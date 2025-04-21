@@ -1,0 +1,150 @@
+jquan@jquan:~/hackathon/vhackusm/dermaDAO-junquan1$ cat .cursorrules 
+You are an expert in Javascript, Node.js, Next.js App Router, React, Shadcn UI, and Tailwind and Framer Motion.
+Just give me the SQL code (without any comment) if you want to modify my database, always refer to db-schema.md for my database setup.
+
+## Project Structure
+
+- Root Organization
+  - /src: Main source code directory
+  - /blockchain: Smart contracts and blockchain-related code
+  - /public: Static assets and files
+
+- Source Code Organization (/src)
+  - /components: Reusable React components
+  - /pages: Next.js pages and routing
+  - /services: Backend services and API integrations
+  - /styles: Global styles and Tailwind configurations
+  - /utils: Utility functions and helpers
+  - /contracts: Smart contract interfaces and types
+  - /lib: Shared libraries and configurations
+  - /middleware: Express middleware and request handlers
+
+- Blockchain Organization (/blockchain)
+  - /abi: Smart contract ABIs
+  - /contracts: Solidity smart contracts
+  - address.txt: Contract deployment addresses
+
+## Frontend Development
+
+- Code Style and Structure
+  - Write concise, technical JavaScript/TypeScript code
+  - Use functional and declarative programming patterns
+  - Prefer iteration and modularization over code duplication
+  - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
+  - Structure files: exported component, subcomponents, helpers, static content
+
+- Naming Conventions
+  - All components should go in src/components and be named like new-component.jsx
+  - Use lowercase with dashes for directories (e.g., components/auth-wizard)
+  - Favor named exports for components
+
+- UI and Styling
+  - Use Shadcn UI and Tailwind for components and styling
+  - Implement responsive design with Tailwind CSS; use a mobile-first approach
+  - Follow DaisyUI component patterns
+
+- Performance Optimization
+  - Minimize 'use client', 'useEffect', and 'setState'
+  - Wrap client components in Suspense with fallback
+  - Use dynamic loading for non-critical components
+  - Optimize images: use WebP format, include size data, implement lazy loading
+
+## Backend Development
+
+- API Structure
+  - Use Express.js for API routes and middleware
+  - Implement RESTful API design principles
+  - Group related endpoints in separate route files
+  - Use express-validator for input validation
+  - Implement proper error handling middleware
+
+- Database
+  - Use PostgreSQL (pg) for relational data
+  - Implement proper database migrations
+  - Use parameterized queries to prevent SQL injection
+  - Follow database normalization principles
+  - Implement proper indexing for performance
+
+- Authentication & Security
+  - Use JWT for authentication
+  - Implement proper password hashing
+  - Use CORS middleware for cross-origin requests
+  - Implement rate limiting for API endpoints
+  - Use environment variables for sensitive data
+
+- File Handling
+  - Use Multer for file uploads
+  - Implement proper file validation
+  - Store files securely (consider IPFS for decentralized storage)
+  - Implement proper file type checking
+  - Use proper file naming conventions
+
+## Blockchain Development
+
+- Smart Contracts
+  - Use Solidity for smart contract development
+  - Follow OpenZeppelin contract patterns
+  - Implement proper access control
+  - Use events for important state changes
+  - Implement proper error handling
+
+- Web3 Integration
+  - Use Web3.js and Ethers.js for blockchain interactions
+  - Implement proper error handling for blockchain transactions
+  - Use IPFS for decentralized storage
+  - Implement proper gas estimation
+  - Follow smart contract best practices
+
+- Contract Management
+  - Keep contract ABIs in /blockchain/abi
+  - Store contract addresses in address.txt
+  - Implement proper contract versioning
+  - Use proper contract testing
+
+## AI Integration
+
+- Google's Generative AI
+  - Implement proper error handling for AI services
+  - Cache AI responses when appropriate
+  - Implement proper rate limiting for AI endpoints
+  - Use proper validation for AI inputs
+  - Follow AI best practices
+
+## Performance & Security
+
+- Performance Optimization
+  - Implement proper caching strategies
+  - Use connection pooling for database connections
+  - Implement proper logging with Morgan
+  - Use compression middleware
+  - Implement proper error tracking
+
+- Security Best Practices
+  - Use environment variables for sensitive data
+  - Implement proper input validation
+  - Use secure headers
+  - Implement rate limiting
+  - Follow security best practices
+
+## Development Workflow
+
+- Code Organization
+  - Place API routes in src/pages/api
+  - Place database models in src/models
+  - Place services in src/services
+  - Place middleware in src/middleware
+  - Place utilities in src/utils
+
+- Testing
+  - Write unit tests for services
+  - Write integration tests for API endpoints
+  - Write tests for blockchain interactions
+  - Implement proper test coverage
+  - Use proper test naming conventions
+
+- Version Control
+  - Use meaningful commit messages
+  - Follow Git flow branching strategy
+  - Keep commits atomic and focused
+  - Review code before merging
+  - Maintain clean git history

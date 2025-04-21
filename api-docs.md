@@ -1,0 +1,2170 @@
+# DermaDAO API Documentation
+
+## Overview
+
+This document outlines the API endpoints for the DermaDAO platform, a blockchain-based charitable giving platform that addresses trust issues in philanthropy through quadratic funding, verification systems, and milestone-based fund release with direct bank transfers.
+
+## Base URL
+
+All endpoints are relative to: `https://api.dermadao.org/v1`
+
+## Authentication
+
+The API uses JWT (JSON Web Token) for authentication.
+
+### Headers
+
+For protected endpoints, include the JWT token in the Authorization header:
+
+```
+Authorization: Bearer <jwt_token>
+```
+
+## Response Format
+
+All responses follow a standard format:
+
+```json
+{
+  "success": true|false,
+  "data": { ... },
+  "error": { "message": "Error description", "code": "ERROR_CODE" }
+}
+```
+
+## Error Codes
+
+| Code | Description |
+|------|-------------|
+| AUTH_REQUIRED | Authentication required |
+| INVALID_TOKEN | Invalid or expired token |
+| PERMISSION_DENIED | User lacks permission |
+| RESOURCE_NOT_FOUND | Requested resource not found |
+| VALIDATION_ERROR | Invalid input data |
+| BLOCKCHAIN_ERROR | Error interacting with blockchain |
+| SERVER_ERROR | Internal server error |
+| RATE_LIMIT_EXCEEDED | Too many requests |
+
+## Rate Limiting
+
+Requests are limited to 1000 per 15 minutes per IP address or authenticated user.
+
+## API Endpoints
+
+### Authentication
+
+#### Register User
+
+```
+POST /api/auth/register
+```
+
+Create a new user account with email/password and generate a smart contract wallet.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123",
+  "name": "John Doe"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": 123,
+    "email": "user@example.com",
+    "wallet_address": "0x123abc...",
+    "token": "jwt_token_here"
+  }
+}
+```
+
+#### Login
+
+```
+POST /api/auth/login
+```
+
+Authenticate and receive JWT token.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": 123,
+    "email": "user@example.com",
+    "wallet_address": "0x123abc...",
+    "token": "jwt_token_here"
+  }
+}
+```
+
+#### Get User Profile
+
+```
+GET /api/auth/me
+```
+
+Retrieve current user profile.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": 123,
+    "email": "user@example.com",
+    "name": "John Doe",
+    "wallet_address": "0x123abc...",
+    "is_worldcoin_verified": true,
+    "created_at": "2023-05-01T12:00:00Z"
+  }
+}
+```
+
+#### Worldcoin Verification
+
+```
+POST /api/auth/worldcoin-verify
+```
+
+Initiate Worldcoin verification for quadratic funding eligibility.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "verification_url": "https://id.worldcoin.org/authorize?..."
+  }
+}
+```
+
+#### Get Worldcoin Auth URL
+
+```
+GET /api/auth/worldcoin-url
+```
+
+Get the Worldcoin authorization URL.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "url": "https://id.worldcoin.org/authorize?..."
+  }
+}
+```
+
+#### Worldcoin Callback
+
+```
+GET /api/auth/worldcoin-callback
+```
+
+Handle Worldcoin OAuth callback (used internally by the OAuth flow).
+
+**Query Parameters:**
+- `code`: Authorization code from Worldcoin
+- `state`: State parameter for security verification
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "is_verified": true
+  }
+}
+```
+
+### Charity Management
+
+#### List Charities
+
+```
+GET /api/charities
+```
+
+List all registered charities with optional filtering.
+
+**Query Parameters:**
+- `verified` (boolean): Filter by verification status
+- `page` (integer): Page number for pagination
+- `limit` (integer): Results per page
+- `search` (string): Search term for charity name
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "charities": [
+      {
+        "charity_id": 45,
+        "name": "Global Health Initiative",
+        "description": "Providing healthcare access in underserved communities",
+        "is_verified": true,
+        "verification_score": 85,
+        "created_at": "2023-05-01T12:00:00Z"
+      }
+    ],
+    "total": 120,
+    "page": 1,
+    "limit": 10
+  }
+}
+```
+
+#### Get Charity Details
+
+```
+GET /api/charities/:id
+```
+
+Retrieve detailed information about a charity.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "charity_id": 45,
+    "name": "Global Health Initiative",
+    "description": "Providing healthcare access in underserved communities",
+    "website": "https://example.org",
+    "registration_number": "1234567890",
+    "country": "United States",
+    "is_verified": true,
+    "verification_score": 85,
+    "admin": {
+      "user_id": 123,
+      "name": "John Doe"
+    },
+    "projects": [
+      {
+        "project_id": 789,
+        "name": "Clean Water Project",
+        "is_active": true
+      }
+    ],
+    "created_at": "2023-05-01T12:00:00Z"
+  }
+}
+```
+
+#### Register Charity
+
+```
+POST /api/charities
+```
+
+Register a new charity organization.
+
+**Request Body:**
+```json
+{
+  "name": "Global Health Initiative",
+  "description": "Providing healthcare access in underserved communities",
+  "website": "https://example.org",
+  "registration_number": "1234567890",
+  "country": "United States",
+  "documentation_ipfs_hash": "ipfs://Qm..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "charity_id": 45,
+    "name": "Global Health Initiative",
+    "status": "pending_verification",
+    "created_at": "2023-05-01T12:00:00Z"
+  }
+}
+```
+
+#### Update Charity
+
+```
+PUT /api/charities/:id
+```
+
+Update a charity's information (charity admin only).
+
+**Request Body:**
+```json
+{
+  "name": "Updated Global Health Initiative",
+  "description": "Updated description",
+  "website": "https://example-updated.org"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "charity_id": 45,
+    "name": "Updated Global Health Initiative",
+    "updated_at": "2023-06-01T12:00:00Z"
+  }
+}
+```
+
+#### Delete Charity
+
+```
+DELETE /api/charities/:id
+```
+
+Delete a charity (charity admin only).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Charity successfully deleted"
+  }
+}
+```
+
+#### Verify Charity (Admin Only)
+
+```
+PUT /api/charities/:id/verify
+```
+
+Update verification status of a charity.
+
+**Request Body:**
+```json
+{
+  "verified": true,
+  "verification_score": 85,
+  "verification_notes": "Documentation verified successfully"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "charity_id": 45,
+    "is_verified": true,
+    "verification_score": 85
+  }
+}
+```
+
+### Project Management
+
+#### Create Project
+
+```
+POST /api/projects
+```
+
+Create a new charity project (charity admin only).
+
+**Request Body:**
+```json
+{
+  "charity_id": 45,
+  "name": "Clean Water Project",
+  "description": "Installing water filtration systems in rural villages",
+  "funding_goal": 5000,
+  "duration_days": 90,
+  "milestones": [
+    {
+      "title": "Equipment Purchase",
+      "description": "Purchase filtration systems",
+      "percentage": 30
+    },
+    {
+      "title": "Installation",
+      "description": "Install systems in 10 villages",
+      "percentage": 50
+    },
+    {
+      "title": "Training & Monitoring",
+      "description": "Train local technicians",
+      "percentage": 20
+    }
+  ],
+  "ipfs_hash": "ipfs://Qm..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": 789,
+    "name": "Clean Water Project",
+    "wallet_address": "0x456def...",
+    "status": "pending_verification",
+    "created_at": "2023-05-01T12:00:00Z"
+  }
+}
+```
+
+#### List Projects
+
+```
+GET /api/projects
+```
+
+List all projects with optional filtering.
+
+**Query Parameters:**
+- `charity_id` (integer): Filter by charity
+- `verified` (boolean): Filter by verification status
+- `active` (boolean): Filter by active status
+- `page` (integer): Page number for pagination
+- `limit` (integer): Results per page
+- `search` (string): Search term for project name
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "projects": [
+      {
+        "project_id": 789,
+        "charity_id": 45,
+        "charity_name": "Global Health Initiative",
+        "name": "Clean Water Project",
+        "description": "Installing water filtration systems in rural villages",
+        "wallet_address": "0x456def...",
+        "is_active": true,
+        "verification_score": 90,
+        "funding_progress": {
+          "goal": 5000,
+          "raised": 2500,
+          "donors_count": 125
+        },
+        "created_at": "2023-05-01T12:00:00Z"
+      }
+    ],
+    "total": 50,
+    "page": 1,
+    "limit": 10
+  }
+}
+```
+
+#### Get Charity Projects
+
+```
+GET /api/projects/charity/:charity_id
+```
+
+List all projects for a specific charity.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "projects": [
+      {
+        "project_id": 789,
+        "name": "Clean Water Project",
+        "description": "Installing water filtration systems in rural villages",
+        "is_active": true,
+        "funding_progress": {
+          "goal": 5000,
+          "raised": 2500
+        },
+        "created_at": "2023-05-01T12:00:00Z"
+      }
+    ],
+    "total": 3
+  }
+}
+```
+
+#### Get Project Details
+
+```
+GET /api/projects/:id
+```
+
+Retrieve detailed information about a project.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": 789,
+    "charity_id": 45,
+    "charity_name": "Global Health Initiative",
+    "name": "Clean Water Project",
+    "description": "Installing water filtration systems in rural villages",
+    "ipfs_hash": "ipfs://Qm...",
+    "wallet_address": "0x456def...",
+    "is_active": true,
+    "verification_score": 90,
+    "funding": {
+      "goal": 5000,
+      "raised": 2500,
+      "donors_count": 125,
+      "quadratic_match": 1200
+    },
+    "milestones": [
+      {
+        "title": "Equipment Purchase",
+        "description": "Purchase filtration systems",
+        "percentage": 30,
+        "status": "completed"
+      },
+      {
+        "title": "Installation",
+        "description": "Install systems in 10 villages",
+        "percentage": 50,
+        "status": "in_progress"
+      },
+      {
+        "title": "Training & Monitoring",
+        "description": "Train local technicians",
+        "percentage": 20,
+        "status": "pending"
+      }
+    ],
+    "proposals": [
+      {
+        "proposal_id": 101,
+        "description": "Equipment purchase payment",
+        "amount": 1500,
+        "status": "approved",
+        "created_at": "2023-05-10T12:00:00Z"
+      }
+    ],
+    "created_at": "2023-05-01T12:00:00Z"
+  }
+}
+```
+
+#### Get Project Verification Status
+
+```
+GET /api/projects/:id/verification
+```
+
+Get the verification status of a project.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": 789,
+    "is_verified": true,
+    "verification_score": 90,
+    "verification_notes": "Project details and milestones verified"
+  }
+}
+```
+
+#### Update Project
+
+```
+PUT /api/projects/:id
+```
+
+Update project details (charity admin only).
+
+**Request Body:**
+```json
+{
+  "name": "Updated Clean Water Project",
+  "description": "Updated project description",
+  "funding_goal": 6000
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": 789,
+    "name": "Updated Clean Water Project",
+    "updated_at": "2023-06-01T12:00:00Z"
+  }
+}
+```
+
+#### Update Project Milestones
+
+```
+PUT /api/projects/:id/milestones
+```
+
+Update project milestones (charity admin only).
+
+**Request Body:**
+```json
+{
+  "milestones": [
+    {
+      "title": "Equipment Purchase",
+      "description": "Purchase advanced filtration systems",
+      "percentage": 25
+    },
+    {
+      "title": "Installation",
+      "description": "Install systems in 15 villages",
+      "percentage": 50
+    },
+    {
+      "title": "Training",
+      "description": "Train local technicians",
+      "percentage": 15
+    },
+    {
+      "title": "Monitoring",
+      "description": "Ongoing monitoring and support",
+      "percentage": 10
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": 789,
+    "milestones": [
+      {
+        "title": "Equipment Purchase",
+        "description": "Purchase advanced filtration systems",
+        "percentage": 25
+      },
+      {
+        "title": "Installation",
+        "description": "Install systems in 15 villages",
+        "percentage": 50
+      },
+      {
+        "title": "Training",
+        "description": "Train local technicians",
+        "percentage": 15
+      },
+      {
+        "title": "Monitoring",
+        "description": "Ongoing monitoring and support",
+        "percentage": 10
+      }
+    ],
+    "updated_at": "2023-06-01T12:00:00Z"
+  }
+}
+```
+
+#### Delete Project
+
+```
+DELETE /api/projects/:id
+```
+
+Delete a project (charity admin only).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Project successfully deleted"
+  }
+}
+```
+
+#### Verify Project (Admin Only)
+
+```
+PUT /api/projects/:id/verify
+```
+
+Update verification status of a project.
+
+**Request Body:**
+```json
+{
+  "verification_score": 90,
+  "verification_notes": "Project details and milestones verified"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": 789,
+    "verification_score": 90
+  }
+}
+```
+
+### Donation Management
+
+#### Make Donation
+
+```
+POST /api/donations
+```
+
+Make a donation to a project.
+
+**Request Body:**
+```json
+{
+  "project_id": 789,
+  "amount": 100,
+  "transaction_hash": "0xabc123..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "donation_id": 5678,
+    "project_id": 789,
+    "amount": 100,
+    "transaction_hash": "0xabc123...",
+    "created_at": "2023-05-15T12:00:00Z",
+    "quadratic_eligible": true
+  }
+}
+```
+
+#### List All Donations
+
+```
+GET /api/donations
+```
+
+List all donations with optional filtering (admin only).
+
+**Query Parameters:**
+- `project_id` (integer): Filter by project
+- `user_id` (string): Filter by user
+- `page` (integer): Page number for pagination
+- `limit` (integer): Results per page
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "donations": [
+      {
+        "donation_id": 5678,
+        "project_id": 789,
+        "project_name": "Clean Water Project",
+        "user_id": 123,
+        "amount": 100,
+        "transaction_hash": "0xabc123...",
+        "created_at": "2023-05-15T12:00:00Z"
+      }
+    ],
+    "total": 250,
+    "page": 1,
+    "limit": 10
+  }
+}
+```
+
+#### Get Donation Details
+
+```
+GET /api/donations/:id
+```
+
+Get details of a specific donation.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "donation_id": 5678,
+    "project_id": 789,
+    "project_name": "Clean Water Project",
+    "user_id": 123,
+    "user_name": "John Doe",
+    "amount": 100,
+    "transaction_hash": "0xabc123...",
+    "quadratic_eligible": true,
+    "created_at": "2023-05-15T12:00:00Z"
+  }
+}
+```
+
+#### Get User Donations
+
+```
+GET /api/donations/by-user/:userId
+```
+
+Retrieve donation history for a specific user.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "donations": [
+      {
+        "donation_id": 5678,
+        "project_id": 789,
+        "project_name": "Clean Water Project",
+        "amount": 100,
+        "transaction_hash": "0xabc123...",
+        "created_at": "2023-05-15T12:00:00Z",
+        "quadratic_eligible": true
+      }
+    ],
+    "total_donated": 350,
+    "donation_count": 3
+  }
+}
+```
+
+#### Get Project Donations
+
+```
+GET /api/donations/by-project/:projectId
+```
+
+Retrieve donation history for a specific project.
+
+**Query Parameters:**
+- `page` (integer): Page number for pagination
+- `limit` (integer): Results per page
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "donations": [
+      {
+        "donation_id": 5678,
+        "amount": 100,
+        "donor": "Anonymous",
+        "transaction_hash": "0xabc123...",
+        "created_at": "2023-05-15T12:00:00Z"
+      }
+    ],
+    "total": 125,
+    "page": 1,
+    "limit": 10,
+    "total_raised": 2500
+  }
+}
+```
+
+#### Delete Donation
+
+```
+DELETE /api/donations/:id
+```
+
+Delete a donation (admin only, for error correction).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Donation successfully deleted"
+  }
+}
+```
+
+### Proposal Management
+
+#### Create Withdrawal Proposal
+
+```
+POST /api/proposals
+```
+
+Create withdrawal proposal for milestone-based fund release (charity admin only).
+
+**Request Body:**
+```json
+{
+  "project_id": 789,
+  "description": "Equipment purchase for water filtration systems",
+  "evidence_ipfs_hash": "ipfs://Qm...",
+  "amount": 1500,
+  "transfer_type": "bank",
+  "bank_account_id": 321,
+  "milestone_index": 0
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposal_id": 101,
+    "project_id": 789,
+    "description": "Equipment purchase for water filtration systems",
+    "amount": 1500,
+    "status": "pending_verification",
+    "ai_verification_pending": true,
+    "created_at": "2023-05-10T12:00:00Z"
+  }
+}
+```
+
+#### Create Crypto Withdrawal Proposal
+
+```
+POST /api/proposals
+```
+
+Create crypto withdrawal proposal (charity admin only).
+
+**Request Body:**
+```json
+{
+  "project_id": 789,
+  "description": "Equipment purchase for water filtration systems",
+  "evidence_ipfs_hash": "ipfs://Qm...",
+  "amount": 1500,
+  "transfer_type": "crypto",
+  "crypto_address": "0xdef456...",
+  "milestone_index": 0
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposal_id": 101,
+    "project_id": 789,
+    "description": "Equipment purchase for water filtration systems",
+    "amount": 1500,
+    "status": "pending_verification",
+    "ai_verification_pending": true,
+    "created_at": "2023-05-10T12:00:00Z"
+  }
+}
+```
+
+#### Get All Proposals
+
+```
+GET /api/proposals
+```
+
+List all proposals with pagination (authenticated users).
+
+**Query Parameters:**
+- `page` (integer): Page number for pagination
+- `limit` (integer): Results per page
+- `status` (string): Filter by status
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposals": [
+      {
+        "proposal_id": 101,
+        "project_id": 789,
+        "project_name": "Clean Water Project",
+        "description": "Equipment purchase for water filtration systems",
+        "amount": 1500,
+        "status": "approved",
+        "created_at": "2023-05-10T12:00:00Z"
+      }
+    ],
+    "total": 25,
+    "page": 1,
+    "limit": 10
+  }
+}
+```
+
+#### Get Project Proposals
+
+```
+GET /api/proposals/project/:id
+```
+
+List all withdrawal proposals for a specific project.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposals": [
+      {
+        "proposal_id": 101,
+        "description": "Equipment purchase for water filtration systems",
+        "evidence_ipfs_hash": "ipfs://Qm...",
+        "amount": 1500,
+        "status": "approved",
+        "ai_verification_score": 92,
+        "bank_account": {
+          "bank_name": "Global Bank",
+          "account_name": "Global Health Initiative"
+        },
+        "created_at": "2023-05-10T12:00:00Z",
+        "executed_at": "2023-05-11T09:30:00Z"
+      }
+    ]
+  }
+}
+```
+
+#### Get Proposal Details
+
+```
+GET /api/proposals/:id
+```
+
+Get detailed information about a specific proposal.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposal_id": 101,
+    "project_id": 789,
+    "project_name": "Clean Water Project",
+    "description": "Equipment purchase for water filtration systems",
+    "evidence_ipfs_hash": "ipfs://Qm...",
+    "amount": 1500,
+    "transfer_type": "bank",
+    "bank_account": {
+      "bank_name": "Global Bank",
+      "account_name": "Global Health Initiative",
+      "account_number_masked": "****7890"
+    },
+    "milestone_index": 0,
+    "milestone": {
+      "title": "Equipment Purchase",
+      "description": "Purchase filtration systems",
+      "percentage": 30
+    },
+    "status": "approved",
+    "ai_verification_score": 92,
+    "created_at": "2023-05-10T12:00:00Z",
+    "verified_at": "2023-05-10T13:30:00Z",
+    "executed_at": "2023-05-11T09:30:00Z"
+  }
+}
+```
+
+#### Get Proposal Status
+
+```
+GET /api/proposals/:id/status
+```
+
+Check the status of a specific withdrawal proposal.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposal_id": 101,
+    "status": "approved",
+    "ai_verification_score": 92,
+    "blockchain_status": "executed",
+    "transaction_hash": "0xdef456...",
+    "bank_transfer": {
+      "status": "completed",
+      "reference": "WISE123456",
+      "completed_at": "2023-05-11T10:15:00Z"
+    }
+  }
+}
+```
+
+#### AI Verification (Admin Only)
+
+```
+POST /api/proposals/:id/verify
+```
+
+Trigger AI verification of a proposal (admin only).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposal_id": 101,
+    "verification_score": 92,
+    "verified": true,
+    "verification_notes": "Evidence matches milestone requirements"
+  }
+}
+```
+
+#### Execute Proposal (Charity Admin)
+
+```
+POST /api/proposals/:id/execute
+```
+
+Execute a verified proposal to release funds (charity admin only).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposal_id": 101,
+    "status": "executing",
+    "message": "Proposal execution initiated"
+  }
+}
+```
+
+#### Record Transaction
+
+```
+POST /api/proposals/record-transaction
+```
+
+Record a blockchain transaction for a proposal (charity admin only).
+
+**Request Body:**
+```json
+{
+  "proposal_id": 101,
+  "transaction_hash": "0xdef456...",
+  "transfer_type": "crypto",
+  "recipient_address": "0xabc123..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposal_id": 101,
+    "transaction_hash": "0xdef456...",
+    "status": "executed"
+  }
+}
+```
+
+#### Vote on Proposal
+
+```
+POST /api/proposals/:id/vote
+```
+
+Vote on a proposal (for donors).
+
+**Request Body:**
+```json
+{
+  "vote": true,
+  "comment": "This looks like a genuine expense for the project."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposal_id": 101,
+    "user_id": 123,
+    "vote": true
+  }
+}
+```
+
+#### Get Proposal Votes
+
+```
+GET /api/proposals/:id/votes
+```
+
+Get all votes for a proposal.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "proposal_id": 101,
+    "votes": [
+      {
+        "user_id": 123,
+        "name": "John Doe",
+        "vote": true,
+        "comment": "This looks like a genuine expense for the project.",
+        "created_at": "2023-05-10T14:30:00Z"
+      }
+    ],
+    "total_votes": 15,
+    "positive_votes": 12,
+    "negative_votes": 3
+  }
+}
+```
+
+### Bank Account Management
+
+#### Register Bank Account
+
+```
+POST /api/bank-accounts
+```
+
+Register a bank account for fund transfers (charity admin only).
+
+**Request Body:**
+```json
+{
+  "account_name": "Global Health Initiative",
+  "account_number": "1234567890",
+  "routing_number": "987654321",
+  "bank_name": "Global Bank",
+  "bank_country": "United States",
+  "bank_address": "123 Bank St, New York, NY",
+  "swift_code": "GLBKUS123",
+  "purpose": "implementation"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "bank_account_id": 321,
+    "account_name": "Global Health Initiative",
+    "bank_name": "Global Bank",
+    "status": "pending_verification",
+    "created_at": "2023-05-05T12:00:00Z"
+  }
+}
+```
+
+#### List Bank Accounts
+
+```
+GET /api/bank-accounts
+```
+
+List all bank accounts for the current user (charity admin).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "bank_accounts": [
+      {
+        "bank_account_id": 321,
+        "account_name": "Global Health Initiative",
+        "account_number": "****7890",
+        "bank_name": "Global Bank",
+        "is_verified": true,
+        "created_at": "2023-05-05T12:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+#### Get Bank Account Details
+
+```
+GET /api/bank-accounts/:id
+```
+
+Get details of a specific bank account.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "bank_account_id": 321,
+    "account_name": "Global Health Initiative",
+    "account_number": "****7890",
+    "routing_number": "****4321",
+    "bank_name": "Global Bank",
+    "bank_country": "United States",
+    "bank_address": "123 Bank St, New York, NY",
+    "swift_code": "GLBKUS123",
+    "purpose": "implementation",
+    "is_verified": true,
+    "created_at": "2023-05-05T12:00:00Z"
+  }
+}
+```
+
+#### Get Project Bank Accounts
+
+```
+GET /api/bank-accounts/project/:id
+```
+
+List verified bank accounts available for a specific project.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "bank_accounts": [
+      {
+        "bank_account_id": 321,
+        "account_name": "Global Health Initiative",
+        "account_number": "****7890",
+        "bank_name": "Global Bank",
+        "purpose": "implementation",
+        "is_verified": true
+      }
+    ]
+  }
+}
+```
+
+#### Update Bank Account
+
+```
+PUT /api/bank-accounts/:id
+```
+
+Update a bank account (charity admin only).
+
+**Request Body:**
+```json
+{
+  "account_name": "Updated Global Health Initiative",
+  "bank_address": "456 New Bank St, Chicago, IL"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "bank_account_id": 321,
+    "account_name": "Updated Global Health Initiative",
+    "updated_at": "2023-06-01T12:00:00Z"
+  }
+}
+```
+
+#### Delete Bank Account
+
+```
+DELETE /api/bank-accounts/:id
+```
+
+Delete a bank account (charity admin only).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Bank account successfully deleted"
+  }
+}
+```
+
+#### Verify Bank Account (Admin Only)
+
+```
+PUT /api/bank-accounts/:id/verify
+```
+
+Verify a bank account for fund transfers.
+
+**Request Body:**
+```json
+{
+  "verified": true,
+  "verification_notes": "Bank account details verified"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "bank_account_id": 321,
+    "is_verified": true
+  }
+}
+```
+
+### Bank Transfer Management
+
+#### Get Transfer Status
+
+```
+GET /api/bank-transfers/:reference
+```
+
+Check the status of a bank transfer.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "transfer_id": 456,
+    "reference": "WISE123456",
+    "status": "completed",
+    "amount": 1500,
+    "currency": "USD",
+    "recipient": "Global Health Initiative",
+    "bank_name": "Global Bank",
+    "created_at": "2023-05-11T09:30:00Z",
+    "completed_at": "2023-05-11T10:15:00Z"
+  }
+}
+```
+
+#### List Project Transfers
+
+```
+GET /api/bank-transfers/project/:id
+```
+
+List all transfers for a specific project.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "transfers": [
+      {
+        "transfer_id": 456,
+        "proposal_id": 101,
+        "reference": "WISE123456",
+        "status": "completed",
+        "amount": 1500,
+        "currency": "USD",
+        "recipient": "Global Health Initiative",
+        "bank_name": "Global Bank",
+        "created_at": "2023-05-11T09:30:00Z",
+        "completed_at": "2023-05-11T10:15:00Z"
+      }
+    ]
+  }
+}
+```
+
+### Quadratic Funding
+
+#### Get All Projects in Quadratic Funding
+
+```
+GET /api/quadratic/projects
+```
+
+List all projects participating in quadratic funding.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "projects": [
+      {
+        "project_id": 789,
+        "name": "Clean Water Project",
+        "description": "Installing water filtration systems in rural villages",
+        "charity_name": "Global Health Initiative",
+        "unique_contributors": 85,
+        "donation_sum": 2500,
+        "estimated_match": 1200
+      }
+    ]
+  }
+}
+```
+
+#### Get Project Details in Quadratic Funding
+
+```
+GET /api/quadratic/project/:id
+```
+
+Get detailed information about a project's quadratic funding status.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": 789,
+    "name": "Clean Water Project",
+    "charity_name": "Global Health Initiative",
+    "unique_contributors": 85,
+    "donation_sum": 2500,
+    "donation_count": 95,
+    "sqrt_sum": 92.3,
+    "estimated_match": 1200,
+    "current_round": {
+      "round_id": 5,
+      "end_time": "2023-05-31T23:59:59Z",
+      "time_remaining": "10 days"
+    }
+  }
+}
+```
+
+#### Get Pool Balance
+
+```
+GET /api/quadratic/pool-balance
+```
+
+Get the current quadratic funding pool balance.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "pool_balance": 10000,
+    "currency": "USD",
+    "updated_at": "2023-05-15T12:00:00Z"
+  }
+}
+```
+
+#### Get Funding Rounds
+
+```
+GET /api/quadratic/rounds
+```
+
+List all quadratic funding rounds.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "rounds": [
+      {
+        "round_id": 5,
+        "start_time": "2023-05-01T00:00:00Z",
+        "end_time": "2023-05-31T23:59:59Z",
+        "total_pool": 10000,
+        "is_distributed": false,
+        "project_count": 12
+      }
+    ]
+  }
+}
+```
+
+#### Get Current Round
+
+```
+GET /api/quadratic/current
+```
+
+Get details of the current funding round.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "round_id": 5,
+    "start_time": "2023-05-01T00:00:00Z",
+    "end_time": "2023-05-31T23:59:59Z",
+    "total_pool": 10000,
+    "is_distributed": false,
+    "projects": [
+      {
+        "project_id": 789,
+        "name": "Clean Water Project",
+        "unique_contributors": 85,
+        "donation_sum": 2500,
+        "estimated_match": 1200
+      }
+    ],
+    "time_remaining": "10 days, 12 hours"
+  }
+}
+```
+
+#### Vote with Quadratic Funding
+
+```
+POST /api/quadratic/vote
+```
+
+Cast a vote for a project with quadratic funding.
+
+**Request Body:**
+```json
+{
+  "project_id": "789",
+  "amount": 100
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "vote_id": 1234,
+    "project_id": "789",
+    "amount": 100,
+    "created_at": "2023-05-15T12:00:00Z"
+  }
+}
+```
+
+#### Get Voting Results
+
+```
+GET /api/quadratic/results/:projectId
+```
+
+Get voting results for a specific project.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": "789",
+    "votes_count": 85,
+    "total_amount": 2500,
+    "sqrt_sum": 92.3,
+    "estimated_match": 1200
+  }
+}
+```
+
+#### Record External Contribution
+
+```
+POST /api/quadratic/external-contribution
+```
+
+Record an external contribution to the quadratic funding pool.
+
+**Request Body:**
+```json
+{
+  "amount": 5000,
+  "transaction_hash": "0xghi789..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "contribution_id": 567,
+    "amount": 5000,
+    "transaction_hash": "0xghi789...",
+    "created_at": "2023-05-15T12:00:00Z"
+  }
+}
+```
+
+#### Distribute Funding (Admin Only)
+
+```
+POST /api/quadratic/distribute
+```
+
+Trigger distribution of the quadratic funding pool for completed round.
+
+**Request Body:**
+```json
+{
+  "round_id": 5
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "round_id": 5,
+    "total_distributed": 10000,
+    "transaction_hash": "0xghi789...",
+    "allocations": [
+      {
+        "project_id": 789,
+        "project_name": "Clean Water Project",
+        "amount": 1200
+      }
+    ]
+  }
+}
+```
+
+### Funding Pools
+
+#### Create Funding Pool
+
+```
+POST /api/pools
+```
+
+Create a new funding pool.
+
+**Request Body:**
+```json
+{
+  "name": "Climate Action Pool",
+  "description": "Funding pool for climate change initiatives",
+  "theme": "Climate",
+  "round_duration": 2592000
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "pool_id": 12,
+    "name": "Climate Action Pool",
+    "theme": "Climate",
+    "created_at": "2023-05-15T12:00:00Z"
+  }
+}
+```
+
+#### List All Pools
+
+```
+GET /api/pools
+```
+
+List all funding pools.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "pools": [
+      {
+        "pool_id": 12,
+        "name": "Climate Action Pool",
+        "description": "Funding pool for climate change initiatives",
+        "theme": "Climate",
+        "total_funds": 20000,
+        "project_count": 8,
+        "is_active": true,
+        "created_at": "2023-05-15T12:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+#### Get Pool Details
+
+```
+GET /api/pools/:id
+```
+
+Get details of a specific funding pool.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "pool_id": 12,
+    "name": "Climate Action Pool",
+    "description": "Funding pool for climate change initiatives",
+    "theme": "Climate",
+    "total_funds": 20000,
+    "current_round": {
+      "round_id": 8,
+      "start_time": "2023-05-15T00:00:00Z",
+      "end_time": "2023-06-15T00:00:00Z",
+      "is_active": true
+    },
+    "projects": [
+      {
+        "project_id": 789,
+        "name": "Clean Water Project",
+        "donations_count": 85,
+        "amount_raised": 2500
+      }
+    ],
+    "created_at": "2023-05-15T12:00:00Z"
+  }
+}
+```
+
+#### Update Funding Pool
+
+```
+PUT /api/pools/:id
+```
+
+Update a funding pool.
+
+**Request Body:**
+```json
+{
+  "name": "Updated Climate Action Pool",
+  "description": "Updated description for the climate pool"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "pool_id": 12,
+    "name": "Updated Climate Action Pool",
+    "updated_at": "2023-06-01T12:00:00Z"
+  }
+}
+```
+
+#### Delete Funding Pool
+
+```
+DELETE /api/pools/:id
+```
+
+Delete a funding pool.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Pool successfully deleted"
+  }
+}
+```
+
+### Wallet Management
+
+#### Get Wallet Balance
+
+```
+GET /api/wallet/balance
+```
+
+Get the current user's wallet balance.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "wallet_address": "0x123abc...",
+    "balance": 0.5,
+    "currency": "ETH"
+  }
+}
+```
+
+#### Connect Wallet
+
+```
+POST /api/wallet/connect
+```
+
+Connect a wallet address to a user account.
+
+**Request Body:**
+```json
+{
+  "address": "0x123abc..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": 123,
+    "wallet_address": "0x123abc...",
+    "connected_at": "2023-05-15T12:00:00Z"
+  }
+}
+```
+
+#### Disconnect Wallet
+
+```
+POST /api/wallet/disconnect
+```
+
+Disconnect a wallet from a user account.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": 123,
+    "message": "Wallet successfully disconnected"
+  }
+}
+```
+
+#### Get Transaction History
+
+```
+GET /api/wallet/transactions
+```
+
+Get the transaction history for the user's wallet.
+
+**Query Parameters:**
+- `page` (integer): Page number for pagination
+- `limit` (integer): Results per page
+- `type` (string): Transaction type (deposit, donation, transfer)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "transactions": [
+      {
+        "transaction_id": "tx_1234",
+        "type": "deposit",
+        "amount": 0.05,
+        "currency": "ETH",
+        "transaction_hash": "0xjkl012...",
+        "status": "completed",
+        "created_at": "2023-05-15T12:00:00Z"
+      },
+      {
+        "transaction_id": "tx_1235",
+        "type": "donation",
+        "amount": 0.02,
+        "currency": "ETH",
+        "project_id": 789,
+        "project_name": "Clean Water Project",
+        "transaction_hash": "0xmno345...",
+        "status": "completed",
+        "created_at": "2023-05-15T12:30:00Z"
+      }
+    ],
+    "total": 5,
+    "page": 1,
+    "limit": 10
+  }
+}
+```
+
+#### Get ScrollScan Data
+
+```
+GET /api/wallet/scrollscan-data
+```
+
+Get wallet data from ScrollScan.
+
+**Query Parameters:**
+- `address` (string): Wallet address
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "address": "0x123abc...",
+    "balance": 0.5,
+    "transactions": [
+      {
+        "hash": "0xjkl012...",
+        "value": 0.05,
+        "timestamp": "2023-05-15T12:00:00Z",
+        "from": "0xdef456...",
+        "to": "0x123abc..."
+      }
+    ]
+  }
+}
+```
+
+#### Record Transak Transaction
+
+```
+POST /api/wallet/transak-transaction
+```
+
+Record a transaction from Transak.
+
+**Request Body:**
+```json
+{
+  "transaction_hash": "0xjkl012...",
+  "amount": 0.05,
+  "currency": "ETH",
+  "status": "completed"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "transaction_id": "tx_1234",
+    "transaction_hash": "0xjkl012...",
+    "status": "recorded"
+  }
+}
+```
+
+### Webhook Endpoints
+
+#### Wise Transfer Webhook
+
+```
+POST /api/webhooks/wise
+```
+
+Receives transfer status updates from Wise.
+
+**Headers:**
+```
+X-Signature-SHA256: <signature>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "data": {
+    "resource": {
+      "id": 123456,
+      "type": "TRANSFER",
+      "profile_id": 12345,
+      "state": "outgoing_payment_sent"
+    },
+    "occurred_at": "2023-05-11T10:15:00Z"
+  },
+  "subscription_id": "subscription-id",
+  "event_type": "transfer-state-change"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+### Debug Endpoints
+
+#### Health Check
+
+```
+GET /health
+```
+
+Check the health status of the API.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "status": "healthy",
+    "timestamp": "2023-05-15T12:00:00Z"
+  }
+}
+```
+
+## Blockchain Interaction
+
+The API handles all blockchain interactions transparently, including:
+
+- Smart contract wallet creation (ERC-4337)
+- Gas-free transactions via paymaster
+- Quadratic funding calculations
+- Milestone-based fund release
+- Bank transfers via fiat off-ramp
+
+## SDKs
+
+Official SDKs are available for:
+
+- JavaScript/Node.js
+- Python
+- Mobile (React Native)
+
+Visit the [Developer Portal](https://developers.dermadao.org) for SDK documentation.
+
+## Rate Limits and Quotas
+
+- Standard tier: 1000 requests per 15 minutes
+- Enterprise tier: Custom limits available
+
+## Support
+
+For API support, contact: api-support@dermadao.org

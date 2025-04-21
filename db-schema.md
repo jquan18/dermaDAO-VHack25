@@ -1,0 +1,520 @@
+# DermaDAO Database Schema
+
+## Overview
+
+This document outlines the PostgreSQL database schema for the DermaDAO platform. The schema is designed to support the blockchain-based charitable giving platform with a focus on transparency, verification, and milestone-based fund release.
+
+## Database Connection
+
+The database uses Neon PostgreSQL, a serverless PostgreSQL service, with the following connection details:
+
+```
+CONNECTION_STRING=postgresql://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST}/${NEON_DATABASE}
+```
+
+## Tables
+
+### Users
+
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  hashed_email VARCHAR(255) UNIQUE NOT NULL,
+  wallet_address VARCHAR(255) UNIQUE,
+  wallet_salt BIGINT,
+  wallet_creation_error TEXT,
+  wallet_error_code VARCHAR(50),
+  is_admin BOOLEAN DEFAULT FALSE,
+  role VARCHAR(50) DEFAULT 'user',
+  charity_id INTEGER,
+  is_worldcoin_verified BOOLEAN DEFAULT FALSE,
+  worldcoin_id VARCHAR(255) NULL,
+  worldcoin_verification_level VARCHAR(50) NULL,
+  last_login TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_wallet_address ON users(wallet_address);
+CREATE INDEX idx_users_hashed_email ON users(hashed_email);
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_charity_id ON users(charity_id);
+```
+
+### Companies
+
+```sql
+CREATE TABLE companies (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  website VARCHAR(255),
+  logo_url VARCHAR(255),
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_companies_user_id ON companies(user_id);
+```
+
+### Funding Pools
+
+```sql
+CREATE TABLE funding_pools (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  theme VARCHAR(255) NOT NULL,
+  sponsor_id INTEGER REFERENCES users(id),
+  admin_id INTEGER REFERENCES users(id),
+  company_id INTEGER REFERENCES companies(id),
+  contract_pool_id INTEGER,
+  round_duration INTEGER NOT NULL DEFAULT 2592000, -- 30 days in seconds
+  total_funds DECIMAL(18, 8) DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  logo_image VARCHAR(255),
+  banner_image VARCHAR(255),
+  matching_ratio INTEGER DEFAULT 1,
+  start_date TIMESTAMP WITH TIME ZONE,
+  end_date TIMESTAMP WITH TIME ZONE,
+  is_distributed BOOLEAN DEFAULT FALSE,
+  distributed_at TIMESTAMP WITH TIME ZONE,
+  distribution_tx_hash VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_funding_pools_sponsor_id ON funding_pools(sponsor_id);
+CREATE INDEX idx_funding_pools_is_active ON funding_pools(is_active);
+CREATE INDEX idx_funding_pools_contract_pool_id ON funding_pools(contract_pool_id);
+CREATE INDEX idx_funding_pools_company_id ON funding_pools(company_id);
+```
+
+### Worldcoin OAuth States
+
+```sql
+CREATE TABLE worldcoin_oauth_states (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  state VARCHAR(255) NOT NULL UNIQUE,
+  nonce VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '10 minutes'),
+  used BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE INDEX idx_worldcoin_oauth_states_user_id ON worldcoin_oauth_states(user_id);
+CREATE INDEX idx_worldcoin_oauth_states_state ON worldcoin_oauth_states(state);
+CREATE INDEX idx_worldcoin_oauth_states_expires_at ON worldcoin_oauth_states(expires_at);
+```
+
+### Charities
+
+```sql
+CREATE TABLE charities (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  website VARCHAR(255),
+  registration_number VARCHAR(100),
+  country VARCHAR(100),
+  documentation_ipfs_hash VARCHAR(255),
+  admin_id INTEGER REFERENCES users(id),
+  is_verified BOOLEAN DEFAULT FALSE,
+  verification_score INTEGER DEFAULT 0,
+  verification_notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  verified_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX idx_charities_admin_id ON charities(admin_id);
+CREATE INDEX idx_charities_verification ON charities(is_verified, verification_score);
+```
+
+### Projects
+
+```sql
+CREATE TABLE projects (
+  id SERIAL PRIMARY KEY,
+  charity_id INTEGER REFERENCES charities(id),
+  pool_id INTEGER REFERENCES funding_pools(id),
+  name VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  ipfs_hash VARCHAR(255),
+  funding_goal DECIMAL(18, 8),
+  duration_days INTEGER,
+  is_active BOOLEAN DEFAULT TRUE,
+  wallet_address VARCHAR(255) NOT NULL,
+  verification_score INTEGER DEFAULT 0,
+  verification_notes TEXT,
+  start_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  end_date TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_projects_charity_id ON projects(charity_id);
+CREATE INDEX idx_projects_pool_id ON projects(pool_id);
+CREATE INDEX idx_projects_wallet_address ON projects(wallet_address);
+CREATE INDEX idx_projects_status ON projects(is_active, verification_score);
+```
+
+### Milestones
+
+```sql
+CREATE TABLE milestones (
+  id SERIAL PRIMARY KEY,
+  project_id INTEGER REFERENCES projects(id),
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  percentage INTEGER NOT NULL,
+  status VARCHAR(50) DEFAULT 'pending',
+  completed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_milestones_project_id ON milestones(project_id);
+CREATE INDEX idx_milestones_status ON milestones(status);
+```
+
+### Donations
+
+```sql
+CREATE TABLE donations (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  project_id INTEGER REFERENCES projects(id),
+  pool_id INTEGER REFERENCES funding_pools(id),
+  amount DECIMAL(18, 8) NOT NULL,
+  transaction_hash VARCHAR(255) NOT NULL,
+  quadratic_eligible BOOLEAN DEFAULT FALSE,
+  donation_type VARCHAR(50) DEFAULT 'project',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_donations_user_id ON donations(user_id);
+CREATE INDEX idx_donations_project_id ON donations(project_id);
+CREATE INDEX idx_donations_pool_id ON donations(pool_id);
+CREATE INDEX idx_donations_transaction_hash ON donations(transaction_hash);
+```
+
+### Proposals
+
+```sql
+CREATE TABLE proposals (
+  id SERIAL PRIMARY KEY,
+  project_id INTEGER REFERENCES projects(id),
+  milestone_id INTEGER REFERENCES milestones(id),
+  description TEXT NOT NULL,
+  evidence_ipfs_hash VARCHAR(255) NOT NULL,
+  amount DECIMAL(18, 8) NOT NULL,
+  bank_account_id INTEGER REFERENCES bank_accounts(id),
+  contract_proposal_id INTEGER,
+  status VARCHAR(50) DEFAULT 'pending_donor_approval',
+  ai_verification_score INTEGER,
+  ai_verification_notes TEXT,
+  transaction_hash VARCHAR(255),
+  transfer_type VARCHAR(50) DEFAULT 'bank',
+  crypto_address VARCHAR(255) DEFAULT NULL,
+  error_message TEXT DEFAULT NULL,
+  required_approvals INTEGER DEFAULT 0,
+  current_approvals INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  executed_at TIMESTAMP WITH TIME ZONE,
+  CONSTRAINT unique_project_contract_proposal UNIQUE (project_id, contract_proposal_id)
+);
+
+CREATE INDEX idx_proposals_project_id ON proposals(project_id);
+CREATE INDEX idx_proposals_milestone_id ON proposals(milestone_id);
+CREATE INDEX idx_proposals_status ON proposals(status);
+CREATE INDEX idx_proposals_bank_account_id ON proposals(bank_account_id);
+CREATE INDEX idx_proposals_contract_proposal_id ON proposals(contract_proposal_id);
+CREATE INDEX idx_proposals_crypto_address ON proposals(crypto_address);
+CREATE INDEX idx_proposals_contract_project_id ON proposals(project_id, contract_proposal_id);
+```
+
+### Donor Votes
+
+```sql
+CREATE TABLE donor_votes (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  proposal_id INTEGER REFERENCES proposals(id),
+  vote BOOLEAN NOT NULL,
+  comment TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, proposal_id)
+);
+
+CREATE INDEX idx_donor_votes_proposal_id ON donor_votes(proposal_id);
+CREATE INDEX idx_donor_votes_user_id ON donor_votes(user_id);
+CREATE INDEX idx_donor_votes_vote ON donor_votes(vote);
+```
+
+### Bank Accounts
+
+```sql
+CREATE TABLE bank_accounts (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  account_name VARCHAR(255) NOT NULL,
+  account_number VARCHAR(255) NOT NULL,
+  routing_number VARCHAR(255) NOT NULL,
+  bank_name VARCHAR(255) NOT NULL,
+  bank_country VARCHAR(100) NOT NULL,
+  bank_address TEXT,
+  swift_code VARCHAR(100),
+  purpose VARCHAR(100) NOT NULL,
+  is_verified BOOLEAN DEFAULT FALSE,
+  verification_notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  verified_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX idx_bank_accounts_user_id ON bank_accounts(user_id);
+CREATE INDEX idx_bank_accounts_verification ON bank_accounts(is_verified);
+```
+
+### Wallet Transactions
+
+```sql
+CREATE TABLE wallet_transactions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  type VARCHAR(50) NOT NULL,
+  amount DECIMAL(18, 8) NOT NULL,
+  currency VARCHAR(10) DEFAULT 'ETH',
+  transaction_hash VARCHAR(255),
+  status VARCHAR(50) DEFAULT 'pending',
+  related_entity_type VARCHAR(50),
+  related_entity_id INTEGER,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX idx_wallet_transactions_user_id ON wallet_transactions(user_id);
+CREATE INDEX idx_wallet_transactions_status ON wallet_transactions(status);
+CREATE INDEX idx_wallet_transactions_hash ON wallet_transactions(transaction_hash);
+```
+
+### Bank Transfers
+
+```sql
+CREATE TABLE bank_transfers (
+  id SERIAL PRIMARY KEY,
+  proposal_id INTEGER REFERENCES proposals(id),
+  bank_account_id INTEGER REFERENCES bank_accounts(id),
+  amount DECIMAL(18, 8) NOT NULL,
+  currency VARCHAR(10) DEFAULT 'USD',
+  status VARCHAR(50) DEFAULT 'pending',
+  provider VARCHAR(50) DEFAULT 'wise',
+  provider_reference VARCHAR(255),
+  transaction_fee DECIMAL(18, 8),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX idx_bank_transfers_proposal_id ON bank_transfers(proposal_id);
+CREATE INDEX idx_bank_transfers_bank_account_id ON bank_transfers(bank_account_id);
+CREATE INDEX idx_bank_transfers_status ON bank_transfers(status);
+```
+
+### External Contributions
+
+```sql
+CREATE TABLE external_contributions (
+    id SERIAL PRIMARY KEY,
+    transaction_hash VARCHAR(255) NOT NULL UNIQUE,
+    amount DECIMAL(18, 8) NOT NULL,
+    pool_id INTEGER NOT NULL REFERENCES funding_pools(id),
+    contributor_address VARCHAR(255),
+    contributor_name VARCHAR(255),
+    recorded_by INTEGER REFERENCES users(id),
+    recorded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_external_contributions_pool_id ON external_contributions(pool_id);
+CREATE INDEX idx_external_contributions_recorded_by ON external_contributions(recorded_by);
+```
+
+### AI Verification Logs
+
+```sql
+CREATE TABLE ai_verification_logs (
+  id SERIAL PRIMARY KEY,
+  entity_type VARCHAR(50) NOT NULL,
+  entity_id INTEGER NOT NULL,
+  input_data JSONB,
+  output_data JSONB,
+  verification_score INTEGER,
+  model_version VARCHAR(100),
+  processing_time INTEGER,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_ai_verification_logs_entity ON ai_verification_logs(entity_type, entity_id);
+CREATE INDEX idx_ai_verification_logs_score ON ai_verification_logs(verification_score);
+```
+
+### Audit Logs
+
+```sql
+CREATE TABLE audit_logs (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  action VARCHAR(100) NOT NULL,
+  entity_type VARCHAR(50),
+  entity_id INTEGER,
+  details JSONB,
+  ip_address VARCHAR(50),
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
+```
+
+## Relational Diagram
+
+```
+users 1──────────────────┐
+ │                       │
+ │                       │
+ ├───1────> charities ───┘
+ │           │
+ │           │
+ │           ╰───1────> projects ───────> funding_pools <─────── companies ───> users
+ │                       │                     │                    
+ │                       ├──1──> milestones    │                    
+ │                       │                     │                    
+ ├───*────> donations ───┼─────────────────────┘                    
+ │                       │                                          
+ ├───*────> bank_accounts                                           
+ │           │                                                      
+ │           │                                                      
+ ├───*────> wallet_transactions                                     
+ │                                                                  
+ ├───*────> donor_votes                                             
+ │                                                                  
+ ├───*────> worldcoin_oauth_states                                  
+ │                                                                  
+ ├───*────> companies                                               
+ │                                                                  
+ └───*────> audit_logs                                              
+ │                                                                  
+ └───*────> external_contributions ────────────> funding_pools      
+
+projects ────1────> proposals ────*────> bank_transfers
+                     │
+                     │
+                     ╰───*────> ai_verification_logs
+```
+
+## Recent Schema Updates
+
+The following updates have been made to the schema:
+
+1. Added a relationship between projects and funding_pools:
+   - The projects table now includes a pool_id column that references funding_pools(id)
+   - An index has been created on the pool_id column for better query performance
+   
+2. A default funding pool has been inserted:
+   ```sql
+   INSERT INTO funding_pools (name, description, theme, admin_id, is_active)
+   VALUES ('Default Pool', 'Default funding pool for existing projects', 'General', (SELECT id FROM users WHERE is_admin = true LIMIT 1), true);
+   ```
+
+3. All existing projects have been updated to reference this default pool:
+   ```sql
+   UPDATE projects SET pool_id = (SELECT id FROM funding_pools LIMIT 1) WHERE pool_id IS NULL;
+   ```
+
+4. Added a new companies table to represent organizations that can create funding pools:
+   ```sql
+   CREATE TABLE companies (
+     id SERIAL PRIMARY KEY,
+     name VARCHAR(255) NOT NULL,
+     description TEXT,
+     website VARCHAR(255),
+     logo_url VARCHAR(255),
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+   );
+   
+   CREATE INDEX idx_companies_user_id ON companies(user_id);
+   ```
+
+5. Enhanced the funding_pools table with new columns:
+   ```sql
+   ALTER TABLE funding_pools 
+   ADD COLUMN company_id INTEGER REFERENCES companies(id);
+   CREATE INDEX idx_funding_pools_company_id ON funding_pools(company_id);
+   
+   ALTER TABLE funding_pools 
+   ADD COLUMN logo_image VARCHAR(255),
+   ADD COLUMN banner_image VARCHAR(255),
+   ADD COLUMN matching_ratio INTEGER DEFAULT 1,
+   ADD COLUMN start_date TIMESTAMP WITH TIME ZONE,
+   ADD COLUMN end_date TIMESTAMP WITH TIME ZONE;
+   ```
+
+6. Simplified funding structure by removing round-based allocation:
+   ```sql
+   -- Removed round_id column from donations
+   ALTER TABLE donations DROP CONSTRAINT IF EXISTS donations_round_id_fkey;
+   ALTER TABLE donations DROP COLUMN IF EXISTS round_id;
+   
+   -- Removed round_allocations table
+   ALTER TABLE round_allocations DROP CONSTRAINT IF EXISTS round_allocations_round_id_fkey;
+   ALTER TABLE round_allocations DROP CONSTRAINT IF EXISTS round_allocations_project_id_fkey;
+   DROP TABLE IF EXISTS round_allocations;
+   
+   -- Removed funding_rounds table
+   ALTER TABLE funding_rounds DROP CONSTRAINT IF EXISTS funding_rounds_pool_id_fkey; 
+   DROP TABLE IF EXISTS funding_rounds;
+   ```
+
+7. Enhanced donation tracking and added external contributions support:
+   ```sql
+   -- Added pool_id and donation_type to donations table
+   ALTER TABLE donations
+   ADD COLUMN pool_id INTEGER REFERENCES funding_pools(id),
+   ADD COLUMN donation_type VARCHAR(50) DEFAULT 'project';
+   CREATE INDEX idx_donations_pool_id ON donations(pool_id);
+   
+   -- Added distribution tracking to funding_pools
+   ALTER TABLE funding_pools
+   ADD COLUMN is_distributed BOOLEAN DEFAULT FALSE,
+   ADD COLUMN distributed_at TIMESTAMP WITH TIME ZONE,
+   ADD COLUMN distribution_tx_hash VARCHAR(255);
+   
+   -- Added external_contributions table for tracking off-platform donations
+   CREATE TABLE external_contributions (
+       id SERIAL PRIMARY KEY,
+       transaction_hash VARCHAR(255) NOT NULL UNIQUE,
+       amount DECIMAL(18, 8) NOT NULL,
+       pool_id INTEGER NOT NULL REFERENCES funding_pools(id),
+       contributor_address VARCHAR(255),
+       contributor_name VARCHAR(255),
+       recorded_by INTEGER REFERENCES users(id),
+       recorded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+   );
+   CREATE INDEX idx_external_contributions_pool_id ON external_contributions(pool_id);
+   CREATE INDEX idx_external_contributions_recorded_by ON external_contributions(recorded_by);
+   ```
+
+These updates establish companies as entities that can sponsor funding pools, add more detailed configuration options for pools including branding (logo and banner images), matching ratio for donations, and explicit start/end dates for funding cycles. The funding structure has been simplified by removing the round-based allocation system, while enhancing donation tracking capabilities with direct pool donations and external contribution tracking.
