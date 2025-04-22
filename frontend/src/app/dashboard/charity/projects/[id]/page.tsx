@@ -141,25 +141,33 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
       setDonationsLoading(true);
       console.log(`Fetching donations for project ID: ${projectId}`);
       
+      let allDonations: any[] = [];
+      
       // Fetch regular donations from our API
-      const response = await donationsApi.getProjectDonations(projectId);
-      console.log('Donations API response:', response);
-      
-      let formattedDonations = [];
-      
-      if (response.success && response.data) {
-        // The API returns donations in response.data.donations
-        const donations = response.data.donations || [];
-        console.log(`Found ${donations.length} donations:`, donations);
+      try {
+        const response = await donationsApi.getProjectDonations(projectId);
+        console.log('Database Donations API response:', response);
         
-        // Format the donations data
-        formattedDonations = donations.map((donation: any) => ({
-          id: donation.id || donation.transaction_hash,
-          amount: parseFloat(donation.amount).toFixed(3),
-          donor: donation.donor || 'Anonymous',
-          date: formatDate(donation.created_at),
-          status: donation.status || 'completed',
-        }));
+        if (response.success && response.data && Array.isArray(response.data.donations)) {
+          const dbDonations = response.data.donations;
+          console.log(`Found ${dbDonations.length} database donations:`, dbDonations);
+          
+          const formattedDbDonations = dbDonations.map((donation: any) => ({
+            id: donation.id || donation.transaction_hash,
+            amount: parseFloat(donation.amount).toFixed(4), // Use 4 decimals for consistency
+            donor: donation.donor_name || donation.donor || 'Anonymous',
+            timestamp_ms: donation.created_at ? new Date(donation.created_at).getTime() : 0,
+            status: donation.status || 'completed',
+            transaction_hash: donation.transaction_hash,
+            is_quadratic_funding: false,
+            created_at: donation.created_at // Keep original for potential use
+          }));
+          allDonations = allDonations.concat(formattedDbDonations);
+        } else {
+          console.warn("Failed to fetch or parse database donations");
+        }
+      } catch (dbError) {
+        console.error("Error fetching database donations:", dbError);
       }
       
       // Fetch quadratic funding allocations from ScrollScan
@@ -167,75 +175,67 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
         try {
           console.log(`Fetching transactions for wallet: ${project.wallet_address}`);
           const walletData = await walletApi.getWalletDataFromScrollScan(project.wallet_address);
-          console.log('Wallet transactions:', walletData);
+          console.log('Wallet transactions data:', walletData);
           
-          if (walletData.success && walletData.data && walletData.data.transactions) {
+          if (walletData.success && walletData.data && Array.isArray(walletData.data.transactions)) {
             const transactions = walletData.data.transactions;
             console.log(`Found ${transactions.length} transactions`);
             
-            // Filter for transactions from the quadratic funding pool
+            // Filter for transactions from the quadratic funding pool address
+            const quadraticPoolAddress = '0xbe7a74b66eba3e612041467f04bcb86d18951044'.toLowerCase();
             const quadraticTransactions = transactions.filter((tx: any) => 
-              tx.from && tx.from.toLowerCase() === '0xbe7a74b66eba3e612041467f04bcb86d18951044'
+              tx.from && tx.from.toLowerCase() === quadraticPoolAddress
             );
             
             console.log(`Found ${quadraticTransactions.length} quadratic funding transactions:`, quadraticTransactions);
             
-            // Format quadratic funding transactions
-            const quadraticDonations = quadraticTransactions.map((tx: any) => ({
+            const formattedQfDonations = quadraticTransactions.map((tx: any) => ({
               id: `qf-${tx.hash}`,
-              amount: parseFloat(tx.value).toFixed(3),
+              amount: parseFloat(tx.value).toFixed(4), // Use 4 decimals
               donor: 'Quadratic Funding Pool',
-              date: formatDate(new Date(tx.timestamp * 1000).toISOString()),
+              timestamp_ms: tx.timestamp ? tx.timestamp * 1000 : 0,
               status: 'completed',
-              is_quadratic_funding: true
+              transaction_hash: tx.hash,
+              is_quadratic_funding: true,
+              created_at: tx.timestamp ? new Date(tx.timestamp * 1000).toISOString() : null // Store ISO string
             }));
-            
-            // Combine regular donations and quadratic funding
-            formattedDonations = [...formattedDonations, ...quadraticDonations];
-            
-            // Sort by date (newest first)
-            formattedDonations.sort((a, b) => 
-              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            );
-            
-            // Calculate quadratic funding total
-            const quadraticTotal = quadraticDonations.reduce((sum: number, d: any) => sum + parseFloat(d.amount), 0);
-            console.log(`Quadratic funding total: ${quadraticTotal.toFixed(3)} ETH`);
-            setQuadraticFundingTotal(quadraticTotal);
+            allDonations = allDonations.concat(formattedQfDonations);
+          } else {
+             console.warn("Failed to fetch or parse Scrollscan transactions");
           }
-        } catch (err) {
-          console.error("Error fetching quadratic funding transactions:", err);
+        } catch (qfError) {
+          console.error("Error fetching quadratic funding transactions:", qfError);
         }
       }
       
-      console.log('Formatted donations:', formattedDonations);
-      setRecentDonations(formattedDonations);
+      // Sort all donations by timestamp (newest first)
+      allDonations.sort((a, b) => b.timestamp_ms - a.timestamp_ms);
+      
+      console.log('Combined and sorted donations:', allDonations);
+      setRecentDonations(allDonations);
+      
+      // Calculate quadratic funding total from the combined list
+      const quadraticTotal = allDonations
+        .filter((d: any) => d.is_quadratic_funding)
+        .reduce((sum: number, d: any) => sum + parseFloat(d.amount), 0);
+      console.log(`Quadratic funding total: ${quadraticTotal.toFixed(4)} ETH`);
+      setQuadraticFundingTotal(quadraticTotal);
       
       // Calculate total raised including quadratic funding
-      let totalRaised = 0;
-      
-      // Add regular donations
-      if (response.data?.total_raised) {
-        totalRaised += parseFloat(response.data.total_raised);
-      }
-      
-      // Add quadratic funding transactions
-      const quadraticDonations = formattedDonations.filter((d: any) => d.is_quadratic_funding);
-      const quadraticTotal = quadraticDonations.reduce((sum: number, d: any) => sum + parseFloat(d.amount), 0);
-      totalRaised += quadraticTotal;
-      
-      console.log(`Total raised (including quadratic funding): ${totalRaised.toFixed(3)} ETH`);
+      let totalRaised = allDonations.reduce((sum: number, d: any) => sum + parseFloat(d.amount), 0);
+      console.log(`Total raised (from combined list): ${totalRaised.toFixed(4)} ETH`);
       
       // Update project funding status with total raised
       setProject((prev: any) => ({
         ...prev,
         funding: {
           ...prev?.funding,
-          raised: totalRaised.toFixed(3)
+          raised: totalRaised.toFixed(4)
         }
       }));
+      
     } catch (err) {
-      console.error("Error fetching donations:", err);
+      console.error("Error in fetchRecentDonations main block:", err);
       setRecentDonations([]);
     } finally {
       setDonationsLoading(false);
@@ -512,14 +512,16 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                       <div key={donation.id} className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0">
                         <div>
                           <div className="font-medium flex items-center gap-2">
-                            {donation.donor}
+                            {donation.donor || 'Anonymous Donor'}
                             {donation.is_quadratic_funding && (
                               <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800 hover:bg-purple-200">
                                 Quadratic Funding
                               </Badge>
                             )}
                           </div>
-                          <div className="text-sm text-gray-500">{formatDate(donation.created_at)}</div>
+                          <div className="text-sm text-gray-500">
+                            {donation.timestamp_ms ? formatDate(new Date(donation.timestamp_ms)) : 'Date unknown'}
+                          </div>
                           {donation.transaction_hash && (
                             <a
                               href={`https://sepolia.scrollscan.com/tx/${donation.transaction_hash}`}
@@ -712,14 +714,16 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                     <div key={donation.id} className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0">
                       <div>
                         <div className="font-medium flex items-center gap-2">
-                          {donation.donor}
+                          {donation.donor || 'Anonymous Donor'}
                           {donation.is_quadratic_funding && (
                             <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800 hover:bg-purple-200">
                               Quadratic Funding
                             </Badge>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">{formatDate(donation.created_at)}</div>
+                        <div className="text-sm text-gray-500">
+                          {donation.timestamp_ms ? formatDate(new Date(donation.timestamp_ms)) : 'Date unknown'}
+                        </div>
                         {donation.transaction_hash && (
                           <a
                             href={`https://sepolia.scrollscan.com/tx/${donation.transaction_hash}`}
@@ -732,7 +736,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                           </a>
                         )}
                       </div>
-                      <div className="font-semibold">{donation.amount} ETH</div>
+                      <div className="font-semibold">{formatCurrency(donation.amount)} ETH</div>
                     </div>
                   ))}
                 </div>
@@ -986,7 +990,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                           'text-red-500'}
                       `}
                       strokeWidth="8"
-                      strokeDasharray={`${project.verification_score * 2.89} 289`}
+                      strokeDasharray={`${(project.verification_score || 0) * 2.89} 289`}
                       strokeLinecap="round"
                       stroke="currentColor"
                       fill="transparent"
@@ -996,7 +1000,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-3xl font-bold">{project.verification_score}%</div>
+                    <div className="text-3xl font-bold">{project.verification_score || 0}%</div>
                     <div className="text-sm text-gray-500">Verified</div>
                   </div>
                 </div>
@@ -1005,12 +1009,13 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Verification Factors</h3>
                 <div className="space-y-3">
+                  {/* Placeholder Verification Factors - Replace with actual data if available */}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Project description clarity</span>
                     <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-green-500" 
-                        style={{ width: `${Math.min(project.verification_score + 10, 100)}%` }}
+                        style={{ width: `${Math.min((project.verification_score || 0) + 10, 100)}%` }}
                       ></div>
                     </div>
                   </div>
@@ -1019,52 +1024,25 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                     <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-amber-500" 
-                        style={{ width: `${Math.min(project.verification_score - 5, 100)}%` }}
+                        style={{ width: `${Math.min((project.verification_score || 0) - 5, 100)}%` }}
                       ></div>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Transparency rating</span>
-                    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-blue-500" 
-                        style={{ width: `${Math.min(project.verification_score + 5, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Charity reputation</span>
-                    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-indigo-500" 
-                        style={{ width: `${Math.min(project.verification_score + 15, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
+                  {/* Add more factors as needed */}
                 </div>
               </div>
               
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Improvement Suggestions</h3>
                 <div className="space-y-2">
+                   {/* Placeholder Suggestions - Replace with actual data if available */}
                   <div className="flex items-start gap-2">
                     <div className="bg-amber-100 p-1 rounded-full mt-0.5">
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
                     </div>
-                    <p className="text-gray-600">Add more specific details about project implementation</p>
+                    <p className="text-gray-600">Add more specific details about project implementation.</p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <div className="bg-amber-100 p-1 rounded-full mt-0.5">
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <p className="text-gray-600">Include expected timeline for each milestone</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="bg-amber-100 p-1 rounded-full mt-0.5">
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <p className="text-gray-600">Add detailed budget breakdown for each milestone</p>
-                  </div>
+                   {/* Add more suggestions as needed */}
                 </div>
               </div>
             </CardContent>
@@ -1072,7 +1050,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
               <Button 
                 variant="outline" 
                 className="w-full" 
-                onClick={() => router.push(`/dashboard/charity/verification/${projectId}`)}
+                onClick={() => router.push(`/dashboard/charity/verification/${projectId}`)} // Assuming such a page exists
               >
                 <ShieldCheck className="h-4 w-4 mr-2" />
                 Improve Verification Score

@@ -514,36 +514,6 @@ export const proposalsApi = {
       };
     }
   },
-  voteOnProposal: async (proposalId, data) => {
-    try {
-      const response = await api.post(`/proposals/${proposalId}/vote`, data);
-      return {
-        success: true,
-        data: response.data.data
-      };
-    } catch (error) {
-      console.error("Error voting on proposal:", error);
-      return {
-        success: false,
-        error: handleApiError(error)
-      };
-    }
-  },
-  getProposalVotes: async (proposalId) => {
-    try {
-      const response = await api.get(`/proposals/${proposalId}/votes`);
-      return {
-        success: true,
-        data: response.data.data
-      };
-    } catch (error) {
-      console.error("Error getting proposal votes:", error);
-      return {
-        success: false,
-        error: handleApiError(error)
-      };
-    }
-  },
   getAllProposals: async () => {
     try {
       const response = await api.get(`/proposals`);

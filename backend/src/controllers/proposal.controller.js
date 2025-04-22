@@ -244,10 +244,6 @@ const createProposal = async (req, res) => {
     
     logger.info(`Created proposal on blockchain with ID ${contractProposalId}, proceeding with database storage`);
     
-    // Get the list of all donors for the project
-    const donors = await getProjectDonors(project_id);
-    const required_approvals = Math.ceil(donors.length * 0.51); // 51% threshold for approval
-    
     // Create proposal in database
     const result = await db.query(
       `INSERT INTO proposals (
@@ -276,36 +272,23 @@ const createProposal = async (req, res) => {
         amount,
         transfer_type === 'bank' ? bank_account_id : null,
         contractProposalId,
-        'pending_donor_approval', // Changed from 'pending_verification' to 'pending_donor_approval'
+        'pending_verification', // Changed from 'pending_donor_approval' to 'pending_verification'
         null, // AI verification score will be null initially
         null, // AI verification notes will be null initially
         transfer_type,
         transfer_type === 'crypto' ? crypto_address : null,
-        required_approvals, // Required approvals for donors
+        0, // Required approvals - set to 0 since we're not using donor voting
         0 // Current approvals start at 0
       ]
     );
     
     const proposal = result.rows[0];
     
-    // Create the donor_votes table if it doesn't exist
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS donor_votes (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        proposal_id INTEGER REFERENCES proposals(id),
-        vote BOOLEAN NOT NULL,
-        comment TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, proposal_id)
-      )
-    `);
-    
     // Create audit log
     await db.query(
       `INSERT INTO audit_logs 
-       (user_id, action, entity_type, entity_id, details, ip_address) 
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+        (user_id, action, entity_type, entity_id, details, ip_address) 
+        VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         req.user.id,
         'CREATE_PROPOSAL',
@@ -315,22 +298,19 @@ const createProposal = async (req, res) => {
           project_id,
           milestone_id: milestoneId,
           amount,
-          contract_proposal_id: contractProposalId,
-          required_approvals
+          contract_proposal_id: contractProposalId
         }),
         req.ip
       ]
     );
     
-    // Trigger initial AI verification for informational purposes only
-    // The result won't automatically approve the proposal, but will help donors make decisions
+    // Trigger AI verification to automatically approve or reject the proposal
     await triggerAiVerification(proposal.id);
     
     res.status(201).json({
       success: true,
       data: {
-        ...proposal,
-        required_approvals
+        ...proposal
       }
     });
   } catch (error) {
@@ -383,18 +363,23 @@ const triggerAiVerification = async (proposalId) => {
     const evaluation = await aiService.evaluateProposal(proposalId, proposalData);
     
     // Update proposal with AI verification results
-    // Note that we don't change the status here - it stays as 'pending_donor_approval'
+    // Now we automatically set status based on AI verification result
+    const newStatus = evaluation.verified ? 'approved' : 'rejected';
+    
     await db.query(
       `UPDATE proposals 
-       SET ai_verification_score = $1, ai_verification_notes = $2 
-       WHERE id = $3`,
-      [evaluation.score, evaluation.notes, proposalId]
+       SET ai_verification_score = $1, ai_verification_notes = $2, status = $3 
+       WHERE id = $4`,
+      [evaluation.score, evaluation.notes, newStatus, proposalId]
     );
     
-    logger.info(`AI verification completed for proposal ${proposalId}: Score ${evaluation.score}, Verified: ${evaluation.verified}`);
+    logger.info(`AI verification completed for proposal ${proposalId}: Score ${evaluation.score}, Verified: ${evaluation.verified}, Status: ${newStatus}`);
     
-    // For proposal processing, we now rely on donor votes, not AI verification
-    // The AI verification is for informational purposes only
+    // If the proposal was approved by AI, automatically process it for execution
+    if (evaluation.verified) {
+      // Process the approved proposal
+      await processVerifiedProposal(proposalId, proposal);
+    }
     
   } catch (error) {
     logger.error(`Error in AI verification for proposal ${proposalId}:`, error);
@@ -850,6 +835,8 @@ const aiVerifyProposal = async (req, res) => {
     const aiResult = await aiService.evaluateProposal(proposalId, proposal);
     
     // Update proposal with AI verification result
+    const newStatus = aiResult.verified ? 'approved' : 'rejected';
+    
     await db.query(
       `UPDATE proposals SET 
         ai_verification_score = $1, 
@@ -860,13 +847,16 @@ const aiVerifyProposal = async (req, res) => {
       [
         aiResult.score,
         aiResult.notes,
-        aiResult.verified ? 'verified_by_ai' : 'rejected_by_ai',
+        newStatus,
         proposalId
       ]
     );
     
-    // If verified by AI and this is an admin-triggered verification,
-    // don't automatically process the proposal, let the admin handle it
+    // If proposal is approved, process it for execution
+    if (aiResult.verified) {
+      // Process the approved proposal
+      await processVerifiedProposal(proposalId, proposal);
+    }
     
     // Return success response
     res.json({
@@ -875,7 +865,8 @@ const aiVerifyProposal = async (req, res) => {
         proposal_id: proposalId,
         verification_score: aiResult.score,
         verified: aiResult.verified,
-        verification_notes: aiResult.notes
+        verification_notes: aiResult.notes,
+        status: newStatus
       }
     });
   } catch (error) {
@@ -1281,241 +1272,12 @@ const getProjectDonors = async (projectId) => {
 
 // Add this function to allow donors to vote on proposals
 const voteOnProposal = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { vote, comment } = req.body;
-    const userId = req.user.id;
-    
-    // Check if proposal exists
-    const proposalResult = await db.query(
-      'SELECT p.*, pr.charity_id, pr.id AS project_id FROM proposals p JOIN projects pr ON p.project_id = pr.id WHERE p.id = $1',
-      [id]
-    );
-    
-    if (proposalResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          message: 'Proposal not found',
-          code: 'RESOURCE_NOT_FOUND'
-        }
-      });
-    }
-    
-    const proposal = proposalResult.rows[0];
-    
-    // Check if proposal is in the right state for voting
-    if (proposal.status !== 'pending_donor_approval') {
-      return res.status(400).json({
-        success: false,
-        error: {
-          message: 'This proposal is not currently accepting votes',
-          code: 'INVALID_PROPOSAL_STATE'
-        }
-      });
-    }
-    
-    // Check if user has donated to this project
-    const isDonor = await hasUserDonated(userId, proposal.project_id);
-    
-    if (!isDonor) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          message: 'Only donors can vote on this proposal',
-          code: 'PERMISSION_DENIED'
-        }
-      });
-    }
-    
-    // Check if user has already voted
-    const existingVoteResult = await db.query(
-      'SELECT id FROM donor_votes WHERE user_id = $1 AND proposal_id = $2',
-      [userId, id]
-    );
-    
-    const hasVoted = existingVoteResult.rows.length > 0;
-    
-    // Start a transaction for the vote operations
-    const client = await db.pool.connect();
-    
-    try {
-      await client.query('BEGIN');
-      
-      if (hasVoted) {
-        // Update existing vote
-        await client.query(
-          'UPDATE donor_votes SET vote = $1, comment = $2 WHERE user_id = $3 AND proposal_id = $4',
-          [vote, comment, userId, id]
-        );
-      } else {
-        // Insert new vote
-        await client.query(
-          'INSERT INTO donor_votes (user_id, proposal_id, vote, comment) VALUES ($1, $2, $3, $4)',
-          [userId, id, vote, comment]
-        );
-      }
-      
-      // Count the current approvals
-      const approvalsResult = await client.query(
-        'SELECT COUNT(*) as count FROM donor_votes WHERE proposal_id = $1 AND vote = true',
-        [id]
-      );
-      
-      const currentApprovals = parseInt(approvalsResult.rows[0].count, 10);
-      
-      // Update the proposal with the current approval count
-      await client.query(
-        'UPDATE proposals SET current_approvals = $1 WHERE id = $2',
-        [currentApprovals, id]
-      );
-      
-      // Check if proposal should be approved
-      if (currentApprovals >= proposal.required_approvals) {
-        // Update proposal status to 'approved'
-        await client.query(
-          'UPDATE proposals SET status = $1 WHERE id = $2',
-          ['approved', id]
-        );
-        
-        // Execute the proposal if it's now approved
-        await client.query('COMMIT');
-        
-        // Get the updated proposal
-        const updatedProposalResult = await db.query(
-          'SELECT * FROM proposals WHERE id = $1',
-          [id]
-        );
-        
-        const updatedProposal = updatedProposalResult.rows[0];
-        
-        // Execute the proposal now that it's been approved by donors
-        await executeVerifiedProposal(id, updatedProposal);
-      } else {
-        await client.query('COMMIT');
-      }
-      
-      // Get the updated proposal for response
-      const finalProposalResult = await db.query(
-        'SELECT * FROM proposals WHERE id = $1',
-        [id]
-      );
-      
-      // Create audit log
-      await db.query(
-        `INSERT INTO audit_logs 
-         (user_id, action, entity_type, entity_id, details, ip_address) 
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          userId,
-          'PROPOSAL_VOTE',
-          'proposal',
-          id,
-          JSON.stringify({
-            vote,
-            comment: comment ? true : false,
-            is_approved: finalProposalResult.rows[0].status === 'approved'
-          }),
-          req.ip
-        ]
-      );
-      
-      res.json({
-        success: true,
-        data: {
-          proposal: finalProposalResult.rows[0],
-          vote: {
-            user_id: userId,
-            proposal_id: id,
-            vote,
-            has_comment: !!comment
-          }
-        }
-      });
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  } catch (error) {
-    logger.error('Error voting on proposal:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        message: 'Failed to record vote',
-        code: 'VOTE_ERROR'
-      }
-    });
-  }
+  // Old voting implementation removed...
 };
 
 // Add this function to get votes for a proposal
 const getProposalVotes = async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Check if proposal exists
-    const proposalResult = await db.query(
-      'SELECT * FROM proposals WHERE id = $1',
-      [id]
-    );
-    
-    if (proposalResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          message: 'Proposal not found',
-          code: 'RESOURCE_NOT_FOUND'
-        }
-      });
-    }
-    
-    // Get all votes for the proposal
-    const votesResult = await db.query(
-      `SELECT dv.*, u.full_name 
-       FROM donor_votes dv 
-       JOIN users u ON dv.user_id = u.id 
-       WHERE dv.proposal_id = $1 
-       ORDER BY dv.created_at DESC`,
-      [id]
-    );
-    
-    // Get voting statistics
-    const statsResult = await db.query(
-      `SELECT 
-         COUNT(*) as total_votes,
-         SUM(CASE WHEN vote = true THEN 1 ELSE 0 END) as approvals,
-         SUM(CASE WHEN vote = false THEN 1 ELSE 0 END) as rejections
-       FROM donor_votes 
-       WHERE proposal_id = $1`,
-      [id]
-    );
-    
-    const stats = statsResult.rows[0];
-    
-    res.json({
-      success: true,
-      data: {
-        votes: votesResult.rows,
-        stats: {
-          total: parseInt(stats.total_votes, 10),
-          approvals: parseInt(stats.approvals, 10),
-          rejections: parseInt(stats.rejections, 10),
-          required_approvals: proposalResult.rows[0].required_approvals
-        }
-      }
-    });
-  } catch (error) {
-    logger.error('Error getting proposal votes:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        message: 'Failed to get votes',
-        code: 'FETCH_ERROR'
-      }
-    });
-  }
+  // Old vote retrieval implementation removed...
 };
 
 /**

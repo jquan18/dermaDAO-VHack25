@@ -8,8 +8,6 @@ const {
   recordTransaction,
   executeProposal,
   getProposalDetails,
-  voteOnProposal,
-  getProposalVotes,
   getAllProposals
 } = require('../controllers/proposal.controller');
 const { authenticate, authorizeAdmin, authorizeCharity } = require('../middleware/auth');
@@ -146,30 +144,6 @@ router.post(
     authorizeCharity
   ],
   executeProposal
-);
-
-/**
- * @route POST /api/proposals/:id/vote
- * @description Vote on a proposal (for donors only)
- * @access Private (Donors)
- */
-router.post('/:id/vote',
-  authenticate,
-  [
-    body('vote').isBoolean().withMessage('Vote must be a boolean'),
-    body('comment').optional().isString().withMessage('Comment must be a string')
-  ],
-  voteOnProposal
-);
-
-/**
- * @route GET /api/proposals/:id/votes
- * @description Get all votes for a proposal
- * @access Private
- */
-router.get('/:id/votes',
-  authenticate,
-  getProposalVotes
 );
 
 module.exports = router; 

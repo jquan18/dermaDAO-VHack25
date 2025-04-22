@@ -72,11 +72,11 @@ export default function DonorProposalsPage() {
   // Get status badge component based on status
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "pending_donor_approval":
+      case "pending_verification":
         return (
           <Badge variant="outline" className="flex items-center gap-1 border-yellow-500 text-yellow-500">
-            <VoteIcon size={14} />
-            <span>Awaiting Votes</span>
+            <AlertCircle size={14} />
+            <span>Pending Verification</span>
           </Badge>
         );
       case "approved":
@@ -118,8 +118,9 @@ export default function DonorProposalsPage() {
       
       <div className="mb-6">
         <p className="text-muted-foreground">
-          As a donor, you have the power to approve or reject withdrawal proposals for projects you've donated to.
-          Each proposal requires approval from at least 51% of donors before funds can be released.
+          Withdrawal proposals for projects you've donated to are automatically verified by our AI system.
+          The system analyzes proposal evidence and verifies milestone completion before automatically
+          executing approved transactions.
         </p>
       </div>
       
@@ -168,7 +169,7 @@ export default function DonorProposalsPage() {
                   {proposal.description}
                 </p>
                 
-                {proposal.status === 'pending_donor_approval' && (
+                {proposal.status === 'pending_verification' && (
                   <div className="mt-3 flex items-center text-sm text-muted-foreground">
                     <Users size={14} className="mr-1" />
                     <span>
@@ -188,7 +189,7 @@ export default function DonorProposalsPage() {
                   className="flex items-center"
                   onClick={() => router.push(`/dashboard/charity/proposals/${proposal.id}`)}
                 >
-                  {proposal.status === 'pending_donor_approval' ? 'Vote Now' : 'View Details'}
+                  {proposal.status === 'pending_verification' ? 'View Verification' : 'View Details'}
                   <ChevronRight size={16} className="ml-1" />
                 </Button>
               </CardFooter>

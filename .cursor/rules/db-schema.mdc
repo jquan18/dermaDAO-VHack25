@@ -3,6 +3,7 @@ description: Any interface that will call an API route to the backend that invol
 globs: 
 alwaysApply: false
 ---
+# Always give me SQL code (without comment) only if you want to modify the database
 # DermaDAO Database Schema
 
 ## Overview
@@ -523,3 +524,10 @@ The following updates have been made to the schema:
    ```
 
 These updates establish companies as entities that can sponsor funding pools, add more detailed configuration options for pools including branding (logo and banner images), matching ratio for donations, and explicit start/end dates for funding cycles. The funding structure has been simplified by removing the round-based allocation system, while enhancing donation tracking capabilities with direct pool donations and external contribution tracking.
+
+UPDATE proposals 
+SET status = 'pending_verification' 
+WHERE status = 'pending_donor_approval';
+
+UPDATE proposals
+SET required_approvals = 0, current_approvals = 0;

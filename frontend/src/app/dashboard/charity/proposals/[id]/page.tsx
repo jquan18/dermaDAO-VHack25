@@ -33,8 +33,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { proposalsApi } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ProposalExecuteButton } from "@/components/proposals/proposal-execute-button";
-import { ProposalVoteForm } from "@/components/proposals/proposal-vote-form";
+import { ProposalVerificationStatus } from "@/components/proposals/proposal-vote-form";
 import { cn } from "@/lib/utils";
 
 type ProposalDetailProps = {
@@ -140,43 +139,43 @@ export default function ProposalDetailPage({ params }: ProposalDetailProps) {
       case 'pending_verification':
         return {
           icon: Clock,
-          title: 'Verification In Progress',
-          description: 'Your withdrawal request is being verified by our AI system.',
+          title: 'AI Verification In Progress',
+          description: 'Your withdrawal request is being verified by our AI system. This process is automatic.',
           color: 'text-yellow-500',
         };
       case 'approved':
         return {
           icon: CheckCircle2,
-          title: 'Proposal Approved',
-          description: 'Your withdrawal request has been approved and is awaiting fund transfer.',
+          title: 'Proposal Approved by AI',
+          description: 'Your withdrawal request has been approved by AI verification and transaction execution has been initiated.',
           color: 'text-green-500',
         };
       case 'transfer_initiated':
         return {
           icon: Building,
           title: 'Bank Transfer Initiated',
-          description: 'Funds are being transferred to your bank account.',
+          description: 'Funds are being automatically transferred to your bank account after AI approval.',
           color: 'text-blue-500',
         };
       case 'completed':
         return {
           icon: CheckCircle2,
           title: 'Transfer Completed',
-          description: 'Funds have been successfully transferred to your bank account.',
+          description: 'Funds have been successfully transferred to your bank account after AI verification and approval.',
           color: 'text-green-500',
         };
       case 'rejected':
         return {
           icon: AlertTriangle,
-          title: 'Proposal Rejected',
-          description: 'Your withdrawal request was not approved. Please review the verification notes for more information.',
+          title: 'Proposal Rejected by AI',
+          description: 'Your withdrawal request was not approved by our AI verification system. Please review the verification notes for more information.',
           color: 'text-red-500',
         };
       case 'processing_error':
         return {
           icon: AlertTriangle,
           title: 'Processing Error',
-          description: 'There was an error processing your withdrawal request. Please contact support.',
+          description: 'There was an error processing your withdrawal request during automated execution. Please contact support.',
           color: 'text-red-500',
         };
       default:
@@ -402,23 +401,16 @@ export default function ProposalDetailPage({ params }: ProposalDetailProps) {
                     </a>
                   </div>
                 )}
-                
-                {['approved', 'pending_transfer'].includes(proposal.status) && (
-                  <ProposalExecuteButton 
-                    proposal={proposal}
-                    onExecuted={handleRefreshStatus}
-                    className="w-full"
-                  />
-                )}
               </CardContent>
             </Card>
             
             {/* Voting card */}
-            <ProposalVoteForm 
+            <ProposalVerificationStatus 
               proposalId={proposal.id.toString()}
               contractProposalId={proposal.contract_proposal_id}
               aiScore={proposal.ai_verification_score}
               aiNotes={proposal.ai_verification_notes}
+              status={proposal.status}
             />
           </div>
         ) : (
