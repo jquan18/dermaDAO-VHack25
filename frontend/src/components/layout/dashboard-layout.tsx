@@ -186,6 +186,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           icon: HeartHandshake,
         },
         {
+          name: "Project Voting",
+          href: "/dashboard/donations/projects-to-vote",
+          icon: FileText,
+        },
+        {
           name: "Proposal Voting",
           href: "/dashboard/donations/proposals",
           icon: FileText,

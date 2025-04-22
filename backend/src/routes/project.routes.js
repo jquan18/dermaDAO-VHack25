@@ -32,7 +32,9 @@ const milestoneValidation = [
 // Routes
 router.get('/', projectController.getAllProjects);
 router.get('/charity/:charity_id', projectController.getCharityProjects);
+router.get('/to-vote', authenticate, projectController.getProjectsToVote);
 router.get('/:id/verification', authenticate, projectController.getVerificationStatus);
+router.get('/:id/transactions', projectController.getProjectTransactions);
 router.get('/:id', projectController.getProjectById);
 router.post('/', authenticate, authorizeCharity, projectValidation, projectController.createProject);
 router.put('/:id', authenticate, authorizeCharity, projectController.updateProject);
@@ -43,5 +45,10 @@ router.put('/:id/milestones', authenticate, authorizeCharity, milestoneValidatio
 
 // Verify a project (admin only)
 router.put('/:id/verify', authenticate, authorizeAdmin, projectController.verifyProject);
+
+// Vote on project verification (only verified users)
+router.post('/:id/vote', authenticate, projectController.voteOnProject);
+// Get votes for project verification
+router.get('/:id/votes', authenticate, projectController.getProjectVotes);
 
 module.exports = router; 

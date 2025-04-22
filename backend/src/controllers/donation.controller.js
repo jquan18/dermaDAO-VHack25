@@ -313,22 +313,29 @@ const donationController = {
         }
       }
       
-      // Get the current funding round if exists
-      const currentRoundQuery = await db.query(`
-        SELECT id FROM funding_rounds 
-        WHERE start_time <= NOW() AND end_time >= NOW()
-        LIMIT 1
-      `);
-      
-      const roundId = currentRoundQuery.rows.length > 0 ? currentRoundQuery.rows[0].id : null;
-      const isQuadraticEligible = roundId !== null && req.user.is_worldcoin_verified;
+      // Get the project's pool ID from the database
+      const projectQuery = await db.query('SELECT pool_id FROM projects WHERE id = $1', [project_id]);
+      if (projectQuery.rows.length === 0) {
+        throw new Error('Project not found for donation');
+      }
+      const poolId = projectQuery.rows[0].pool_id;
 
-      // Save donation in database
+      // Check if the pool is active (optional, depends on business logic)
+      let isPoolActive = false;
+      if (poolId !== null) {
+          const poolQuery = await db.query('SELECT is_active FROM funding_pools WHERE id = $1', [poolId]);
+          isPoolActive = poolQuery.rows.length > 0 && poolQuery.rows[0].is_active;
+      }
+      
+      // Determine if the donation is eligible for quadratic funding
+      const isQuadraticEligible = poolId !== null && isPoolActive && req.user.is_worldcoin_verified;
+
+      // Save donation in database, using pool_id instead of round_id
       const donation = await db.query(
-        `INSERT INTO donations (amount, project_id, user_id, transaction_hash, round_id, quadratic_eligible) 
-         VALUES ($1, $2, $3, $4, $5, $6) 
+        `INSERT INTO donations (amount, project_id, user_id, transaction_hash, pool_id, quadratic_eligible, donation_type) 
+         VALUES ($1, $2, $3, $4, $5, $6, 'project') 
          RETURNING *`,
-        [amount, project_id, user_id, finalTransactionHash, roundId, isQuadraticEligible]
+        [amount, project_id, user_id, finalTransactionHash, poolId, isQuadraticEligible]
       );
 
       res.status(201).json({

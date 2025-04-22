@@ -34,6 +34,8 @@ import {
   BarChart3,
   Plus,
   ExternalLink,
+  ArrowUpRight,
+  ArrowDownLeft,
 } from "lucide-react";
 import { projectsApi, donationsApi, proposalsApi, walletApi } from "@/lib/api";
 import { formatCurrency, formatDate, calculateProgress } from "@/lib/utils";
@@ -57,6 +59,10 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
   // Recent donations
   const [recentDonations, setRecentDonations] = useState<any[]>([]);
   const [donationsLoading, setDonationsLoading] = useState(false);
+  
+  // Transactions
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
   
   // Copy wallet address
   const [copied, setCopied] = useState(false);
@@ -102,6 +108,30 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
       setError(err.response?.data?.error?.message || "Failed to load project details");
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Fetch transactions for project
+  const fetchTransactions = async () => {
+    try {
+      setTransactionsLoading(true);
+      console.log(`Fetching transactions for project ID: ${projectId}`);
+      
+      const response = await fetch(`/api/projects/${projectId}/transactions`);
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        console.log('Transactions API response:', data);
+        setTransactions(data.data.transactions || []);
+      } else {
+        console.error('Error fetching transactions:', data.error?.message || 'Failed to fetch transactions');
+        setTransactions([]);
+      }
+    } catch (err) {
+      console.error("Error fetching transactions:", err);
+      setTransactions([]);
+    } finally {
+      setTransactionsLoading(false);
     }
   };
   
@@ -216,6 +246,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
     if (projectId) {
       fetchProject();
       fetchRecentDonations();
+      fetchTransactions();
     }
   }, [projectId]);
   
@@ -319,10 +350,11 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="grid grid-cols-4 md:grid-cols-5 mb-4">
+        <TabsList className="grid grid-cols-5 md:grid-cols-6 mb-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="milestones">Milestones</TabsTrigger>
           <TabsTrigger value="donations">Donations</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="proposals">Proposals</TabsTrigger>
           <TabsTrigger value="verification" className="hidden md:block">Verification</TabsTrigger>
         </TabsList>
@@ -745,6 +777,115 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                     </div>
                   </div>
                 )}
+              </div>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        {/* Transactions Tab */}
+        <TabsContent value="transactions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Wallet Transactions</CardTitle>
+              <CardDescription>All blockchain transactions for this project's wallet</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {transactionsLoading ? (
+                <div className="space-y-4 animate-pulse">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex justify-between items-center border-b pb-3">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                        <div className="h-3 bg-gray-200 rounded w-32"></div>
+                      </div>
+                      <div className="h-5 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : transactions.length > 0 ? (
+                <div className="space-y-4 divide-y">
+                  {transactions.map((tx) => (
+                    <div key={tx.hash} className="pt-4 first:pt-0 flex justify-between items-center">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          {tx.isIncoming ? (
+                            <div className="bg-green-100 p-1.5 rounded-full">
+                              <ArrowDownLeft className="h-4 w-4 text-green-600" />
+                            </div>
+                          ) : (
+                            <div className="bg-red-100 p-1.5 rounded-full">
+                              <ArrowUpRight className="h-4 w-4 text-red-600" />
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-medium">
+                              {tx.isIncoming ? 'Received from' : 'Sent to'}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {tx.isIncoming ? tx.from.slice(0, 6) + '...' + tx.from.slice(-4) : tx.to.slice(0, 6) + '...' + tx.to.slice(-4)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-1">
+                          <a
+                            href={`https://sepolia.scrollscan.com/tx/${tx.hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center"
+                          >
+                            {tx.hash.slice(0, 6)}...{tx.hash.slice(-4)}
+                            <ExternalLink className="ml-1 h-3 w-3" />
+                          </a>
+                          <div className="text-xs text-gray-500">
+                            {formatDate(new Date(tx.timestamp * 1000).toISOString())}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`font-semibold ${tx.isIncoming ? 'text-green-600' : 'text-red-600'}`}>
+                        {tx.isIncoming ? '+' : '-'}{parseFloat(tx.value).toFixed(4)} ETH
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-900">No transactions yet</h3>
+                  <p className="text-gray-500">
+                    Your project's wallet has no transaction history yet
+                  </p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="bg-gray-50 border-t">
+              <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="bg-gray-200 p-2 rounded-full">
+                    <CircleDollarSign className="h-5 w-5 text-gray-700" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Wallet Balance</div>
+                    <div className="font-medium">{walletBalance} ETH</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="bg-gray-200 p-2 rounded-full">
+                    <BarChart3 className="h-5 w-5 text-gray-700" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Total Transactions</div>
+                    <div className="font-medium">{transactions.length}</div>
+                  </div>
+                </div>
+                <a
+                  href={`https://sepolia.scrollscan.com/address/${project?.wallet_address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline flex items-center"
+                >
+                  View in ScrollScan
+                  <ExternalLink className="ml-1 h-4 w-4" />
+                </a>
               </div>
             </CardFooter>
           </Card>

@@ -859,6 +859,7 @@ const poolController = {
           p.funding_goal,
           p.verification_score,
           p.is_active,
+          p.is_verified,
           c.id as charity_id,
           c.name as charity_name,
           COUNT(d.id) as donation_count,

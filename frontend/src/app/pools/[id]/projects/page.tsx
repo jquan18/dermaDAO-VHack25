@@ -59,6 +59,7 @@ interface Project {
   };
   category?: string;
   tags?: string[];
+  is_verified: boolean;
 }
 
 interface ProjectsPageProps {
@@ -107,8 +108,10 @@ export default function PoolProjectsPage() {
         
         // Fetch projects associated with this pool
         const projectsResponse = await api.getPoolProjects(poolId);
-        setProjects(projectsResponse.data);
-        setFilteredProjects(projectsResponse.data);
+        // Only include verified projects for normal users
+        const verifiedProjects = projectsResponse.data.filter((project: Project) => project.is_verified);
+        setProjects(verifiedProjects);
+        setFilteredProjects(verifiedProjects);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({

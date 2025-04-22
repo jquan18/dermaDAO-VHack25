@@ -295,7 +295,34 @@ export const projectsApi = {
       verification_notes: notes 
     });
     return response.data;
-  }
+  },
+  // Get projects pending verification vote for the current donor
+  getProjectsToVote: async () => {
+    const response = await api.get('/projects/to-vote');
+    return response.data;
+  },
+  // Cast a vote on a project's verification
+  voteProject: async (projectId: number, vote: boolean, comment?: string) => {
+    const response = await api.post(`/projects/${projectId}/vote`, { vote, comment });
+    return response.data;
+  },
+  // Fetch verification votes for a project
+  getProjectVotes: async (projectId: string) => {
+    const response = await api.get(`/projects/${projectId}/votes`);
+    return response.data;
+  },
+  getProjectById: async (id: string) => {
+    try {
+      const response = await api.get(`/projects/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+      return {
+        success: false,
+        error: { message: 'Failed to fetch project details', code: 'FETCH_ERROR' }
+      };
+    }
+  },
 };
 
 // Donations API
@@ -1010,4 +1037,5 @@ export const userRoleApi = {
   }
 };
 
-export default api; 
+// Default export for backward compatibility
+export default projectsApi; 

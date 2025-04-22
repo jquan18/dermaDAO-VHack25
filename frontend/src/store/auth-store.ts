@@ -164,12 +164,12 @@ export const useAuthStore = create<AuthState>()(
           // Use the new Worldcoin OAuth flow with real verification
           const response = await authApi.getWorldcoinUrl();
           
-          if (!response.data?.success || !response.data?.data?.auth_url) {
+          if (!response.success || !response.data?.auth_url) {
             throw new Error("Failed to get Worldcoin authorization URL");
           }
           
           // Redirect to Worldcoin for verification
-          window.location.href = response.data.data.auth_url;
+          window.location.href = response.data.auth_url;
           
           // Set a temporary state - the actual verification will happen on callback
           set({

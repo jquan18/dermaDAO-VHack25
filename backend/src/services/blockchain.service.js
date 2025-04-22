@@ -22,11 +22,11 @@ const sendTransaction = async (contractInteraction, description) => {
     const tx = await contractInteraction;
     logger.info(`Transaction sent: ${tx.hash}. Waiting for confirmation...`);
     const receipt = await tx.wait();
-    logger.info(`Transaction confirmed: ${receipt.transactionHash}. Status: ${receipt.status === 1 ? 'Success' : 'Failed'}`);
+    logger.info(`Transaction confirmed: ${receipt.hash}. Status: ${receipt.status === 1 ? 'Success' : 'Failed'}`);
     if (receipt.status !== 1) {
-      throw new Error(`Transaction failed: ${receipt.transactionHash}`);
+      throw new Error(`Transaction failed: ${receipt.hash}`);
     }
-    return { success: true, receipt, transactionHash: receipt.transactionHash };
+    return { success: true, receipt, transactionHash: receipt.hash };
   } catch (error) {
     logger.error(`Error during ${description}: ${error.message}`, {
       error: error,
@@ -237,7 +237,14 @@ const verifyProject = async (projectId, verified) => {
     
     const platformContract = blockchainConfig.getSignedContract(blockchainConfig.platformContract);
     
-    const interaction = platformContract.verifyProject(projectId, verified);
+    // Adjust projectId to be 0-indexed for the contract
+    const contractProjectId = projectId;
+    if (contractProjectId < 0) {
+      throw new Error(`Invalid project ID: ${projectId} resulted in negative contract ID`);
+    }
+    
+    logger.info(`Using contract project ID ${contractProjectId} for database ID ${projectId}`);
+    const interaction = platformContract.verifyProject(contractProjectId, verified);
     const result = await sendTransaction(interaction, `verify project ${projectId}`);
     
     return result;
@@ -339,22 +346,31 @@ const createProjectWallet = async (adminId, projectId, name, description, charit
           transactionHash: receipt.hash,
           logs: receipt.logs.length
         });
+        // Log raw logs for debugging
+        logger.debug('Raw transaction logs:', JSON.stringify(receipt.logs, null, 2));
         throw new Error('Failed to find ProjectCreated event');
       }
+      
+      // Log the parsed event for debugging
+      logger.debug('Parsed ProjectCreated event:', JSON.stringify(projectCreatedEvent, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value // Convert BigInts to strings for JSON
+      , 2));
   
-      // Extract the relevant fields from the event
-      const contractProjectId = Number(projectCreatedEvent.args[0]); // Project ID from event
-      const projectPoolId = Number(projectCreatedEvent.args[1]); // Pool ID from event
-      const projectName = projectCreatedEvent.args[2]; // Project name from event
-      const walletAddress = projectCreatedEvent.args[3]; // Extract wallet address from event (should be an Ethereum address)
+      // Extract the relevant fields from the event according to the contract definition
+      // event ProjectCreated(uint256 indexed projectId, uint256 indexed charityId, uint256 indexed poolId, string name, address walletAddress);
+      const contractProjectIdFromEvent = Number(projectCreatedEvent.args[0]); // Correct: projectId is at index 0
+      const eventCharityId = Number(projectCreatedEvent.args[1]); // Correct: charityId is at index 1
+      const eventPoolId = Number(projectCreatedEvent.args[2]); // Correct: poolId is at index 2
+      const eventProjectName = projectCreatedEvent.args[3]; // Correct: name is at index 3
+      const walletAddress = projectCreatedEvent.args[4]; // Correct: walletAddress is at index 4
       
       // Verify wallet address is a proper Ethereum address
-      if (!walletAddress || !walletAddress.startsWith('0x') || walletAddress.length !== 42) {
+      if (!walletAddress || !ethers.isAddress(walletAddress)) { // Use ethers.isAddress for validation
         logger.error(`Invalid wallet address returned from contract: ${walletAddress}`);
         throw new Error('Invalid wallet address format returned from blockchain');
       }
       
-      logger.info(`Project created with blockchain ID: ${contractProjectId}, name: ${projectName}, pool: ${projectPoolId}, wallet address: ${walletAddress}`);
+      logger.info(`Project created with blockchain ID: ${contractProjectIdFromEvent}, name: ${eventProjectName}, pool: ${eventPoolId}, wallet address: ${walletAddress}`);
       
       return walletAddress;
     } catch (txError) {
@@ -845,7 +861,7 @@ const distributeQuadraticFunding = async (poolId, projectsForDistribution = []) 
 
     // 4. Parse allocation events
     let distributions = [];
-    logger.info('Parsing logs for distribution events...');
+    logger.info(`Parsing logs for distribution events from tx ${result.transactionHash}...`);
     for (const log of result.receipt.logs) {
       try {
         const parsedLog = platformContract.interface.parseLog(log);
@@ -876,7 +892,7 @@ const distributeQuadraticFunding = async (poolId, projectsForDistribution = []) 
         }
       } catch (e) { /* Ignore logs not parseable by platform ABI */ }
     }
-    logger.info(`Found ${distributions.length} project allocations in logs for pool ${poolId} (Contract ID: ${contractPoolId}).`);
+    logger.info(`Found ${distributions.length} project allocations in logs for DB Pool ${poolId} (Contract ID: ${contractPoolId}).`);
 
     return {
       success: true,
@@ -1075,64 +1091,6 @@ const createPoolOnContract = async (poolData) => {
       // Log the specific DB pool ID if available
       logger.error(`Failed to create pool (DB ID ${poolData?.poolId}) on blockchain: ${error.message}`, { error });
       return { success: false, error: error.message };
-  }
-};
-
-/**
- * Add a project to a funding pool
- * @param {number} projectId - Project ID
- * @param {number} poolId - Database Pool ID
- * @returns {Promise<Object>} Result object with success flag
- */
-const addProjectToPool = async (projectId, poolId) => {
-  try {
-    logger.info(`Adding project ${projectId} to pool ${poolId} in database`);
-
-    // Get the contract_pool_id from the database
-    const poolResult = await db.query(
-      'SELECT contract_pool_id FROM funding_pools WHERE id = $1',
-      [poolId]
-    );
-
-    if (poolResult.rows.length === 0) {
-      logger.error(`Funding pool ${poolId} not found in database`);
-      return {
-        success: false,
-        error: 'Funding pool not found'
-      };
-    }
-
-    // Get the contract_pool_id (blockchain pool ID)
-    const contractPoolId = poolResult.rows[0].contract_pool_id !== null 
-      ? poolResult.rows[0].contract_pool_id 
-      : 0; // Fallback to 0 if null
-
-    logger.info(`Using contract pool ID ${contractPoolId} for database pool ID ${poolId}`);
-
-    // Get platform contract
-    const platformContract = await getPlatformContract();
-
-    // Add project to pool on blockchain using the contract_pool_id
-    const transaction = await platformContract.addProjectToPool(projectId, contractPoolId);
-    logger.info(`Add project to pool transaction initiated with hash: ${transaction.hash}`);
-
-    // Wait for transaction to be mined
-    const receipt = await transaction.wait();
-
-    logger.info(`Successfully added project ${projectId} to contract pool ${contractPoolId}, tx hash: ${receipt.hash}`);
-
-    return {
-      success: true,
-      data: {
-        transaction_hash: receipt.hash
-      }
-    };
-  } catch (error) {
-    logger.error(`Error adding project ${projectId} to pool ${poolId}:`, error);
-    return {
-      success: false,
-      error: error.message || 'Unknown error adding project to pool'
-    };
   }
 };
 
@@ -1376,6 +1334,53 @@ const donateToFundingPool = async (
   }
 };
 
+/**
+ * Gets the quadratic funding allocation for a specific project in a specific pool.
+ * @param {number} poolId - The database ID of the funding pool.
+ * @param {number} projectId - The database ID of the project.
+ * @returns {Promise<string>} The allocated amount in ETH, or '0' if error or not found.
+ */
+const getProjectAllocation = async (poolId, projectId) => {
+  try {
+    logger.info(`Getting allocation for project ${projectId} in DB pool ${poolId}`);
+
+    // 1. Get Contract Pool ID from DB Pool ID
+    const poolQuery = await db.query('SELECT contract_pool_id FROM funding_pools WHERE id = $1', [poolId]);
+    if (poolQuery.rows.length === 0 || poolQuery.rows[0].contract_pool_id === null || poolQuery.rows[0].contract_pool_id === undefined) {
+        logger.warn(`DB Pool ID ${poolId} not found or has no contract_pool_id. Cannot fetch allocation.`);
+        return '0'; // Return 0 if pool/contract_pool_id doesn't exist
+    }
+    const contractPoolId = poolQuery.rows[0].contract_pool_id;
+    logger.info(`Using Contract Pool ID ${contractPoolId} for DB Pool ID ${poolId}`);
+
+    // 2. Get the READ-ONLY QuadraticFundingPool contract
+    const fundingPoolContract = blockchainConfig.fundingPoolContract;
+    if (!fundingPoolContract) {
+        logger.error('Funding Pool contract is not initialized in blockchain config.');
+        return '0';
+    }
+
+    // 3. Call the getProjectAllocation view function
+    // Function signature from QuadraticFunding.sol: getProjectAllocation(uint256 poolId, uint256 projectId) returns (uint256)
+    logger.info(`Calling fundingPool.getProjectAllocation(poolId=${contractPoolId}, projectId=${projectId})`);
+    const allocationWei = await fundingPoolContract.getProjectAllocation(contractPoolId, projectId);
+
+    // 4. Convert Wei to ETH and return
+    const allocationEth = ethers.formatEther(allocationWei);
+    logger.info(`Project ${projectId} allocation in pool ${contractPoolId}: ${allocationEth} ETH`);
+    return allocationEth;
+
+  } catch (error) {
+    // Log specific errors
+    if (error.code === 'CALL_EXCEPTION') {
+        logger.warn(`Contract call exception fetching allocation for project ${projectId}, pool ${contractPoolId}. Possibly project not found in pool or other contract issue: ${error.reason || error.message}`);
+    } else {
+        logger.error(`Failed to get project allocation for project ${projectId}, pool ${poolId} (Contract Pool ID ${contractPoolId || 'N/A'}): ${error.message}`, { error });
+    }
+    return '0'; // Return '0' on any error
+  }
+};
+
 // Export all functions
 module.exports = {
   initializeBlockchain,
@@ -1394,6 +1399,6 @@ module.exports = {
   executeProposal,
   getPlatformContract,
   createPoolOnContract,
-  addProjectToPool,
   donateToFundingPool,
+  getProjectAllocation
 };

@@ -169,7 +169,7 @@ export default function NewProjectPage() {
       const response = await projectsApi.createProject(projectData);
       
       // Redirect to project details page
-      router.push(`/dashboard/charity/projects/${response.data.id}`);
+      router.push(`/dashboard/charity/projects/${response.projectId}`);
     } catch (err: any) {
       console.error("Error creating project:", err);
       setError(err.response?.data?.error?.message || "Failed to create project. Please try again.");

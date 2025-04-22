@@ -3,6 +3,30 @@ const logger = require('../config/logger');
 const blockchainService = require('../services/blockchain.service');
 const { AppError } = require('../utils/appError');
 const httpStatus = require('http-status');
+const { ethers } = require('ethers');
+const axios = require('axios');
+
+// Format blockchain transaction
+function formatBlockchainTransaction(tx, walletAddress) {
+  const value = ethers.formatEther(tx.value || '0');
+  const timestamp = parseInt(tx.timeStamp, 10) || Math.floor(Date.now() / 1000);
+  const isIncoming = tx.to && tx.to.toLowerCase() === walletAddress.toLowerCase();
+  const isOutgoing = tx.from && tx.from.toLowerCase() === walletAddress.toLowerCase();
+  
+  return {
+    hash: tx.hash,
+    from: tx.from,
+    to: tx.to,
+    value: value,
+    timestamp: timestamp,
+    blockNumber: tx.blockNumber,
+    isIncoming,
+    isOutgoing,
+    gasUsed: tx.gasUsed,
+    gasPrice: tx.gasPrice ? ethers.formatUnits(tx.gasPrice, 'gwei') : '0',
+    isInternal: tx.isInternalTransaction || false
+  };
+}
 
 const projectController = {
   // Get all projects with pagination, filtering and search
@@ -166,21 +190,23 @@ const projectController = {
       `;
       const proposals = await db.query(proposalsQuery, [id]);
       
-      // Get quadratic funding status if applicable
-      let quadratic = { rows: [] }; // Default empty result
-      try {
-        const quadraticQuery = `
-          SELECT ra.allocated_amount, ra.transaction_hash, fr.id as round_id, fr.end_time
-          FROM round_allocations ra
-          JOIN funding_rounds fr ON ra.round_id = fr.id
-          WHERE ra.project_id = $1
-          ORDER BY fr.end_time DESC
-          LIMIT 1
-        `;
-        quadratic = await db.query(quadraticQuery, [id]);
-      } catch (quadraticError) {
-        logger.warn(`Unable to fetch quadratic funding info (tables may not exist yet): ${quadraticError.message}`);
-        // Continue without quadratic funding data
+      // Get quadratic funding allocation from the blockchain if applicable
+      let quadraticMatchAmount = 0;
+      const poolId = project.rows[0].pool_id;
+      const projectId = id;
+      
+      if (poolId !== null && poolId !== undefined) {
+        try {
+          logger.info(`Fetching quadratic allocation for project ${projectId} in pool ${poolId}`);
+          const allocationResult = await blockchainService.getProjectAllocation(poolId, projectId);
+          quadraticMatchAmount = parseFloat(allocationResult || 0);
+          logger.info(`Quadratic allocation for project ${projectId} in pool ${poolId}: ${quadraticMatchAmount}`);
+        } catch (blockchainError) {
+          logger.warn(`Unable to fetch quadratic funding allocation from blockchain for project ${projectId}, pool ${poolId}: ${blockchainError.message}`);
+          // Continue with 0 allocation if blockchain call fails
+        }
+      } else {
+        logger.info(`Project ${projectId} is not associated with a funding pool. Skipping quadratic allocation fetch.`);
       }
 
       // Extract pool information
@@ -199,7 +225,7 @@ const projectController = {
           goal: parseFloat(project.rows[0].funding_goal),
           raised: parseFloat(funding.rows[0].raised || 0),
           donors_count: parseInt(funding.rows[0].donors_count || 0, 10),
-          quadratic_match: quadratic.rows.length > 0 ? parseFloat(quadratic.rows[0].allocated_amount || 0) : 0
+          quadratic_match: quadraticMatchAmount // Use the amount fetched from blockchain
         },
         proposals: proposals.rows,
         pool: poolInfo
@@ -417,103 +443,45 @@ const projectController = {
             start_date,
             end_date,
             0, // Initial verification score is 0
-            false // Project not active until verified
+            true // Project active by default, needs verification
           ]
         );
         
         const projectId = result.rows[0].id;
-        logger.info(`Project inserted successfully with ID: ${projectId}`);
+        logger.info(`Project inserted successfully with ID: ${projectId} (active but needs verification)`);
         
-        // Immediately trigger AI verification
+        // Immediately trigger AI verification (only record score and notes, do not auto-activate)
         const aiService = require('../services/ai.service');
-        const projectData = {
-          id: projectId,
-          charity_id,
-          pool_id,
-          name,
-          description,
-          ipfs_hash,
-          funding_goal,
-          duration_days,
-          wallet_address: walletAddress
-        };
-        
+        const projectData = { id: projectId, charity_id, pool_id, name, description, ipfs_hash, funding_goal, duration_days, wallet_address: walletAddress };
         const aiEvaluation = await aiService.evaluateProject(projectId, projectData);
-        
-        // Update project with AI verification score
+        // Update only score and notes
         await db.query(
-          `UPDATE projects 
-           SET verification_score = $1, 
+          `UPDATE projects
+           SET verification_score = $1,
                verification_notes = $2,
-               is_active = $3
-           WHERE id = $4`,
-          [
-            aiEvaluation.score,
-            aiEvaluation.notes,
-            aiEvaluation.verified, // Set project active if AI verification passes
-            projectId
-          ]
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $3`,
+          [aiEvaluation.score, aiEvaluation.notes, projectId]
         );
-        
-        // Add project to blockchain pool
-        try {
-          logger.info(`Adding project ${projectId} to pool ${pool_id} on blockchain`);
-          await blockchainService.addProjectToPool(projectId, pool_id);
-        } catch (blockchainError) {
-          logger.error(`Error adding project ${projectId} to pool ${pool_id} on blockchain:`, blockchainError);
-          // Continue even if blockchain operation fails
-        }
-        
-        // Call blockchain service to verify project if AI verification passes
-        if (aiEvaluation.verified) {
-          try {
-            logger.info(`Project ${projectId} passed AI verification with score ${aiEvaluation.score}, verifying on blockchain`);
-            await blockchainService.verifyProject(projectId, true);
-          } catch (blockchainError) {
-            logger.error(`Error verifying project ${projectId} on blockchain after AI verification:`, blockchainError);
-            // Continue even if blockchain verification fails
-          }
-        }
-        
-        // Create audit log
+        // Create audit log (excluding auto-activation details)
         await db.query(
-          `INSERT INTO audit_logs 
-           (user_id, action, entity_type, entity_id, details, ip_address) 
+          `INSERT INTO audit_logs
+           (user_id, action, entity_type, entity_id, details, ip_address)
            VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            req.user.id,
-            'CREATE_PROJECT',
-            'project',
-            projectId,
-            JSON.stringify({
-              project_name: name,
-              charity_id: charity_id,
-              pool_id: pool_id,
-              ai_score: aiEvaluation.score,
-              ai_verified: aiEvaluation.verified
-            }),
-            req.ip
-          ]
+          [req.user.id, 'CREATE_PROJECT', 'project', projectId, JSON.stringify({ project_name: name, charity_id, pool_id, ai_score: aiEvaluation.score }), req.ip]
         );
         
-        // Return success with project ID and AI verification status
-        res.status(201).json({
-          success: true,
-          data: {
-            id: projectId,
-            name,
-            description,
-            pool_id,
-            ipfs_hash,
-            funding_goal,
-            duration_days,
-            wallet_address: walletAddress,
-            verification_score: aiEvaluation.score,
-            is_active: aiEvaluation.verified,
-            ai_verified: aiEvaluation.verified,
-            verification_notes: aiEvaluation.notes
-          }
-        });
+        // Explicitly set verification to false on blockchain (to ensure consistency)
+        try {
+          logger.info(`Explicitly setting project ${projectId} verification to false on blockchain`);
+          await blockchainService.verifyProject(projectId, false);
+        } catch (blockchainError) {
+          logger.error(`Error setting project ${projectId} verification to false on blockchain:`, blockchainError);
+          // Continue even if blockchain verification fails
+        }
+        
+        // Return success with project ID
+        res.status(201).json({ projectId });
       } catch (error) {
         logger.error('Error inserting project into database:', error);
         res.status(500).json({
@@ -985,7 +953,245 @@ const projectController = {
         }
       });
     }
-  }
+  },
+
+  // Record a vote on project verification
+  voteOnProject: async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id, 10);
+      const userId = req.user.id;
+      const { vote, comment } = req.body;
+      // Check project exists
+      const proj = await db.query('SELECT id, is_verified FROM projects WHERE id = $1', [projectId]);
+      if (proj.rows.length === 0) {
+        return res.status(404).json({ success: false, error: { message: 'Project not found', code: 'NOT_FOUND' } });
+      }
+      // Prevent voting on already verified projects
+      if (proj.rows[0].is_verified) {
+        return res.status(400).json({ success: false, error: { message: 'Project already verified', code: 'ALREADY_VERIFIED' } });
+      }
+      // Insert or update vote
+      const existing = await db.query('SELECT id FROM project_verification_votes WHERE user_id = $1 AND project_id = $2', [userId, projectId]);
+      if (existing.rows.length > 0) {
+        await db.query('UPDATE project_verification_votes SET vote = $1, comment = $2, created_at = CURRENT_TIMESTAMP WHERE user_id = $3 AND project_id = $4', [vote, comment || null, userId, projectId]);
+      } else {
+        await db.query('INSERT INTO project_verification_votes (user_id, project_id, vote, comment) VALUES ($1, $2, $3, $4)', [userId, projectId, vote, comment || null]);
+      }
+      // If vote is approve (true), mark project verified immediately
+      if (vote) {
+        await db.query('UPDATE projects SET is_verified = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [projectId]);
+        // Also update the blockchain verification status
+        try {
+          // Call blockchain service to verify project
+          await blockchainService.verifyProject(projectId, true);
+        } catch (blockchainError) {
+          logger.error(`Error verifying project ${projectId} on blockchain after user vote:`, blockchainError);
+          // Continue with database update even if blockchain update fails
+        }
+      }
+      res.json({ success: true, data: { project_id: projectId, voted: vote } });
+    } catch (error) {
+      logger.error('Error voting on project:', error);
+      res.status(500).json({ success: false, error: { message: 'Failed to record vote', code: 'VOTE_ERROR' } });
+    }
+  },
+
+  // Get all votes for a project's verification
+  getProjectVotes: async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id, 10);
+      // Check project exists
+      const proj = await db.query('SELECT id FROM projects WHERE id = $1', [projectId]);
+      if (proj.rows.length === 0) {
+        return res.status(404).json({ success: false, error: { message: 'Project not found', code: 'NOT_FOUND' } });
+      }
+      const votes = await db.query(
+        `SELECT v.user_id, u.full_name, v.vote, v.comment, v.created_at
+         FROM project_verification_votes v
+         JOIN users u ON v.user_id = u.id
+         WHERE v.project_id = $1
+         ORDER BY v.created_at DESC`, [projectId]
+      );
+      res.json({ success: true, data: votes.rows });
+    } catch (error) {
+      logger.error('Error fetching project votes:', error);
+      res.status(500).json({ success: false, error: { message: 'Failed to fetch votes', code: 'FETCH_ERROR' } });
+    }
+  },
+
+  // List projects pending verification vote for the current donor
+  getProjectsToVote: async (req, res) => {
+    try {
+      const userId = req.user.id;
+      // Fetch all unverified projects regardless of donation history
+      const result = await db.query(
+        `SELECT p.id, p.name, p.description, p.verification_score, p.is_active, p.created_at,
+         c.name as charity_name
+         FROM projects p
+         JOIN charities c ON p.charity_id = c.id
+         WHERE p.is_verified = FALSE AND p.is_active = TRUE 
+         ORDER BY p.created_at DESC`
+      );
+      res.json({ success: true, data: result.rows });
+    } catch (error) {
+      logger.error('Error fetching projects to vote on:', error);
+      res.status(500).json({ success: false, error: { message: 'Failed to fetch projects', code: 'FETCH_ERROR' } });
+    }
+  },
+
+  // Get transactions for a project
+  getProjectTransactions: async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get project to verify it exists and get the wallet address
+      const projectQuery = `
+        SELECT p.*, c.name as charity_name 
+        FROM projects p 
+        JOIN charities c ON p.charity_id = c.id
+        WHERE p.id = $1
+      `;
+      
+      const project = await db.query(projectQuery, [id]);
+      
+      if (project.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: 'Project not found',
+            code: 'NOT_FOUND'
+          }
+        });
+      }
+      
+      const walletAddress = project.rows[0].wallet_address;
+      
+      if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'Project wallet address is missing or invalid',
+            code: 'INVALID_WALLET'
+          }
+        });
+      }
+      
+      // Get the API key for ScrollScan
+      const SCROLLSCAN_API_KEY = process.env.SCROLLSCAN_API_KEY || '';
+      
+      // Define networks to try
+      const networks = [
+        { name: 'Sepolia', url: 'https://api-sepolia.scrollscan.com/api' },
+        { name: 'Mainnet', url: 'https://api.scrollscan.com/api' }
+      ];
+      
+      let transactions = [];
+      let networkUsed = '';
+      
+      // Try each network until we find transactions
+      for (const network of networks) {
+        try {
+          logger.info(`Trying ${network.name} network for project ${id} transactions...`);
+          
+          // Fetch regular transactions
+          const txUrl = `${network.url}?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=${SCROLLSCAN_API_KEY}`;
+          const txResponse = await axios.get(txUrl);
+          
+          if (txResponse.data.status === '1' && Array.isArray(txResponse.data.result) && txResponse.data.result.length > 0) {
+            logger.info(`Found ${txResponse.data.result.length} transactions on ${network.name}`);
+            
+            // Format the transactions
+            transactions = txResponse.data.result.map(tx => formatBlockchainTransaction(tx, walletAddress));
+            
+            networkUsed = network.name;
+            break; // Exit loop if we found transactions
+          }
+          
+          // Also fetch internal transactions
+          const internalTxUrl = `${network.url}?module=account&action=txlistinternal&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=${SCROLLSCAN_API_KEY}`;
+          const internalTxResponse = await axios.get(internalTxUrl);
+          
+          if (internalTxResponse.data.status === '1' && Array.isArray(internalTxResponse.data.result) && internalTxResponse.data.result.length > 0) {
+            logger.info(`Found ${internalTxResponse.data.result.length} internal transactions on ${network.name}`);
+            
+            // Add isInternalTransaction flag to mark these as internal transactions
+            const internalTxsWithFlag = internalTxResponse.data.result.map(tx => ({
+              ...tx,
+              isInternalTransaction: true
+            }));
+            
+            // Format and add internal transactions
+            const internalTransactions = internalTxsWithFlag.map(tx => formatBlockchainTransaction(tx, walletAddress));
+            
+            // Combine with regular transactions if any
+            transactions = [...transactions, ...internalTransactions];
+            
+            // Sort by timestamp (newest first)
+            transactions.sort((a, b) => b.timestamp - a.timestamp);
+            
+            networkUsed = network.name;
+            break; // Exit loop if we found transactions
+          }
+        } catch (error) {
+          logger.error(`Error fetching transactions from ${network.name}:`, error);
+        }
+      }
+      
+      // If no transactions found, try to check if there are any local transactions in the database
+      if (transactions.length === 0) {
+        logger.info(`No transactions found on blockchain for project ${id}, checking database...`);
+        
+        try {
+          // Check for donations or other transactions in our database
+          const dbTransactions = await db.query(`
+            SELECT * FROM transactions
+            WHERE to_address = $1 OR from_address = $1
+            ORDER BY created_at DESC
+          `, [walletAddress]);
+          
+          if (dbTransactions.rows.length > 0) {
+            logger.info(`Found ${dbTransactions.rows.length} transactions in database`);
+            
+            // Format database transactions
+            transactions = dbTransactions.rows.map(tx => ({
+              hash: tx.transaction_hash || `local-${tx.id}`,
+              from: tx.from_address || 'Unknown',
+              to: tx.to_address || walletAddress,
+              value: tx.amount?.toString() || '0',
+              timestamp: new Date(tx.created_at).getTime() / 1000,
+              isIncoming: tx.to_address?.toLowerCase() === walletAddress.toLowerCase(),
+              isOutgoing: tx.from_address?.toLowerCase() === walletAddress.toLowerCase(),
+              status: tx.status || 'completed',
+              source: 'database'
+            }));
+          }
+        } catch (dbError) {
+          logger.error(`Error fetching transactions from database:`, dbError);
+        }
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          transactions,
+          project_id: parseInt(id, 10),
+          project_name: project.rows[0].name,
+          wallet_address: walletAddress,
+          network: networkUsed || 'Database',
+          count: transactions.length
+        }
+      });
+    } catch (error) {
+      logger.error(`Error fetching transactions for project ${req.params.id}:`, error);
+      res.status(500).json({
+        success: false,
+        error: {
+          message: 'Failed to fetch project transactions',
+          code: 'FETCH_ERROR'
+        }
+      });
+    }
+  },
 };
 
-module.exports = projectController; 
+module.exports = projectController;

@@ -31,8 +31,15 @@ interface Transaction {
     hash: string;
     from: string;
     to: string;
-    value: string; // Already formatted as ETH string
-    timeStamp: number;
+    value: string; // Formatted as ETH
+    timestamp: number; // Note: API returns lowercase timestamp, not camelCase timeStamp
+    blockNumber?: string;
+    isIncoming?: boolean;
+    isOutgoing?: boolean;
+    gasUsed?: string;
+    gasPrice?: string;
+    isInternal?: boolean;
+    source?: string;
 }
 
 // Helper function to check if a project ID is valid
@@ -133,8 +140,10 @@ export default function DonatePage({ params }: ProjectDetailProps) {
           throw new Error(data.error?.message || "Failed to load transactions");
         }
 
-        setTransactions(data.data || []);
-        // console.log("Transactions data set:", data.data);
+        // Extract transactions array from the response
+        const transactionsArray = data.data?.transactions || [];
+        setTransactions(transactionsArray);
+        console.log("Transactions data set:", transactionsArray);
 
       } catch (error: any) {
         console.error("Transaction fetch error:", error);
@@ -421,12 +430,15 @@ export default function DonatePage({ params }: ProjectDetailProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {transactions.map((tx) => (
+                            {transactions
+                                .filter(tx => tx.isIncoming)
+                                .slice(0, 5)
+                                .map((tx) => (
                                 <TableRow key={tx.hash}>
                                     <TableCell className="font-mono text-xs">{shortenAddress(tx.from)}</TableCell>
                                     <TableCell className="text-right text-xs">{parseFloat(tx.value).toFixed(4)} ETH</TableCell>
                                     <TableCell className="text-right text-xs whitespace-nowrap">
-                                        {formatDistanceToNow(new Date(tx.timeStamp * 1000), { addSuffix: true })}
+                                        {formatDistanceToNow(new Date(tx.timestamp * 1000), { addSuffix: true })}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <a href={`${scrollscanBaseUrl}${tx.hash}`} target="_blank" rel="noopener noreferrer" title="View on Scrollscan">

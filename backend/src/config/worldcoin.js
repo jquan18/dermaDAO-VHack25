@@ -1,7 +1,7 @@
 const worldcoinConfig = {
   clientId: process.env.WLD_CLIENT_ID || '',
   clientSecret: process.env.WLD_CLIENT_SECRET || '',
-  redirectUri: process.env.WLD_REDIRECT_URI || 'http://localhost:3000/api/auth/callback/worldcoin',
+  redirectUri: process.env.WLD_REDIRECT_URI || 'http://localhost:3000/api/auth/worldcoin-callback',
   wellKnownUrl: 'https://id.worldcoin.org/.well-known/openid-configuration',
   tokenUrl: 'https://id.worldcoin.org/token',
   userInfoUrl: 'https://id.worldcoin.org/userinfo',
