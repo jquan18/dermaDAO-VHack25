@@ -229,41 +229,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <div className="flex flex-1">
-        {/* Sidebar - Desktop */}
-        <aside className="hidden md:flex md:flex-col md:w-64 border-r bg-white">
-          <div className="p-4 border-b">
-            <h2 className="text-xl font-semibold">
-              {user?.role === "charity_admin"
-                ? "Charity Dashboard"
-                : user?.role === "admin"
-                ? "Admin Dashboard"
-                : user?.role === "corporate"
-                ? "Corporate Dashboard"
-                : "Dashboard"}
-            </h2>
-          </div>
-          <nav className="flex-1 p-4 space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "flex items-center px-4 py-3 rounded-md text-gray-600 hover:bg-primary/5 hover:text-primary transition-colors",
-                  pathname === item.href && "bg-primary/10 text-primary font-medium"
-                )}
-              >
-                <item.icon className="h-5 w-5 mr-3" />
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-          <div className="p-4 border-t">
-            <div className="text-sm text-gray-500">
-              Logged in as <span className="font-medium">{user?.name}</span>
-            </div>
-          </div>
-        </aside>
-
         {/* Main content */}
         <main className="flex-1 bg-gray-50">
           <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">{children}</div>

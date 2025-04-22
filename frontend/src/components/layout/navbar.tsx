@@ -35,12 +35,9 @@ export function Navbar() {
     setIsUserMenuOpen(false);
   };
 
-  const navItems = [
+  const navItems = isAuthenticated ? [] : [
     { name: "Home", href: "/" },
     { name: "Funding Pools", href: "/pools" },
-    { name: "Projects", href: "/projects" },
-    { name: "How It Works", href: "/how-it-works" },
-    { name: "About", href: "/about" },
   ];
 
   // Add additional nav items for specific roles
@@ -48,18 +45,40 @@ export function Navbar() {
     ? user?.role === "charity_admin"
       ? [
           { name: "Dashboard", href: "/dashboard/charity" },
-          { name: "Wallet", href: "/dashboard/wallet" }
+          { name: "Projects", href: "/dashboard/charity/projects" },
+          { name: "Funding Pools", href: "/dashboard/pools" },
+          { name: "Proposals", href: "/dashboard/charity/proposals" },
+          { name: "Bank Accounts", href: "/dashboard/charity/bank-accounts" },
         ]
       : user?.role === "admin"
       ? [
-          { name: "Admin Panel", href: "/dashboard/admin" },
-          { name: "Wallet", href: "/dashboard/wallet" }
+          { name: "Dashboard", href: "/dashboard/admin" },
+          { name: "Charities", href: "/dashboard/admin/charities" },
+          { name: "Projects", href: "/dashboard/admin/projects" },
+          { name: "Funding Pools", href: "/dashboard/pools" },
+          { name: "Verifications", href: "/dashboard/admin/verifications" },
+          { name: "Users", href: "/dashboard/admin/users" },
+        ]
+      : user?.role === "corporate"
+      ? [
+          { name: "Dashboard", href: "/dashboard/corporate" },
+          { name: "Funding Pools", href: "/dashboard/corporate/pools" },
         ]
       : [
           { name: "My Donations", href: "/dashboard/donations" },
-          { name: "Wallet", href: "/dashboard/wallet" }
+          { name: "Funding Pools", href: "/dashboard/pools" },
+          { name: "Proposal Voting", href: "/dashboard/donations/proposals" },
         ]
     : [];
+
+  // Redirect regular users to My Donations page after login
+  useEffect(() => {
+    if (isAuthenticated && user && !user.role) {
+      if (pathname === "/dashboard") {
+        router.push("/dashboard/donations");
+      }
+    }
+  }, [isAuthenticated, user, pathname, router]);
 
   const allNavItems = [...navItems, ...roleNavItems];
 
@@ -73,26 +92,23 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:ml-6 md:flex md:items-center md:space-x-4">
+          {/* Desktop Navigation - All items aligned to right */}
+          <div className="hidden md:flex md:items-center md:justify-end md:flex-1 md:space-x-6">
             {allNavItems.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "px-3 py-2 rounded-md text-sm font-medium",
-                  pathname === item.href
-                    ? "text-primary font-semibold"
-                    : "text-gray-700 hover:text-primary hover:bg-gray-50"
+                  "px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200",
+                  pathname === item.href || pathname?.startsWith(item.href + '/')
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-gray-700 hover:text-primary hover:bg-primary/5"
                 )}
               >
                 {item.name}
               </Link>
             ))}
-          </div>
-
-          {/* Authentication Section - Desktop */}
-          <div className="hidden md:flex md:items-center md:space-x-2">
+            
             {isAuthenticated ? (
               <div className="relative">
                 <button
@@ -212,10 +228,10 @@ export function Navbar() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "block px-3 py-2 rounded-md text-base font-medium",
-                  pathname === item.href
-                    ? "text-primary font-semibold"
-                    : "text-gray-700 hover:text-primary hover:bg-gray-50"
+                  "block px-3 py-3 rounded-md text-base font-medium",
+                  pathname === item.href || pathname?.startsWith(item.href + '/')
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-gray-700 hover:text-primary hover:bg-primary/5"
                 )}
                 onClick={closeMenus}
               >
