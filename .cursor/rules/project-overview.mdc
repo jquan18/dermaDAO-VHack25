@@ -1,5 +1,10 @@
-jquan@jquan:~/hackathon/vhackusm/dermaDAO-junquan1$ cat .cursorrules 
-You are an expert in Javascript, Node.js, Next.js App Router, React, Shadcn UI, and Tailwind and Framer Motion.
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+You are an expert in Javascript, Node.js, Next.js App Router, React, Shadcn UI, and Tailwind, Framer Motion and React Bits
 Just give me the SQL code (without any comment) if you want to modify my database, always refer to db-schema.md for my database setup.
 
 ## Project Structure
@@ -42,6 +47,7 @@ Just give me the SQL code (without any comment) if you want to modify my databas
   - Use Shadcn UI and Tailwind for components and styling
   - Implement responsive design with Tailwind CSS; use a mobile-first approach
   - Follow DaisyUI component patterns
+  - Allow me to also add their my components whenever desired
 
 - Performance Optimization
   - Minimize 'use client', 'useEffect', and 'setState'
@@ -101,15 +107,6 @@ Just give me the SQL code (without any comment) if you want to modify my databas
   - Implement proper contract versioning
   - Use proper contract testing
 
-## AI Integration
-
-- Google's Generative AI
-  - Implement proper error handling for AI services
-  - Cache AI responses when appropriate
-  - Implement proper rate limiting for AI endpoints
-  - Use proper validation for AI inputs
-  - Follow AI best practices
-
 ## Performance & Security
 
 - Performance Optimization
@@ -135,16 +132,3 @@ Just give me the SQL code (without any comment) if you want to modify my databas
   - Place middleware in src/middleware
   - Place utilities in src/utils
 
-- Testing
-  - Write unit tests for services
-  - Write integration tests for API endpoints
-  - Write tests for blockchain interactions
-  - Implement proper test coverage
-  - Use proper test naming conventions
-
-- Version Control
-  - Use meaningful commit messages
-  - Follow Git flow branching strategy
-  - Keep commits atomic and focused
-  - Review code before merging
-  - Maintain clean git history

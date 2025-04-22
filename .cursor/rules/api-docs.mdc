@@ -1,3 +1,8 @@
+---
+description: Any interface that will call an API route to the backend
+globs: 
+alwaysApply: false
+---
 # DermaDAO API Documentation
 
 ## Overview
@@ -2158,7 +2163,7 @@ Official SDKs are available for:
 - Python
 - Mobile (React Native)
 
-Visit the [Developer Portal](https://developers.dermadao.org) for SDK documentation.
+Visit the [Developer Portal](mdc:https:/developers.dermadao.org) for SDK documentation.
 
 ## Rate Limits and Quotas
 

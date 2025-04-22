@@ -198,25 +198,6 @@ export default function PoolsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4 mt-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-white p-2 rounded-full shadow-sm">
-              <Wallet className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-800">Wallet Dashboard</h3>
-              <p className="text-sm text-gray-600">
-                Manage your tokens and view transaction history
-              </p>
-            </div>
-          </div>
-          <Link href="/dashboard/wallet">
-            <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
-              Go to Wallet
-            </Button>
-          </Link>
-        </div>
-
         <div className="my-6 flex flex-col gap-4 md:flex-row md:items-center">
           <Input
             placeholder="Search pools by name or description..."
