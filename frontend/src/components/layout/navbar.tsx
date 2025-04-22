@@ -67,7 +67,7 @@ export function Navbar() {
       : [
           { name: "My Donations", href: "/dashboard/donations" },
           { name: "Funding Pools", href: "/dashboard/pools" },
-          { name: "Proposal Voting", href: "/dashboard/donations/proposals" },
+          { name: "Project Voting", href: "/dashboard/donations/projects-to-vote" },
         ]
     : [];
 
