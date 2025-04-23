@@ -16,10 +16,18 @@ const fadeIn = {
 
 export default function HomePage() {
   return (
-    <MainLayout>
-      {/* Hero Section with vibrant gradient background */}
+    <MainLayout fullWidthHero={true}>
+      {/* Hero background - this will be positioned behind the navbar */}
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 w-full h-full">
+        {/* Background gradient elements */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+      </div>
+      
+      {/* Hero Section content */}
       <motion.section
-        className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center px-4 py-20 overflow-hidden relative"
+        className="min-h-screen flex items-center justify-center px-4 py-20 overflow-hidden relative"
         initial="hidden"
         animate="visible"
         variants={fadeIn}
@@ -45,11 +53,6 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-
-        {/* Background gradient elements */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
       </motion.section>
 
       {/* Features Section */}
@@ -84,39 +87,9 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-          
-          <div className="mt-16 text-center">
-            <Link href="/how-it-works">
-              <Button className="bg-white hover:bg-white/90 text-black px-8 py-6 text-lg rounded-md">
-                Learn How It Works
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
         </div>
       </section>
       
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-600 to-indigo-700 text-white">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Make a Difference?</h2>
-          <p className="text-xl mb-10 opacity-90 max-w-3xl mx-auto">
-            Join DermaDAO today and be part of the transparent charity revolution.
-          </p>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link href="/projects">
-              <Button size="lg" className="bg-black hover:bg-black/80 text-white px-8 py-6 text-lg rounded-md">
-                Browse Projects
-              </Button>
-            </Link>
-            <Link href="/auth/register">
-              <Button size="lg" className="bg-white hover:bg-white/90 text-black px-8 py-6 text-lg rounded-md">
-                Sign Up Now
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
     </MainLayout>
   );
-} 
+}

@@ -15,7 +15,32 @@ export function Navbar() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, logout, loadUser, isLoading } = useAuthStore();
+  
+  // Check if we're on the landing page
+  const isLandingPage = pathname === "/";
+
+  // Handle scroll event to change navbar opacity
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    
+    if (isLandingPage) {
+      window.addEventListener("scroll", handleScroll);
+    } else {
+      setScrolled(true); // Always solid for non-landing pages
+    }
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isLandingPage]);
 
   useEffect(() => {
     // Only load user data if we're not authenticated, not loading, and don't have user data
@@ -37,7 +62,6 @@ export function Navbar() {
 
   const navItems = isAuthenticated ? [] : [
     { name: "Home", href: "/" },
-    { name: "Funding Pools", href: "/pools" },
   ];
 
   // Add additional nav items for specific roles
@@ -83,12 +107,19 @@ export function Navbar() {
   const allNavItems = [...navItems, ...roleNavItems];
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav 
+      className={cn(
+        "sticky top-0 z-50 transition-all duration-300 border-b",
+        isLandingPage && !scrolled 
+          ? "bg-transparent border-transparent" 
+          : "bg-purple-950/95 backdrop-blur-sm border-gray-800"
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-20">
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" onClick={closeMenus}>
-              <span className="text-xl font-bold text-primary">DermaDAO</span>
+              <span className="text-xl font-bold text-white">DermaDAO</span>
             </Link>
           </div>
 
@@ -101,8 +132,10 @@ export function Navbar() {
                 className={cn(
                   "px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200",
                   pathname === item.href || pathname?.startsWith(item.href + '/')
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-gray-700 hover:text-primary hover:bg-primary/5"
+                    ? isLandingPage && !scrolled 
+                      ? "bg-white/20 backdrop-blur-sm text-white font-semibold" 
+                      : "bg-purple-800 text-white font-semibold"
+                    : "text-white hover:text-white hover:bg-white/10"
                 )}
               >
                 {item.name}
@@ -112,7 +145,7 @@ export function Navbar() {
             {isAuthenticated ? (
               <div className="relative">
                 <button
-                  className="flex items-center space-x-2 text-sm focus:outline-none"
+                  className="flex items-center space-x-2 text-sm focus:outline-none text-white"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
                   <Avatar className="h-8 w-8">
@@ -135,18 +168,18 @@ export function Navbar() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-10">
-                    <div className="px-4 py-2 border-b border-gray-200">
-                      <p className="text-sm font-medium">{user?.email}</p>
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-950 border border-gray-800 rounded-md shadow-lg py-1 z-10">
+                    <div className="px-4 py-2 border-b border-gray-800">
+                      <p className="text-sm font-medium text-white">{user?.email}</p>
                       {user?.wallet_address && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                           Wallet: {truncateAddress(user.wallet_address)}
                         </p>
                       )}
                     </div>
                     <Link
                       href="/dashboard/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-900 flex items-center"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       <User size={16} className="mr-2" />
@@ -154,14 +187,14 @@ export function Navbar() {
                     </Link>
                     <Link
                       href="/dashboard/wallet"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-900 flex items-center"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       <Wallet size={16} className="mr-2" />
                       Wallet
                     </Link>
                     <button
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                      className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-900 flex items-center"
                       onClick={handleLogout}
                     >
                       <LogOut size={16} className="mr-2" />
@@ -173,10 +206,10 @@ export function Navbar() {
             ) : (
               <>
                 <Link href="/auth/login">
-                  <Button variant="ghost">Sign In</Button>
+                  <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">Sign In</Button>
                 </Link>
                 <Link href="/auth/register">
-                  <Button>Sign Up</Button>
+                  <Button className="bg-white text-purple-950 hover:bg-gray-200">Sign Up</Button>
                 </Link>
               </>
             )}
@@ -205,7 +238,7 @@ export function Navbar() {
             )}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-800 hover:text-primary hover:bg-gray-100 focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-white hover:bg-white/10 focus:outline-none"
               aria-expanded="false"
             >
               <span className="sr-only">Open main menu</span>
@@ -221,7 +254,7 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden bg-gray-950">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {allNavItems.map((item) => (
               <Link
@@ -230,8 +263,8 @@ export function Navbar() {
                 className={cn(
                   "block px-3 py-3 rounded-md text-base font-medium",
                   pathname === item.href || pathname?.startsWith(item.href + '/')
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-gray-700 hover:text-primary hover:bg-primary/5"
+                    ? "bg-purple-800 text-white font-semibold"
+                    : "text-gray-300 hover:text-white hover:bg-purple-900"
                 )}
                 onClick={closeMenus}
               >
@@ -242,20 +275,20 @@ export function Navbar() {
               <>
                 <Link
                   href="/dashboard/profile"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-purple-900"
                   onClick={closeMenus}
                 >
                   Profile
                 </Link>
                 <Link
                   href="/dashboard/wallet"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-purple-900"
                   onClick={closeMenus}
                 >
                   Wallet
                 </Link>
                 <button
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-50"
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-400 hover:bg-purple-900"
                   onClick={handleLogout}
                 >
                   Sign out
@@ -264,12 +297,12 @@ export function Navbar() {
             ) : (
               <div className="flex flex-col space-y-2 px-3 py-2">
                 <Link href="/auth/login" onClick={closeMenus}>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full text-white border-gray-700 hover:bg-purple-900">
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/auth/register" onClick={closeMenus}>
-                  <Button className="w-full">Sign Up</Button>
+                  <Button className="w-full bg-white text-purple-950 hover:bg-gray-200">Sign Up</Button>
                 </Link>
               </div>
             )}
@@ -278,4 +311,4 @@ export function Navbar() {
       )}
     </nav>
   );
-} 
+}
