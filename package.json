@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "ethers": "^6.13.5"
+    "clsx": "^2.1.1",
+    "ethers": "^6.13.5",
+    "motion": "^12.7.5",
+    "ogl": "^1.0.11",
+    "tailwind-merge": "^3.2.0"
   }
 }
