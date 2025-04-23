@@ -9,9 +9,10 @@ import { useAuthStore } from "@/store/auth-store";
 
 export default function VerificationSuccessPage() {
   const router = useRouter();
-  const { loadUser, user, isWorldcoinVerified } = useAuthStore();
+  const { loadUser, user, isWorldcoinVerified, isOnfidoVerified } = useAuthStore();
   const [userLoaded, setUserLoaded] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [verificationMethod, setVerificationMethod] = useState<string>("");
 
   // First useEffect to load user data only once
   useEffect(() => {
@@ -25,12 +26,26 @@ export default function VerificationSuccessPage() {
           await loadUser();
           setUserLoaded(true);
           
-          console.log("User data reloaded, verification status:", user?.is_worldcoin_verified);
-          console.log("Store verification status:", isWorldcoinVerified);
+          console.log("User data reloaded:");
+          console.log("Worldcoin verification:", user?.is_worldcoin_verified);
+          console.log("Onfido verification:", user?.is_onfido_verified);
+          console.log("Store worldcoin status:", isWorldcoinVerified);
+          console.log("Store onfido status:", isOnfidoVerified);
+          
+          // Determine which verification method was used
+          if (user?.is_worldcoin_verified) {
+            setVerificationMethod("Worldcoin");
+          } else if (user?.is_onfido_verified) {
+            setVerificationMethod("Onfido");
+          } else {
+            setVerificationMethod("identity provider");
+          }
           
           // If we have a user, but their verification status doesn't match what's in the store
           // after 3 attempts, force a hard reload to clear all states
-          if (user && attempts > 2 && user.is_worldcoin_verified !== isWorldcoinVerified) {
+          if (user && attempts > 2 && 
+              (user.is_worldcoin_verified !== isWorldcoinVerified || 
+               user.is_onfido_verified !== isOnfidoVerified)) {
             console.log("Status mismatch detected after multiple attempts, forcing page reload...");
             window.location.reload();
           } else if (attempts < 3) {
@@ -43,7 +58,7 @@ export default function VerificationSuccessPage() {
     };
     
     updateUserData();
-  }, [loadUser, userLoaded, attempts, user, isWorldcoinVerified]);
+  }, [loadUser, userLoaded, attempts, user, isWorldcoinVerified, isOnfidoVerified]);
   
   // Second useEffect to handle redirection after user data is loaded
   useEffect(() => {
@@ -78,7 +93,7 @@ export default function VerificationSuccessPage() {
         </CardHeader>
         <CardContent className="text-center px-6">
           <p className="mb-4">
-            Your account has been successfully verified with Worldcoin. You can now participate in quadratic funding.
+            Your account has been successfully verified with {verificationMethod}. You can now participate in quadratic funding.
           </p>
           <p className="text-sm text-gray-500">
             You will be automatically redirected to your dashboard in a few seconds.

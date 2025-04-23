@@ -34,11 +34,11 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { truncateAddress } from "@/lib/utils";
-import { WorldcoinVerification } from "@/components/auth/WorldcoinVerification";
+import { VerificationOptions } from "@/components/auth/VerificationOptions";
 
 export default function UserProfilePage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, isWorldcoinVerified } = useAuthStore();
+  const { user, isAuthenticated, isLoading, isWorldcoinVerified, isOnfidoVerified } = useAuthStore();
   
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -49,6 +49,8 @@ export default function UserProfilePage() {
       router.push("/auth/login");
     }
   }, [isAuthenticated, isLoading, router]);
+  
+  const isVerified = isWorldcoinVerified || isOnfidoVerified;
   
   if (isLoading) {
     return (
@@ -133,7 +135,7 @@ export default function UserProfilePage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Verification Status:</span>
                 <div className="flex items-center">
-                  {isWorldcoinVerified ? (
+                  {isVerified ? (
                     <Badge className="bg-green-100 text-green-800 border-green-200 flex items-center gap-1">
                       <CheckCircle2 className="h-3 w-3" />
                       Verified
@@ -150,8 +152,8 @@ export default function UserProfilePage() {
           </CardContent>
         </Card>
         
-        {/* Worldcoin Verification */}
-        <WorldcoinVerification className="h-full" />
+        {/* Verification Options */}
+        <VerificationOptions className="h-full" />
       </div>
     </DashboardLayout>
   );

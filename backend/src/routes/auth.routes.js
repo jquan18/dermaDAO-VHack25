@@ -7,7 +7,10 @@ const {
   worldcoinVerify,
   worldcoinCallback,
   getWorldcoinUrl,
-  getMyCharity
+  getMyCharity,
+  onfidoVerify,
+  onfidoCallback,
+  onfidoWebhook
 } = require('../controllers/auth.controller');
 const { authenticate } = require('../middleware/auth');
 const { validateRequest } = require('../middleware/validator');
@@ -86,5 +89,26 @@ router.post('/verify-worldcoin', authenticate, worldcoinVerify);
  * @access Private
  */
 router.get('/my-charity', authenticate, getMyCharity);
+
+/**
+ * @route POST /api/auth/onfido-verify
+ * @desc Initiate Onfido verification
+ * @access Private
+ */
+router.post('/onfido-verify', authenticate, onfidoVerify);
+
+/**
+ * @route POST /api/auth/onfido-callback
+ * @desc Complete Onfido verification after SDK flow
+ * @access Private
+ */
+router.post('/onfido-callback', authenticate, onfidoCallback);
+
+/**
+ * @route POST /api/auth/onfido-webhook
+ * @desc Handle Onfido webhook notifications
+ * @access Public
+ */
+router.post('/onfido-webhook', onfidoWebhook);
 
 module.exports = router; 

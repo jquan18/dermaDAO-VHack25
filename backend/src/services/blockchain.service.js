@@ -256,6 +256,8 @@ const verifyProject = async (projectId, verified) => {
 
 /**
  * Verify a user with Worldcoin on the blockchain
+ * Note: This function is used for both Worldcoin and Onfido verifications
+ * as the blockchain contract only needs to know if a user is verified or not
  * @param {string} walletAddress - User wallet address
  * @param {boolean} verified - Verification status (true/false)
  * @returns {Promise<boolean>} - Success status

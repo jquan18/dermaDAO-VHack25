@@ -94,6 +94,14 @@ export const authApi = {
     const response = await api.get('/auth/worldcoin-url');
     return response.data;
   },
+  verifyOnfido: async () => {
+    const response = await api.post('/auth/onfido-verify');
+    return response.data;
+  },
+  completeOnfidoVerification: async () => {
+    const response = await api.post('/auth/onfido-callback');
+    return response.data;
+  },
   getMe: async () => {
     const response = await api.get('/auth/me');
     return response.data;

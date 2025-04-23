@@ -634,6 +634,91 @@ const getMyCharity = async (req, res) => {
   }
 };
 
+/**
+ * Verify user with Onfido
+ * @route POST /api/auth/onfido-verify
+ * @access Private
+ */
+const onfidoVerify = async (req, res) => {
+  try {
+    logger.info(`Onfido verification requested for user ID: ${req.user.id}`);
+    
+    // Initialize Onfido verification flow
+    const verificationResult = await require('../services/onfido.service').initializeOnfidoVerification(req.user.id);
+    
+    // Return the SDK token for the frontend
+    res.json({
+      success: true,
+      data: {
+        sdk_token: verificationResult.data.sdk_token,
+        applicant_id: verificationResult.data.applicant_id
+      }
+    });
+  } catch (error) {
+    logger.error('Onfido verification error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: error.message || 'Server error',
+        code: 'SERVER_ERROR'
+      }
+    });
+  }
+};
+
+/**
+ * Handle Onfido verification completion
+ * @route POST /api/auth/onfido-callback
+ * @access Private
+ */
+const onfidoCallback = async (req, res) => {
+  try {
+    logger.info(`Onfido verification completion for user ID: ${req.user.id}`);
+    
+    // Complete verification after frontend SDK flow
+    const onfidoService = require('../services/onfido.service');
+    const result = await onfidoService.manuallyCompleteVerification(req.user.id);
+    
+    res.json({
+      success: true,
+      data: {
+        check_id: result.data.check_id,
+        status: result.data.status,
+        message: result.data.message
+      }
+    });
+  } catch (error) {
+    logger.error('Onfido callback error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: error.message || 'Server error',
+        code: 'SERVER_ERROR'
+      }
+    });
+  }
+};
+
+/**
+ * Handle Onfido webhook
+ * @route POST /api/auth/onfido-webhook
+ * @access Public
+ */
+const onfidoWebhook = async (req, res) => {
+  try {
+    logger.info('Onfido webhook received');
+    
+    // Handle the webhook
+    const onfidoService = require('../services/onfido.service');
+    await onfidoService.handleWebhook(req.body);
+    
+    res.status(200).end();
+  } catch (error) {
+    logger.error('Onfido webhook error:', error);
+    res.status(500).end();
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -641,5 +726,8 @@ module.exports = {
   worldcoinVerify,
   worldcoinCallback,
   getWorldcoinUrl,
-  getMyCharity
+  getMyCharity,
+  onfidoVerify,
+  onfidoCallback,
+  onfidoWebhook
 }; 

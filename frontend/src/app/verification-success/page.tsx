@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/auth-store";
 
 export default function VerificationSuccessRedirect() {
   const router = useRouter();
-  const { loadUser, user, isWorldcoinVerified } = useAuthStore();
+  const { loadUser, user, isWorldcoinVerified, isOnfidoVerified } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,11 +22,15 @@ export default function VerificationSuccessRedirect() {
         await loadUser();
         
         console.log("User data loaded:", user);
-        console.log("Current verification status:", isWorldcoinVerified);
-        console.log("User verification field:", user?.is_worldcoin_verified);
+        console.log("Current Worldcoin verification status:", isWorldcoinVerified);
+        console.log("Current Onfido verification status:", isOnfidoVerified);
+        console.log("User worldcoin field:", user?.is_worldcoin_verified);
+        console.log("User onfido field:", user?.is_onfido_verified);
         
         // If verification statuses mismatch, force a hard reload to reset everything
-        if (user && Boolean(user.is_worldcoin_verified) !== isWorldcoinVerified) {
+        if (user && 
+            (Boolean(user.is_worldcoin_verified) !== isWorldcoinVerified || 
+             Boolean(user.is_onfido_verified) !== isOnfidoVerified)) {
           console.log("Verification status mismatch! Forcing reload...");
           window.location.reload();
           return;
@@ -57,7 +61,7 @@ export default function VerificationSuccessRedirect() {
       updateUserData();
     }, 300);
     
-  }, [router, loadUser, user, isWorldcoinVerified]);
+  }, [router, loadUser, user, isWorldcoinVerified, isOnfidoVerified]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">

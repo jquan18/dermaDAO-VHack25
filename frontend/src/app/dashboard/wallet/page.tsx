@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TransakFunding } from "@/components/wallet/transak-funding";
-import { WorldcoinVerification } from "@/components/auth/WorldcoinVerification";
+import { VerificationOptions } from "@/components/auth/VerificationOptions";
 import dynamic from "next/dynamic";
 
 // Define transaction type
@@ -609,11 +609,11 @@ export default function WalletPage() {
           <CardHeader className="pb-2">
             <CardTitle>Quadratic Funding Verification</CardTitle>
             <CardDescription>
-              Verify your identity with Worldcoin to participate in quadratic funding
+              Verify your identity to participate in quadratic funding
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <WorldcoinVerification />
+            <VerificationOptions />
           </CardContent>
         </Card>
 

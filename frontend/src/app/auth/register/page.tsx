@@ -78,7 +78,7 @@ export default function RegisterPage() {
       
       // Redirect based on role
       if (role === "charity_admin") {
-        router.push("/auth/verify");
+        router.push("/dashboard");
       } else if (role === "corporate") {
         router.push("/dashboard/corporate");
       } else {

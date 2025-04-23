@@ -13,6 +13,7 @@ export interface User {
   role: "user" | "charity_admin" | "corporate" | "admin";
   is_verified: boolean;
   is_worldcoin_verified?: boolean;
+  is_onfido_verified?: boolean;
   wallet_address?: string;
   charity_id?: string;
   profile_image?: string;
@@ -25,6 +26,7 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   isWorldcoinVerified: boolean;
+  isOnfidoVerified: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (
@@ -42,6 +44,8 @@ interface AuthState {
   ) => Promise<void>;
   logout: () => void;
   verifyWorldcoin: (mockProof?: any) => Promise<void>;
+  verifyOnfido: () => Promise<{ sdk_token: string; applicant_id: string }>;
+  completeOnfidoVerification: () => Promise<void>;
   loadUser: () => Promise<void>;
   checkAndUpdateCorporateRole: () => Promise<void>;
 }
@@ -54,6 +58,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       isAuthenticated: false,
       isWorldcoinVerified: false,
+      isOnfidoVerified: false,
       error: null,
       login: async (email, password) => {
         set({ isLoading: true, error: null });
@@ -80,6 +85,7 @@ export const useAuthStore = create<AuthState>()(
             token,
             isAuthenticated: true,
             isWorldcoinVerified: user.is_worldcoin_verified === true,
+            isOnfidoVerified: user.is_onfido_verified === true,
             isLoading: false,
           });
           
@@ -131,6 +137,7 @@ export const useAuthStore = create<AuthState>()(
             token,
             isAuthenticated: true,
             isWorldcoinVerified: user.is_worldcoin_verified === true,
+            isOnfidoVerified: user.is_onfido_verified === true,
             isLoading: false,
           });
         } catch (error: any) {
@@ -150,6 +157,7 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           isAuthenticated: false,
           isWorldcoinVerified: false,
+          isOnfidoVerified: false,
         });
       },
       verifyWorldcoin: async (mockProof) => {
@@ -183,6 +191,37 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
+      verifyOnfido: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authApi.verifyOnfido();
+          return response.data;
+        } catch (error: any) {
+          set({
+            error: error.response?.data?.error?.message || "Onfido verification failed",
+            isLoading: false,
+          });
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+      completeOnfidoVerification: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authApi.completeOnfidoVerification();
+          // After verification, reload user data to get updated verification status
+          await get().loadUser();
+        } catch (error: any) {
+          set({
+            error: error.response?.data?.error?.message || "Onfido verification completion failed",
+            isLoading: false,
+          });
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
       loadUser: async () => {
         const token = Cookies.get("token");
         
@@ -192,6 +231,7 @@ export const useAuthStore = create<AuthState>()(
             token: null,
             isAuthenticated: false,
             isWorldcoinVerified: false,
+            isOnfidoVerified: false,
             isLoading: false
           });
           return;
@@ -204,11 +244,12 @@ export const useAuthStore = create<AuthState>()(
           const response = await authApi.getMe();
           const { user } = response.data;
           
-          // Set the worldcoin verification status based on correct field name
+          // Set the verification status based on correct field names
           set({
             user,
             isAuthenticated: true,
             isWorldcoinVerified: user.is_worldcoin_verified === true,
+            isOnfidoVerified: user.is_onfido_verified === true,
             isLoading: false,
           });
           
@@ -226,6 +267,7 @@ export const useAuthStore = create<AuthState>()(
             token: null,
             isAuthenticated: false,
             isWorldcoinVerified: false,
+            isOnfidoVerified: false,
             isLoading: false
           });
         }
@@ -272,8 +314,8 @@ export const useAuthStore = create<AuthState>()(
       // Persist both token and authentication state
       partialize: (state) => ({
         token: state.token,
+        user: state.user,
         isAuthenticated: state.isAuthenticated,
-        user: state.user
       }),
     }
   )
