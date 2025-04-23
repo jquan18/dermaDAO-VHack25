@@ -7,6 +7,18 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MainLayout } from "@/components/layout/main-layout";
+import Iridescence from '@/components/ui/iridescence';
+import { FeatureGrid, FeatureItem } from "@/components/ui/feature-grid";
+import {
+  IconAdjustmentsBolt,
+  IconCloud,
+  IconCurrencyDollar,
+  IconEaseInOut,
+  IconHeart,
+  IconHelp,
+  IconRouteAltLeft,
+  IconTerminal2,
+} from "@tabler/icons-react";
 
 // Animation variants
 const fadeIn = {
@@ -14,109 +26,114 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
+const features: FeatureItem[] = [
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  }
+  // Add more features...
+];
+
 export default function HomePage() {
   return (
-    <MainLayout>
-      {/* Hero Section with vibrant gradient background */}
-      <motion.section
-        className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center px-4 py-20 overflow-hidden relative"
-        initial="hidden"
-        animate="visible"
-        variants={fadeIn}
-      >
-        <div className="max-w-5xl mx-auto text-center z-10">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight">
-            The first modular<br />charity funding platform
-          </h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-3xl mx-auto">
-            DermaDAO is a decentralized platform that brings transparency and
-            accountability to charity donations through blockchain technology.
-          </p>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link href="/projects">
-              <Button size="lg" className="bg-black hover:bg-black/80 text-white px-8 py-6 text-lg rounded-md">
-                Browse Projects
-              </Button>
-            </Link>
-            <Link href="/how-it-works">
-              <Button size="lg" variant="outline" className="bg-white hover:bg-white/90 text-black border-white px-8 py-6 text-lg rounded-md">
-                Explore
-              </Button>
-            </Link>
-          </div>
-        </div>
+    <MainLayout fullWidthHero={true}>
+      <Iridescence
+  color={[0.95, 0.8, 1]}
+  mouseReact={true}
+  amplitude={1.0}
+  speed={1.0}
+/>
 
-        {/* Background gradient elements */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
-      </motion.section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-black text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">Revolutionizing Charity Transparency</h2>
-            <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-              Every donation on DermaDAO is tracked on the blockchain, ensuring complete transparency and accountability.
+      {/* Content Wrapper - Passed as the second child */}
+      <div className="relative z-10"> {/* Added relative z-10 to ensure content is above background */}
+        {/* Hero Section content */}
+        <motion.section
+          className="flex items-center justify-center px-4 py-48" 
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+        >
+          <div className="max-w-5xl mx-auto text-center">
+            <h1 className="text-5xl md:text-7xl font-bold text-black mb-6 tracking-tight">
+              The first modular<br />charity funding platform
+            </h1>
+            <p className="text-xl md:text-2xl text-black/90 mb-10 max-w-3xl mx-auto">
+              DermaDAO is a decentralized platform that brings transparency and
+              accountability to charity donations through blockchain technology.
             </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="bg-white/5 p-8 rounded-lg backdrop-blur-sm">
-              <h3 className="text-2xl font-bold mb-4">Verified Charities</h3>
-              <p className="text-gray-300">
-                Every charity on our platform is verified through a rigorous process to ensure legitimacy and accountability.
-              </p>
-            </div>
-            
-            <div className="bg-white/5 p-8 rounded-lg backdrop-blur-sm">
-              <h3 className="text-2xl font-bold mb-4">Quadratic Funding</h3>
-              <p className="text-gray-300">
-                Our innovative funding model amplifies the impact of your donations through matched contributions.
-              </p>
-            </div>
-            
-            <div className="bg-white/5 p-8 rounded-lg backdrop-blur-sm">
-              <h3 className="text-2xl font-bold mb-4">No Gas Fees</h3>
-              <p className="text-gray-300">
-                We eliminate barriers to giving by covering all gas fees, so 100% of your donation goes to the cause.
-              </p>
+            <div className="flex flex-wrap justify-center gap-6">
+              <Link href="/auth/register">
+                <Button size="lg" className="bg-black hover:bg-black/80 text-white px-8 py-6 text-lg rounded-md">
+                  Get Started
+                </Button>
+              </Link>
             </div>
           </div>
-          
-          <div className="mt-16 text-center">
-            <Link href="/how-it-works">
-              <Button className="bg-white hover:bg-white/90 text-black px-8 py-6 text-lg rounded-md">
-                Learn How It Works
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-      
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-600 to-indigo-700 text-white">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Make a Difference?</h2>
-          <p className="text-xl mb-10 opacity-90 max-w-3xl mx-auto">
-            Join DermaDAO today and be part of the transparent charity revolution.
-          </p>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link href="/projects">
-              <Button size="lg" className="bg-black hover:bg-black/80 text-white px-8 py-6 text-lg rounded-md">
-                Browse Projects
-              </Button>
-            </Link>
-            <Link href="/auth/register">
-              <Button size="lg" className="bg-white hover:bg-white/90 text-black px-8 py-6 text-lg rounded-md">
-                Sign Up Now
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+        </motion.section>
+
+        {/* Features Section */}
+        {/* Changed py-20 to pt-20 pb-48 for more bottom spacing */}
+        <section className="pt-20 pb-20 text-black">
+        <FeatureGrid features={features} columns={2} />
+          {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-bold mb-4">Revolutionizing Charity Transparency</h2>
+              <p className="text-lg text-black/90 max-w-3xl mx-auto">
+                Every donation on DermaDAO is tracked on the blockchain, ensuring complete transparency and accountability.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              <div className="bg-white/5 p-8 rounded-lg backdrop-blur-sm">
+                <h3 className="text-2xl font-bold mb-4">Verified Charities</h3>
+                <p className="text-black/90">
+                  Every charity on our platform is verified through a rigorous process to ensure legitimacy and accountability.
+                </p>
+              </div>
+
+              <div className="bg-white/5 p-8 rounded-lg backdrop-blur-sm">
+                <h3 className="text-2xl font-bold mb-4">Quadratic Funding</h3>
+                <p className="text-black/90">
+                  Our innovative funding model amplifies the impact of your donations through matched contributions.
+                </p>
+              </div>
+
+              <div className="bg-white/5 p-8 rounded-lg backdrop-blur-sm">
+                <h3 className="text-2xl font-bold mb-4">No Gas Fees</h3>
+                <p className="text-black/90">
+                  We eliminate barriers to giving by covering all gas fees, so 100% of your donation goes to the cause.
+                </p>
+              </div>
+            </div>
+          </div> */}
+        </section>
+      </div>
     </MainLayout>
   );
-} 
+}

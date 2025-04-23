@@ -77,8 +77,14 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-white;
+    background-color: rgb(3 7 18); /* bg-gray-950 as direct CSS */
   }
+}
+
+/* Make transparent sections properly display gradients */
+.bg-transparent {
+  background-color: transparent !important;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
