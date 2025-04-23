@@ -8,9 +8,8 @@ const {
   recordTransaction,
   executeProposal,
   getProposalDetails,
-  voteOnProposal,
-  getProposalVotes,
-  getAllProposals
+  getAllProposals,
+  aiEvaluateProposal
 } = require('../controllers/proposal.controller');
 const { authenticate, authorizeAdmin, authorizeCharity } = require('../middleware/auth');
 const { validateRequest } = require('../middleware/validation');
@@ -135,6 +134,20 @@ router.post(
 );
 
 /**
+ * @route POST /api/proposals/:id/ai-evaluate
+ * @desc Trigger Gemini AI evaluation for a proposal without changing status (admin only)
+ * @access Private (Admin)
+ */
+router.post(
+  '/:id/ai-evaluate',
+  [
+    authenticate,
+    authorizeAdmin
+  ],
+  aiEvaluateProposal
+);
+
+/**
  * @route POST /api/proposals/:id/execute
  * @desc Execute a verified proposal to transfer funds
  * @access Private (Charity Admin)
@@ -146,30 +159,6 @@ router.post(
     authorizeCharity
   ],
   executeProposal
-);
-
-/**
- * @route POST /api/proposals/:id/vote
- * @description Vote on a proposal (for donors only)
- * @access Private (Donors)
- */
-router.post('/:id/vote',
-  authenticate,
-  [
-    body('vote').isBoolean().withMessage('Vote must be a boolean'),
-    body('comment').optional().isString().withMessage('Comment must be a string')
-  ],
-  voteOnProposal
-);
-
-/**
- * @route GET /api/proposals/:id/votes
- * @description Get all votes for a proposal
- * @access Private
- */
-router.get('/:id/votes',
-  authenticate,
-  getProposalVotes
 );
 
 module.exports = router; 

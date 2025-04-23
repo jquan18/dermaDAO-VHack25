@@ -46,6 +46,9 @@ router.put('/:id/milestones', authenticate, authorizeCharity, milestoneValidatio
 // Verify a project (admin only)
 router.put('/:id/verify', authenticate, authorizeAdmin, projectController.verifyProject);
 
+// Trigger AI evaluation for a project (admin only)
+router.post('/:id/ai-evaluate', authenticate, authorizeAdmin, projectController.aiEvaluateProject);
+
 // Vote on project verification (only verified users)
 router.post('/:id/vote', authenticate, projectController.voteOnProject);
 // Get votes for project verification

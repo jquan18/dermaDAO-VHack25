@@ -16,10 +16,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ConnectWallet } from "@/components/blockchain/connect-wallet";
-import { AlertCircle, CheckCircle, Clock, Search, Shield, ShieldCheck, ShieldX } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Search, Shield, ShieldCheck, ShieldX, Bot, Loader2 } from "lucide-react";
 import { projectsApi } from "@/lib/api";
 import { useBlockchain } from "@/hooks/use-blockchain";
 import { formatDate } from "@/lib/utils";
+import { toast } from "@/components/ui/use-toast";
 
 type Project = {
   id: number;
@@ -49,6 +50,8 @@ export default function ProjectsVerification() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+  const [evaluatingProjectId, setEvaluatingProjectId] = useState<number | null>(null);
   
   useEffect(() => {
     // Redirect if not admin
@@ -149,6 +152,49 @@ export default function ProjectsVerification() {
     setIsDialogOpen(true);
   };
 
+  const handleAiEvaluateProject = async (projectId: number) => {
+    if (!isWalletConnected) {
+      setError("Please connect your wallet first to perform operations.");
+      return;
+    }
+    
+    setIsEvaluating(true);
+    setEvaluatingProjectId(projectId);
+    setError(null);
+    
+    try {
+      // Call the AI evaluation endpoint
+      const result = await projectsApi.aiEvaluateProject(projectId.toString());
+      
+      if (result.success) {
+        // Update the project in the local state with the new AI evaluation results
+        setProjects(projects.map(project => 
+          project.id === projectId 
+            ? { 
+                ...project, 
+                verification_score: result.data.verification_score,
+                verification_notes: result.data.verification_notes 
+              } 
+            : project
+        ));
+        
+        toast({
+          title: "AI Evaluation Complete",
+          description: `Project received a score of ${result.data.verification_score}/100`,
+          variant: "success"
+        });
+      } else {
+        setError(result.error?.message || "Failed to evaluate project");
+      }
+    } catch (error: any) {
+      console.error("Error evaluating project:", error);
+      setError(error.message || "Failed to evaluate project with AI");
+    } finally {
+      setIsEvaluating(false);
+      setEvaluatingProjectId(null);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -211,14 +257,34 @@ export default function ProjectsVerification() {
                             <Badge variant="secondary">Pending</Badge>
                           </TableCell>
                           <TableCell>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => openVerifyDialog(project)}
-                            >
-                              <Shield className="h-4 w-4 mr-1" />
-                              Verify
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => openVerifyDialog(project)}
+                              >
+                                <Shield className="h-4 w-4 mr-1" />
+                                Verify
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => handleAiEvaluateProject(project.id)}
+                                disabled={isEvaluating && evaluatingProjectId === project.id}
+                              >
+                                {isEvaluating && evaluatingProjectId === project.id ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                    Evaluating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Bot className="h-4 w-4 mr-1" />
+                                    AI Evaluate
+                                  </>
+                                )}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -263,14 +329,34 @@ export default function ProjectsVerification() {
                             <Badge variant="success">Verified</Badge>
                           </TableCell>
                           <TableCell>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => openVerifyDialog(project)}
-                            >
-                              <ShieldCheck className="h-4 w-4 mr-1" />
-                              Update
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => openVerifyDialog(project)}
+                              >
+                                <Shield className="h-4 w-4 mr-1" />
+                                Update
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => handleAiEvaluateProject(project.id)}
+                                disabled={isEvaluating && evaluatingProjectId === project.id}
+                              >
+                                {isEvaluating && evaluatingProjectId === project.id ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                    Evaluating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Bot className="h-4 w-4 mr-1" />
+                                    AI Evaluate
+                                  </>
+                                )}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

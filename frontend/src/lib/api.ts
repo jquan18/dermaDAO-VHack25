@@ -311,6 +311,10 @@ export const projectsApi = {
     const response = await api.get(`/projects/${projectId}/votes`);
     return response.data;
   },
+  aiEvaluateProject: async (id: string) => {
+    const response = await api.post(`/projects/${id}/ai-evaluate`);
+    return response.data;
+  },
   getProjectById: async (id: string) => {
     try {
       const response = await api.get(`/projects/${id}`);
@@ -440,7 +444,11 @@ export const proposalsApi = {
     return response.data;
   },
   verifyProposal: async (id: string) => {
-    const response = await api.post(`/proposals/${id}/ai-verify`);
+    const response = await api.post(`/proposals/${id}/verify`);
+    return response.data;
+  },
+  aiEvaluateProposal: async (id: string) => {
+    const response = await api.post(`/proposals/${id}/ai-evaluate`);
     return response.data;
   },
   createProposalWithTransferType: async (data: {
@@ -514,36 +522,6 @@ export const proposalsApi = {
       };
     }
   },
-  voteOnProposal: async (proposalId, data) => {
-    try {
-      const response = await api.post(`/proposals/${proposalId}/vote`, data);
-      return {
-        success: true,
-        data: response.data.data
-      };
-    } catch (error) {
-      console.error("Error voting on proposal:", error);
-      return {
-        success: false,
-        error: handleApiError(error)
-      };
-    }
-  },
-  getProposalVotes: async (proposalId) => {
-    try {
-      const response = await api.get(`/proposals/${proposalId}/votes`);
-      return {
-        success: true,
-        data: response.data.data
-      };
-    } catch (error) {
-      console.error("Error getting proposal votes:", error);
-      return {
-        success: false,
-        error: handleApiError(error)
-      };
-    }
-  },
   getAllProposals: async () => {
     try {
       const response = await api.get(`/proposals`);
@@ -577,25 +555,8 @@ export const bankTransfersApi = {
 export const walletApi = {
   getWalletBalance: async () => {
     try {
-      console.log('Fetching wallet balance from API...');
       const response = await api.get('/wallet/balance');
-      console.log('Balance API response:', response.data);
-      
-      if (response.data.success && response.data.data) {
-        console.log(`Balance: ${response.data.data.balance} ${response.data.data.currency}`);
-        return response.data;
-      } else {
-        console.warn('Invalid balance API response:', response.data);
-        return {
-          success: true,
-          data: {
-            wallet_address: null,
-            balance: '0.00',
-            currency: 'ETH',
-            status: 'error'
-          }
-        };
-      }
+      return response.data;
     } catch (error) {
       console.error('Error fetching wallet balance:', error);
       return {
@@ -610,11 +571,11 @@ export const walletApi = {
     }
   },
   
-  getWalletDataFromScrollScan: async (walletAddress: string) => {
+  getWalletDataFromScrollScan: async (walletAddress: string, network: string = 'sepolia') => {
     try {
-      console.log(`Fetching wallet data for: ${walletAddress}`);
+      console.log(`Fetching wallet data for: ${walletAddress} on network: ${network}`);
       const response = await api.get(`/wallet/scrollscan-data`, {
-        params: { walletAddress }
+        params: { walletAddress, network }
       });
       
       console.log('ScrollScan API response:', response.data);

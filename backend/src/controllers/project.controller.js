@@ -1192,6 +1192,95 @@ const projectController = {
       });
     }
   },
+
+  /**
+   * Trigger AI evaluation for a project
+   * @route POST /api/projects/:id/ai-evaluate
+   * @access Private (Admin only)
+   */
+  aiEvaluateProject: async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Check if user is admin
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          error: {
+            message: 'Only administrators can trigger AI evaluation',
+            code: 'PERMISSION_DENIED'
+          }
+        });
+      }
+      
+      // Check if project exists
+      const projectResult = await db.query(
+        `SELECT p.*, c.name as organization_name
+         FROM projects p
+         JOIN charities c ON p.charity_id = c.id
+         WHERE p.id = $1`,
+        [id]
+      );
+      
+      if (projectResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: 'Project not found',
+            code: 'NOT_FOUND'
+          }
+        });
+      }
+      
+      const project = projectResult.rows[0];
+      
+      // Prepare project data for AI evaluation
+      const projectData = {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        ipfs_hash: project.ipfs_hash,
+        funding_goal: project.funding_goal,
+        organization_name: project.organization_name
+      };
+      
+      // Import AI service
+      const aiService = require('../services/ai.service');
+      
+      // Call AI service to evaluate project
+      const aiEvaluation = await aiService.evaluateProject(id, projectData);
+      
+      // Update project with AI evaluation results
+      await db.query(
+        `UPDATE projects 
+         SET verification_score = $1,
+             verification_notes = $2,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3`,
+        [aiEvaluation.score, aiEvaluation.notes, id]
+      );
+      
+      // Return success response with AI evaluation results
+      res.json({
+        success: true,
+        data: {
+          project_id: id,
+          verification_score: aiEvaluation.score,
+          verified: aiEvaluation.verified,
+          verification_notes: aiEvaluation.notes
+        }
+      });
+    } catch (error) {
+      logger.error('AI evaluation error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          message: 'Server error during AI evaluation',
+          code: 'SERVER_ERROR'
+        }
+      });
+    }
+  },
 };
 
 module.exports = projectController;
