@@ -882,6 +882,91 @@ const aiVerifyProposal = async (req, res) => {
 };
 
 /**
+ * Evaluate a proposal with Gemini AI without changing its status
+ * @route POST /api/proposals/:id/ai-evaluate
+ * @access Private (Admin only)
+ */
+const aiEvaluateProposal = async (req, res) => {
+  try {
+    // This endpoint should only be accessible to admins
+    if (!req.user.is_admin) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          message: 'Only admin can trigger AI evaluation',
+          code: 'PERMISSION_DENIED'
+        }
+      });
+    }
+    
+    const proposalId = req.params.id;
+    
+    // Get proposal details
+    const { rows } = await db.query(
+      `SELECT 
+        p.id, p.project_id, p.milestone_id, p.description, 
+        p.evidence_ipfs_hash, p.amount, p.bank_account_id,
+        p.status, pr.name as project_name, pr.description as project_description
+       FROM proposals p
+       JOIN projects pr ON p.project_id = pr.id
+       WHERE p.id = $1`,
+      [proposalId]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Proposal not found',
+          code: 'RESOURCE_NOT_FOUND'
+        }
+      });
+    }
+    
+    const proposal = rows[0];
+    
+    // Evaluate proposal with AI
+    const aiService = require('../services/ai.service');
+    const aiResult = await aiService.evaluateProposal(proposalId, proposal);
+    
+    // Update proposal with AI evaluation results WITHOUT changing status
+    await db.query(
+      `UPDATE proposals SET 
+        ai_verification_score = $1, 
+        ai_verification_notes = $2,
+        updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3`,
+      [
+        aiResult.score,
+        aiResult.notes,
+        proposalId
+      ]
+    );
+    
+    // Return success response
+    res.json({
+      success: true,
+      data: {
+        proposal_id: proposalId,
+        verification_score: aiResult.score,
+        verified: aiResult.verified,
+        verification_notes: aiResult.notes,
+        status: proposal.status // Return the unchanged status
+      }
+    });
+  } catch (error) {
+    logger.error('AI evaluation error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Server error',
+        code: 'SERVER_ERROR'
+      }
+    });
+  }
+};
+
+/**
  * Record a blockchain transaction for a proposal
  * @route POST /api/proposals/record-transaction
  * @access Private (Charity Admin)
@@ -1376,5 +1461,6 @@ module.exports = {
   executeVerifiedProposal,
   hasUserDonated,
   getProjectDonors,
-  getAllProposals
+  getAllProposals,
+  aiEvaluateProposal
 }; 

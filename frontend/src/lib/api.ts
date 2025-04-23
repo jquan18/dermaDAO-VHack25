@@ -311,6 +311,10 @@ export const projectsApi = {
     const response = await api.get(`/projects/${projectId}/votes`);
     return response.data;
   },
+  aiEvaluateProject: async (id: string) => {
+    const response = await api.post(`/projects/${id}/ai-evaluate`);
+    return response.data;
+  },
   getProjectById: async (id: string) => {
     try {
       const response = await api.get(`/projects/${id}`);
@@ -440,7 +444,11 @@ export const proposalsApi = {
     return response.data;
   },
   verifyProposal: async (id: string) => {
-    const response = await api.post(`/proposals/${id}/ai-verify`);
+    const response = await api.post(`/proposals/${id}/verify`);
+    return response.data;
+  },
+  aiEvaluateProposal: async (id: string) => {
+    const response = await api.post(`/proposals/${id}/ai-evaluate`);
     return response.data;
   },
   createProposalWithTransferType: async (data: {

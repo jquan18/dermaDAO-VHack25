@@ -1,5 +1,5 @@
 ---
-description: Any interface that will call an API route to the backend that involves database manipulation
+description: 
 globs: 
 alwaysApply: false
 ---

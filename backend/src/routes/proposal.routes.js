@@ -8,7 +8,8 @@ const {
   recordTransaction,
   executeProposal,
   getProposalDetails,
-  getAllProposals
+  getAllProposals,
+  aiEvaluateProposal
 } = require('../controllers/proposal.controller');
 const { authenticate, authorizeAdmin, authorizeCharity } = require('../middleware/auth');
 const { validateRequest } = require('../middleware/validation');
@@ -130,6 +131,20 @@ router.post(
     authorizeAdmin
   ],
   aiVerifyProposal
+);
+
+/**
+ * @route POST /api/proposals/:id/ai-evaluate
+ * @desc Trigger Gemini AI evaluation for a proposal without changing status (admin only)
+ * @access Private (Admin)
+ */
+router.post(
+  '/:id/ai-evaluate',
+  [
+    authenticate,
+    authorizeAdmin
+  ],
+  aiEvaluateProposal
 );
 
 /**

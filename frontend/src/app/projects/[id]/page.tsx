@@ -13,6 +13,7 @@ import { formatDateTime, formatCurrency } from "@/lib/utils";
 import { Loader2, CheckCircle, XCircle, ExternalLink, ArrowUpRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AIVerificationBadge } from '@/components/projects/ai-verification-badge';
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -346,7 +347,7 @@ export default function ProjectDetailsPage() {
             <TabsContent value="verification" className="pt-4">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium">Verification Status</h3>
+                  <h3 className="text-lg font-medium">Project Verification Status</h3>
                   <p className="mt-1">
                     {project.is_verified 
                       ? "This project has been verified and is eligible to receive donations." 
@@ -354,27 +355,10 @@ export default function ProjectDetailsPage() {
                   </p>
                 </div>
                 
-                <div>
-                  <h3 className="text-lg font-medium">AI Verification Score</h3>
-                  <div className="flex items-center mt-2">
-                    <div className="bg-gray-100 w-full h-4 rounded-full">
-                      <div 
-                        className="bg-blue-500 h-4 rounded-full" 
-                        style={{ width: `${project.verification_score || 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="ml-2 font-semibold">
-                      {project.verification_score || 0}/100
-                    </span>
-                  </div>
-                </div>
-                
-                {project.verification_notes && (
-                  <div>
-                    <h3 className="text-lg font-medium">Verification Notes</h3>
-                    <p className="mt-1">{project.verification_notes}</p>
-                  </div>
-                )}
+                <AIVerificationBadge 
+                  score={project.verification_score || 0} 
+                  notes={project.verification_notes || null}
+                />
                 
                 <Separator className="my-6" />
                 

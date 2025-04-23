@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { projectsApi, donationsApi, proposalsApi, walletApi } from "@/lib/api";
 import { formatCurrency, formatDate, calculateProgress } from "@/lib/utils";
+import { AIVerificationBadge } from '@/components/projects/ai-verification-badge';
 
 type ProjectDetailProps = {
   params: {
@@ -965,86 +966,41 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
         
         {/* Verification Tab */}
         <TabsContent value="verification" className="space-y-6">
-          <Card>
+          <Card className="border-none">
             <CardHeader>
-              <CardTitle>Project Verification</CardTitle>
-              <CardDescription>AI-powered verification and transparency score</CardDescription>
+              <CardTitle>Verification Status</CardTitle>
+              <CardDescription>Current verification status and suggestions for improvement</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-center">
-                <div className="relative w-40 h-40">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                    <circle
-                      className="text-gray-200"
-                      strokeWidth="8"
-                      stroke="currentColor"
-                      fill="transparent"
-                      r="46"
-                      cx="50"
-                      cy="50"
-                    />
-                    <circle
-                      className={`
-                        ${project.verification_score >= 70 ? 'text-green-500' : 
-                          project.verification_score >= 40 ? 'text-amber-500' : 
-                          'text-red-500'}
-                      `}
-                      strokeWidth="8"
-                      strokeDasharray={`${(project.verification_score || 0) * 2.89} 289`}
-                      strokeLinecap="round"
-                      stroke="currentColor"
-                      fill="transparent"
-                      r="46"
-                      cx="50"
-                      cy="50"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-3xl font-bold">{project.verification_score || 0}%</div>
-                    <div className="text-sm text-gray-500">Verified</div>
-                  </div>
-                </div>
-              </div>
+            <CardContent className="space-y-8">
+              <AIVerificationBadge 
+                score={project.verification_score || 0} 
+                notes={project.verification_notes || null}
+              />
               
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Verification Factors</h3>
-                <div className="space-y-3">
-                  {/* Placeholder Verification Factors - Replace with actual data if available */}
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Project description clarity</span>
-                    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-green-500" 
-                        style={{ width: `${Math.min((project.verification_score || 0) + 10, 100)}%` }}
-                      ></div>
-                    </div>
+              {/* Improvement Suggestions based on score */}
+              {project.verification_score < 80 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Improvement Suggestions</h3>
+                  <div className="space-y-2">
+                    {project.verification_score < 70 && (
+                      <div className="flex items-start gap-2">
+                        <div className="bg-amber-100 p-1 rounded-full mt-0.5">
+                          <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        </div>
+                        <p className="text-gray-600">Add more specific details about project implementation.</p>
+                      </div>
+                    )}
+                    {project.verification_score < 80 && (
+                      <div className="flex items-start gap-2">
+                        <div className="bg-amber-100 p-1 rounded-full mt-0.5">
+                          <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        </div>
+                        <p className="text-gray-600">Include evidence of past successes or similar projects.</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Milestone definition</span>
-                    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-amber-500" 
-                        style={{ width: `${Math.min((project.verification_score || 0) - 5, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  {/* Add more factors as needed */}
                 </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Improvement Suggestions</h3>
-                <div className="space-y-2">
-                   {/* Placeholder Suggestions - Replace with actual data if available */}
-                  <div className="flex items-start gap-2">
-                    <div className="bg-amber-100 p-1 rounded-full mt-0.5">
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <p className="text-gray-600">Add more specific details about project implementation.</p>
-                  </div>
-                   {/* Add more suggestions as needed */}
-                </div>
-              </div>
+              )}
             </CardContent>
             <CardFooter className="bg-gray-50 border-t">
               <Button 
