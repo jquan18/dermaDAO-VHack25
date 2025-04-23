@@ -64,7 +64,7 @@ export default function HomePage() {
   return (
     <MainLayout fullWidthHero={true}>
       <Iridescence
-  color={[0.95, 0.8, 1]}
+  color={[1, 1, 1]}
   mouseReact={true}
   amplitude={1.0}
   speed={1.0}
