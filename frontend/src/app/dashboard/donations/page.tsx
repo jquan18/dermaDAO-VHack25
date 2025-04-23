@@ -10,7 +10,6 @@ import { Loader2, Search, PieChart, BarChart3, CalendarDays, Landmark, ExternalL
 import { useToast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { QuadraticFundingInfo } from "@/components/funding/quadratic-funding-info";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
@@ -49,7 +48,6 @@ interface DonationStats {
 export default function DonationsPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("dashboard");
   const [projects, setProjects] = useState<Project[]>([]);
   const [userDonations, setUserDonations] = useState<Donation[]>([]);
   const [donationStats, setDonationStats] = useState<DonationStats>({
@@ -69,12 +67,12 @@ export default function DonationsPage() {
         // Fetch user's donations
         const donationsResponse = await donationsApi.getUserDonations();
         if (donationsResponse.success && donationsResponse.data) {
-          const fetchedDonations = donationsResponse.data.donations || [];
+          const fetchedDonations: Donation[] = donationsResponse.data.donations || [];
           setUserDonations(fetchedDonations);
           
           // Calculate stats
-          const totalDonated = fetchedDonations.reduce((sum, donation) => sum + Number(donation.amount), 0);
-          const totalMatched = fetchedDonations.reduce((sum, donation) => sum + Number(donation.matched_amount || 0), 0);
+          const totalDonated = fetchedDonations.reduce((sum: number, donation: Donation) => sum + Number(donation.amount), 0);
+          const totalMatched = fetchedDonations.reduce((sum: number, donation: Donation) => sum + Number(donation.matched_amount ?? 0), 0);
           const projectIds = new Set(fetchedDonations.map(donation => donation.project_id));
           
           setDonationStats({
@@ -208,220 +206,143 @@ export default function DonationsPage() {
           </p>
         </div>
 
-        <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-2 md:grid-cols-2">
-            <TabsTrigger value="dashboard">My Impact</TabsTrigger>
-            <TabsTrigger value="projects">Donate to Projects</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard" className="space-y-6">
-            {/* Impact Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Donated
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center">
-                    <Landmark className="mr-2 h-4 w-4 text-primary" />
-                    <div className="text-2xl font-bold">{formatCurrency(donationStats.total_donated)}</div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Projects Supported
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center">
-                    <BarChart3 className="mr-2 h-4 w-4 text-primary" />
-                    <div className="text-2xl font-bold">{donationStats.projects_supported}</div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Matched Amount
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center">
-                    <PieChart className="mr-2 h-4 w-4 text-primary" />
-                    <div className="text-2xl font-bold">{formatCurrency(donationStats.matched_amount)}</div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Impact
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center">
-                    <CalendarDays className="mr-2 h-4 w-4 text-primary" />
-                    <div className="text-2xl font-bold">{formatCurrency(donationStats.total_impact)}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Donation History */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Transaction History</CardTitle>
-                <CardDescription>Recent transactions from your wallet</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {userDonations.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">You haven't made any donations yet.</p>
-                    <Button 
-                      className="mt-4" 
-                      onClick={() => setActiveTab("projects")}
-                    >
-                      Find Projects to Support
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {userDonations.map((donation) => (
-                      <div key={donation.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Badge className={getTypeBadgeClass('donation')}>
-                              Donation
-                            </Badge>
-                            <Badge className={getStatusBadgeClass(donation.status || 'completed')}>
-                              {donation.status ? (donation.status.charAt(0).toUpperCase() + donation.status.slice(1)) : 'Completed'}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-500">{formatDate(donation.created_at)}</p>
-                          <p className="text-sm font-medium mt-1">
-                            Project: {donation.project_name}
-                          </p>
-                          {donation.charity_name && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Charity: {donation.charity_name}
-                            </p>
-                          )}
-                          {donation.transaction_hash && (
-                            <>
-                              <p className="text-xs text-gray-500 mt-1">
-                                Block: {donation.transaction_hash.includes('_') ? 'Internal' : '9293797'}
-                              </p>
-                              <div className="flex items-center mt-1">
-                                <a
-                                  href={`https://sepolia.scrollscan.com/tx/${donation.transaction_hash}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-primary hover:underline flex items-center"
-                                >
-                                  {truncateAddress(donation.transaction_hash)}
-                                  <ExternalLink size={12} className="ml-1" />
-                                </a>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold text-gray-800">
-                            -{formatCurrency(Number(donation.amount))}
-                          </div>
-                          {donation.matched_amount > 0 && (
-                            <div className="text-sm text-green-600 font-medium text-right">
-                              +{formatCurrency(Number(donation.matched_amount))} matched
-                            </div>
-                          )}
-                          <div className="mt-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => router.push(`/projects/${donation.project_id}`)}
-                              className="text-xs"
-                            >
-                              View Project
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="projects" className="space-y-6">
-            <QuadraticFundingInfo />
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="mb-6 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  placeholder="Search projects..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+        {/* Directly render the impact stats and history without tabs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Donated
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <Landmark className="mr-2 h-4 w-4 text-primary" />
+                <div className="text-2xl font-bold">{formatCurrency(donationStats.total_donated)}</div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Projects Supported
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <BarChart3 className="mr-2 h-4 w-4 text-primary" />
+                <div className="text-2xl font-bold">{donationStats.projects_supported}</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Matched Amount
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <PieChart className="mr-2 h-4 w-4 text-primary" />
+                <div className="text-2xl font-bold">{formatCurrency(donationStats.matched_amount)}</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Impact
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <CalendarDays className="mr-2 h-4 w-4 text-primary" />
+                <div className="text-2xl font-bold">{formatCurrency(donationStats.total_impact)}</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            {filteredProjects.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-lg text-gray-500">No projects found. Please try a different search.</p>
+        {/* Donation History */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Transaction History</CardTitle>
+            <CardDescription>Recent transactions from your wallet</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {userDonations.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">You haven't made any donations yet.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProjects.map((project) => (
-                  <Card key={project.id} className="flex flex-col h-full">
-                    <CardHeader>
-                      <CardTitle className="line-clamp-1">{project.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-3">{project.description}</p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Goal</span>
-                          <span className="font-medium">{formatCurrency(project.funding_goal)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Raised</span>
-                          <span className="font-medium">
-                            {formatCurrency(project.funding_progress?.raised ?? 0)}
-                          </span>
-                        </div>
-                        <Progress 
-                          value={calculateProgress(
-                            project.funding_progress?.raised,
-                            project.funding_goal
-                          )}
-                          className="h-2"
-                        />
+              <div className="space-y-4">
+                {userDonations.map((donation) => (
+                  <div key={donation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Badge className={getTypeBadgeClass('donation')}>
+                          Donation
+                        </Badge>
+                        <Badge className={getStatusBadgeClass(donation.status || 'completed')}>
+                          {donation.status ? (donation.status.charAt(0).toUpperCase() + donation.status.slice(1)) : 'Completed'}
+                        </Badge>
                       </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button
-                        className="w-full"
-                        onClick={() => handleDonate(project.id)}
-                      >
-                        Donate Now
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                      <p className="text-sm text-gray-500">{formatDate(donation.created_at)}</p>
+                      <p className="text-sm font-medium mt-1">
+                        Project: {donation.project_name}
+                      </p>
+                      {donation.charity_name && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Charity: {donation.charity_name}
+                        </p>
+                      )}
+                      {donation.transaction_hash && (
+                        <>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Block: {donation.transaction_hash.includes('_') ? 'Internal' : '9293797'}
+                          </p>
+                          <div className="flex items-center mt-1">
+                            <a
+                              href={`https://sepolia.scrollscan.com/tx/${donation.transaction_hash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline flex items-center"
+                            >
+                              {truncateAddress(donation.transaction_hash)}
+                              <ExternalLink size={12} className="ml-1" />
+                            </a>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-gray-800">
+                        -{formatCurrency(Number(donation.amount))}
+                      </div>
+                      {(donation.matched_amount ?? 0) > 0 && (
+                        <div className="text-sm text-green-600 font-medium text-right">
+                          +{formatCurrency(donation.matched_amount ?? 0)} matched
+                        </div>
+                      )}
+                      <div className="mt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => router.push(`/projects/${donation.project_id}`)}
+                          className="text-xs"
+                        >
+                          View Project
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
-          </TabsContent>
-        </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
