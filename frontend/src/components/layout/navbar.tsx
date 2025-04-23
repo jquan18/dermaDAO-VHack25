@@ -99,14 +99,17 @@ export function Navbar() {
           <div className="flex justify-between h-16">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" onClick={closeMenus}>
+              <div className="btn btn-ghost normal-case text-xl flex items-center gap-1">
+              <img src="/dermaDAOlogoBLACK.png" alt="DermaDAO Logo" className="h-10 w-10 -mr-2" />
                 <span
                   className={cn(
                     "text-xl font-bold transition-colors duration-300",
                     isLandingPage ? "text-black" : "text-primary"
                   )}
-                >
+                  >
                   DermaDAO
                 </span>
+                  </div>
               </Link>
             </div>
 

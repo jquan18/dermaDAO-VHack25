@@ -8,7 +8,17 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MainLayout } from "@/components/layout/main-layout";
 import Iridescence from '@/components/ui/iridescence';
-  
+import { FeatureGrid, FeatureItem } from "@/components/ui/feature-grid";
+import {
+  IconAdjustmentsBolt,
+  IconCloud,
+  IconCurrencyDollar,
+  IconEaseInOut,
+  IconHeart,
+  IconHelp,
+  IconRouteAltLeft,
+  IconTerminal2,
+} from "@tabler/icons-react";
 
 // Animation variants
 const fadeIn = {
@@ -16,11 +26,45 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
+const features: FeatureItem[] = [
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  },
+  {
+    title: "Your Feature Title",
+    description: "Your feature description goes here",
+    icon: <IconCloud />,
+  }
+  // Add more features...
+];
+
 export default function HomePage() {
   return (
     <MainLayout fullWidthHero={true}>
       <Iridescence
-  color={[1, 1, 1]}
+  color={[0.95, 0.8, 1]}
   mouseReact={true}
   amplitude={1.0}
   speed={1.0}
@@ -55,8 +99,9 @@ export default function HomePage() {
 
         {/* Features Section */}
         {/* Changed py-20 to pt-20 pb-48 for more bottom spacing */}
-        <section className="pt-20 pb-48 text-black">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="pt-20 pb-20 text-black">
+        <FeatureGrid features={features} columns={2} />
+          {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold mb-4">Revolutionizing Charity Transparency</h2>
               <p className="text-lg text-black/90 max-w-3xl mx-auto">
@@ -86,7 +131,7 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
         </section>
       </div>
     </MainLayout>
