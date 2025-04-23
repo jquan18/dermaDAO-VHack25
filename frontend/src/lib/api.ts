@@ -555,25 +555,8 @@ export const bankTransfersApi = {
 export const walletApi = {
   getWalletBalance: async () => {
     try {
-      console.log('Fetching wallet balance from API...');
       const response = await api.get('/wallet/balance');
-      console.log('Balance API response:', response.data);
-      
-      if (response.data.success && response.data.data) {
-        console.log(`Balance: ${response.data.data.balance} ${response.data.data.currency}`);
-        return response.data;
-      } else {
-        console.warn('Invalid balance API response:', response.data);
-        return {
-          success: true,
-          data: {
-            wallet_address: null,
-            balance: '0.00',
-            currency: 'ETH',
-            status: 'error'
-          }
-        };
-      }
+      return response.data;
     } catch (error) {
       console.error('Error fetching wallet balance:', error);
       return {
@@ -588,11 +571,11 @@ export const walletApi = {
     }
   },
   
-  getWalletDataFromScrollScan: async (walletAddress: string) => {
+  getWalletDataFromScrollScan: async (walletAddress: string, network: string = 'sepolia') => {
     try {
-      console.log(`Fetching wallet data for: ${walletAddress}`);
+      console.log(`Fetching wallet data for: ${walletAddress} on network: ${network}`);
       const response = await api.get(`/wallet/scrollscan-data`, {
-        params: { walletAddress }
+        params: { walletAddress, network }
       });
       
       console.log('ScrollScan API response:', response.data);
