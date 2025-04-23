@@ -18,6 +18,8 @@ const donationValidation = [
 
 // Routes
 router.get('/', donationController.getAllDonations);
+router.get('/stats', donationController.getDonationStats);
+router.get('/user', authenticate, donationController.getUserDonations);
 router.get('/by-project/:projectId', donationController.getDonationsByProject);
 router.get('/by-user/:userId', authenticate, donationController.getDonationsByUser);
 router.get('/:id', donationController.getDonationById);

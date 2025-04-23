@@ -9,7 +9,7 @@ const donationController = {
   getAllDonations: async (req, res) => {
     try {
       const donations = await db.query(`
-        SELECT d.*, p.title as project_title, u.email as user_email
+        SELECT d.*, p.name as project_title, u.email as user_email
         FROM donations d
         JOIN projects p ON d.project_id = p.id
         LEFT JOIN users u ON d.user_id = u.id
@@ -37,7 +37,7 @@ const donationController = {
     try {
       const { id } = req.params;
       const donation = await db.query(`
-        SELECT d.*, p.title as project_title, u.email as user_email
+        SELECT d.*, p.name as project_title, u.email as user_email
         FROM donations d
         JOIN projects p ON d.project_id = p.id
         LEFT JOIN users u ON d.user_id = u.id
@@ -184,7 +184,7 @@ const donationController = {
       }
 
       const donations = await db.query(`
-        SELECT d.*, p.title as project_title
+        SELECT d.*, p.name as project_title
         FROM donations d
         JOIN projects p ON d.project_id = p.id
         WHERE d.user_id = $1
