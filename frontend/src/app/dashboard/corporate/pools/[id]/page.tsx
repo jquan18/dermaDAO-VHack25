@@ -722,11 +722,10 @@ export default function PoolDetailsPage() {
               <CardHeader>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
-                    <CardTitle className="text-2xl flex items-center font-['Sansation']">
-                      <CircleDollarSign className="h-6 w-6 mr-2 text-blue-600" />
+                    <CardTitle className="text-2xl flex items-center">
                       {pool.name}
                     </CardTitle>
-                    <CardDescription className="text-gray-500">{pool.theme || "General Funding"}</CardDescription>
+                    <CardDescription className="text-gray-500">Theme: {pool.theme || "General Funding"}</CardDescription>
                   </div>
                   <Badge
                     variant={isActive ? "success" : hasEnded ? (isDistributed ? "secondary" : "outline") : "outline"}
@@ -738,24 +737,12 @@ export default function PoolDetailsPage() {
                 
                 {isPoolSponsor && (
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline" asChild>
-                      <Link href={`/dashboard/corporate/pools/${poolId}/edit`}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Pool
-                      </Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                      <Link href={`/dashboard/corporate/pools/${poolId}/projects/create`}>
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Add Project
-                      </Link>
-                    </Button>
                   </div>
                 )}
               </CardHeader>
               <CardContent>
                 <div className="bg-white/10 backdrop-blur-sm p-4 rounded-md mb-6">
-                  <p className="text-gray-700">{pool.description}</p>
+                  <p className="text-gray-850">{pool.description}</p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
