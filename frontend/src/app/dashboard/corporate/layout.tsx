@@ -11,7 +11,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
 
 interface CorporateLayoutProps {
   children: ReactNode;
@@ -56,7 +55,6 @@ export default function CorporateLayout({ children }: CorporateLayoutProps) {
           <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>
-      <Footer />
     </div>
   );
 } 
