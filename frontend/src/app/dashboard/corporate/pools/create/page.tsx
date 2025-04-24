@@ -73,6 +73,7 @@ export default function CreatePoolPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFunding, setIsFunding] = useState(false);
 
   // Initialize form with react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -109,10 +110,46 @@ export default function CreatePoolPage() {
       const result = await quadraticFundingApi.createPool(poolData);
       
       if (result.success) {
-        toast({
-          title: "Pool created successfully",
-          description: `${values.name} has been created.`,
-        });
+        // Extract the pool ID from the result
+        const poolId = result.data.id || result.data.pool_id;
+        
+        if (poolId) {
+          // Get the initial funding amount
+          const amount = parseFloat(values.initialFunding);
+          
+          // Make donation to the newly created pool
+          try {
+            setIsFunding(true);
+            console.log(`Making initial donation of ${amount} ETH to pool ${poolId}`);
+            const donationResult = await quadraticFundingApi.donateToPool(poolId, amount);
+            
+            if (donationResult.success) {
+              toast({
+                title: "Pool created and funded successfully",
+                description: `${values.name} has been created and funded with ${amount} ETH.`,
+              });
+            } else {
+              console.error("Failed to make initial donation:", donationResult.error);
+              toast({
+                title: "Pool created but funding failed",
+                description: `${values.name} has been created, but the initial funding of ${amount} ETH failed.`,
+              });
+            }
+          } catch (donationError) {
+            console.error("Error making initial donation:", donationError);
+            toast({
+              title: "Pool created but funding failed",
+              description: `${values.name} has been created, but the initial funding failed.`,
+            });
+          } finally {
+            setIsFunding(false);
+          }
+        } else {
+          toast({
+            title: "Pool created successfully",
+            description: `${values.name} has been created, but could not make initial funding.`,
+          });
+        }
         
         // Redirect to pools list
         router.push("/dashboard/corporate/pools");
@@ -124,7 +161,6 @@ export default function CreatePoolPage() {
       toast({
         title: "Failed to create pool",
         description: "There was an error creating your funding pool. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -425,8 +461,8 @@ export default function CreatePoolPage() {
                   <Button type="button" variant="outline" onClick={() => router.back()}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create Pool"}
+                  <Button type="submit" disabled={isSubmitting || isFunding}>
+                    {isSubmitting ? (isFunding ? "Creating and Funding..." : "Creating...") : "Create Pool"}
                   </Button>
                 </div>
               </form>
