@@ -47,7 +47,6 @@ export function Navbar() {
           { name: "Dashboard", href: "/dashboard/charity" },
           { name: "Projects", href: "/dashboard/charity/projects" },
           { name: "Funding Pools", href: "/dashboard/pools" },
-          { name: "Proposals", href: "/dashboard/charity/proposals" },
           { name: "Bank Accounts", href: "/dashboard/charity/bank-accounts" },
         ]
       : user?.role === "admin"
