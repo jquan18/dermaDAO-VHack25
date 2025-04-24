@@ -382,6 +382,10 @@ export default function ProjectDetailsPage() {
                 )}
               </div>
             </div>
+            <div className="prose max-w-none bg-white/20 backdrop-blur-sm p-4 rounded-md mb-6">
+                  <p>{project.description}</p>
+              </div>
+
           </CardHeader>
           <CardContent>
             <div className="mb-8">
@@ -405,13 +409,10 @@ export default function ProjectDetailsPage() {
               </TabsList>
               
               <TabsContent value="details" className="pt-4">
-                <div className="prose max-w-none bg-white/20 backdrop-blur-sm p-4 rounded-md mb-6">
-                  <p>{project.description}</p>
-                </div>
                 
                 {project.pool && (
                   <div className="mt-6">
-                    <h3 className="text-lg font-medium mb-2">Funding Pool</h3>
+                    <h3 className="text-lg font-medium mb-2">Sponsored By</h3>
                     <Card className="bg-white/20 backdrop-blur-sm border-0">
                       <CardHeader className="py-4">
                         <CardTitle className="text-xl">{project.pool.name}</CardTitle>
@@ -633,18 +634,16 @@ export default function ProjectDetailsPage() {
             </Tabs>
           </CardContent>
         </Card>
-      </BlurContainer>
-
-      {/* Action button */}
-      <BlurContainer intensity="strong" className="flex justify-center">
+        <div className="flex flex-row-reverse mr-6">
         <Button 
           onClick={() => router.push(`/dashboard/donations/${projectId}`)}
           size="lg"
-          className="mt-6"
-        >
+          >
           Donate to This Project
         </Button>
+          </div>
       </BlurContainer>
+
     </div>
   );
 }
