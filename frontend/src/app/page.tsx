@@ -66,8 +66,8 @@ export default function HomePage() {
       <Iridescence
   color={[1, 1, 1]}
   mouseReact={true}
-  amplitude={1.0}
-  speed={1.0}
+  amplitude={0.6}
+  speed={0.8}
 />
 
       {/* Content Wrapper - Passed as the second child */}

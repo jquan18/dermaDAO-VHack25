@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { ConnectWallet } from "@/components/blockchain/connect-wallet";
 import Link from "next/link";
 import { charityApi, projectsApi, proposalsApi } from "@/lib/api";
+import { BlurContainer } from "@/components/ui/blur-container";
 
 // Add Project interface
 interface Project {
@@ -142,189 +143,197 @@ export default function AdminDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage platform settings, verify charities, and monitor activity.
-          </p>
-        </div>
+        <BlurContainer intensity="light" className="py-2">
+          <div>
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">
+              Manage platform settings, verify charities, and monitor activity.
+            </p>
+          </div>
+        </BlurContainer>
 
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Charities
-              </CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalCharities}</div>
-              <p className="text-xs text-muted-foreground">
-                Registered on the platform
-              </p>
-            </CardContent>
-          </Card>
+        <BlurContainer>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Charities
+                </CardTitle>
+                <Building className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalCharities}</div>
+                <p className="text-xs text-muted-foreground">
+                  Registered on the platform
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Verifications
-              </CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingVerifications}</div>
-              <p className="text-xs text-muted-foreground">
-                Charities awaiting verification
-              </p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Verifications
+                </CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.pendingVerifications}</div>
+                <p className="text-xs text-muted-foreground">
+                  Charities awaiting verification
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Projects
-              </CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalProjects}</div>
-              <p className="text-xs text-muted-foreground">
-                Active & completed projects
-              </p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Projects
+                </CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalProjects}</div>
+                <p className="text-xs text-muted-foreground">
+                  Active & completed projects
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">
-                Registered platform users
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalUsers}</div>
+                <p className="text-xs text-muted-foreground">
+                  Registered platform users
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </BlurContainer>
 
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Link 
-                  href="/dashboard/admin/charities"
-                  className="block w-full px-4 py-2 text-left text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  Verify Charities
-                </Link>
-                <Link 
-                  href="/dashboard/admin/projects"
-                  className="block w-full px-4 py-2 text-left text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  Verify Projects
-                </Link>
-                <Link 
-                  href="/dashboard/admin/quadratic-funding"
-                  className="block w-full px-4 py-2 text-left text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                >
-                  Manage Quadratic Funding
-                </Link>
-                <Link 
-                  href="/dashboard/admin/users"
-                  className="block w-full px-4 py-2 text-left text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                >
-                  Manage Users
-                </Link>
-                <Link 
-                  href="/dashboard/admin/transfers"
-                  className="block w-full px-4 py-2 text-left text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                >
-                  Review Transfers
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Accounts</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Default admin login credentials:
-                </p>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-4 text-sm">
-                    <span className="font-medium">Username:</span>
-                    <span className="col-span-3">admin</span>
-                  </div>
-                  <div className="grid grid-cols-4 text-sm">
-                    <span className="font-medium">Password:</span>
-                    <span className="col-span-3">admin</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Please change these default credentials immediately in the profile settings.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-4">
-            <ConnectWallet />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Blockchain Operations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Connect your wallet to perform these operations:
-                </p>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
-                    <span>Verify charity organizations</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
-                    <span>Verify project proposals</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
-                    <span>Distribute quadratic funding to projects</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
-                    <span>Create new funding rounds</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
-                    <span>Verify withdrawal proposals</span>
-                  </li>
-                </ul>
-                
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="text-sm font-medium mb-2">Quadratic Funding Management</p>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    You can manage funding rounds and distributions from the Quadratic Funding page.
-                  </p>
+          <BlurContainer className="h-full">
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Link 
+                    href="/dashboard/admin/charities"
+                    className="block w-full px-4 py-2 text-left text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    Verify Charities
+                  </Link>
+                  <Link 
+                    href="/dashboard/admin/projects"
+                    className="block w-full px-4 py-2 text-left text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    Verify Projects
+                  </Link>
                   <Link 
                     href="/dashboard/admin/quadratic-funding"
-                    className="block w-full px-4 py-2 text-center text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="block w-full px-4 py-2 text-left text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
                   >
-                    Manage Funding Rounds
+                    Manage Quadratic Funding
                   </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  <Link 
+                    href="/dashboard/admin/users"
+                    className="block w-full px-4 py-2 text-left text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                  >
+                    Manage Users
+                  </Link>
+                  <Link 
+                    href="/dashboard/admin/transfers"
+                    className="block w-full px-4 py-2 text-left text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                  >
+                    Review Transfers
+                  </Link>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Admin Accounts</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-4 text-sm text-muted-foreground">
+                    Default admin login credentials:
+                  </p>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-4 text-sm">
+                      <span className="font-medium">Username:</span>
+                      <span className="col-span-3">admin</span>
+                    </div>
+                    <div className="grid grid-cols-4 text-sm">
+                      <span className="font-medium">Password:</span>
+                      <span className="col-span-3">admin</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Please change these default credentials immediately in the profile settings.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </BlurContainer>
+
+          <BlurContainer className="h-full">
+            <div className="space-y-4">
+              <ConnectWallet />
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Blockchain Operations</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Connect your wallet to perform these operations:
+                  </p>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-start">
+                      <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                      <span>Verify charity organizations</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                      <span>Verify project proposals</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                      <span>Distribute quadratic funding to projects</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                      <span>Create new funding rounds</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                      <span>Verify withdrawal proposals</span>
+                    </li>
+                  </ul>
+                  
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <p className="text-sm font-medium mb-2">Quadratic Funding Management</p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      You can manage funding rounds and distributions from the Quadratic Funding page.
+                    </p>
+                    <Link 
+                      href="/dashboard/admin/quadratic-funding"
+                      className="block w-full px-4 py-2 text-center text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      Manage Funding Rounds
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </BlurContainer>
         </div>
       </div>
     </DashboardLayout>
   );
-} 
+}

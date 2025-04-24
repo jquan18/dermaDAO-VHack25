@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 export const metadata: Metadata = {
   title: "Project Details | DermaDAO",
@@ -10,9 +11,5 @@ export default function ProjectDetailsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen flex flex-col">
-      {children}
-    </div>
-  );
-} 
+  return <DashboardLayout>{children}</DashboardLayout>;
+}

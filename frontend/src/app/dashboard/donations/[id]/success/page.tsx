@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowLeft, ExternalLink } from "lucide-react";
 import { projectsApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { BlurContainer } from "@/components/ui/blur-container";
 
 interface SuccessPageProps {
   params: {
@@ -96,75 +98,76 @@ export default function DonationSuccessPage({ params }: SuccessPageProps) {
   }, [params.id, router, toast]);
 
   return (
-    <div className="container mx-auto py-8">
-      <Button
-        variant="ghost"
-        className="mb-6"
-        onClick={() => router.push("/dashboard/donations")}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Projects
-      </Button>
+    <DashboardLayout>
+      <div className="container mx-auto py-8">
+        <BlurContainer intensity="light" className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/dashboard/donations")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Projects
+          </Button>
+        </BlurContainer>
 
-      <div className="max-w-2xl mx-auto">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <CheckCircle2 className="h-16 w-16 text-green-500" />
-            </div>
-            <CardTitle className="text-2xl">Thank You for Your Donation!</CardTitle>
-            <CardDescription>
-              Your contribution has been successfully processed
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center space-y-6">
-            {project && (
-              <div>
-                <p className="text-lg font-medium mb-2">Project Details</p>
-                <p className="text-gray-600">{project.name}</p>
-                <p className="text-sm text-gray-500">by {project.charity_name}</p>
-              </div>
-            )}
-            
-            {transactionHash && (
-              <Card className="bg-gray-50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-md">Transaction Details</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-sm mb-3">
-                    <span className="font-medium">Transaction Hash: </span>
-                    <span className="font-mono">{truncateHash(transactionHash)}</span>
+        <div className="max-w-2xl mx-auto">
+          <BlurContainer>
+            <Card className="border-0 bg-transparent">
+              <CardHeader className="text-center">
+                <div className="flex justify-center mb-4">
+                  <CheckCircle2 className="h-16 w-16 text-green-500" />
+                </div>
+                <CardTitle className="text-2xl">Thank You for Your Donation!</CardTitle>
+                <CardDescription>
+                  Your contribution has been successfully processed
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center space-y-6">
+                {project && (
+                  <div className="bg-white/20 backdrop-blur-sm rounded-md p-4">
+                    <p className="text-lg font-medium mb-2">Project Details</p>
+                    <p className="text-gray-600">{project.name}</p>
+                    <p className="text-sm text-gray-500">by {project.charity_name}</p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open(getExplorerUrl(transactionHash), '_blank')}
+                )}
+                
+                {transactionHash && (
+                  <div className="bg-white/30 backdrop-blur-md rounded-md p-4">
+                    <p className="text-md font-semibold mb-3">Transaction Details</p>
+                    <div className="text-sm mb-3">
+                      <span className="font-medium">Transaction Hash: </span>
+                      <span className="font-mono">{truncateHash(transactionHash)}</span>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open(getExplorerUrl(transactionHash), '_blank')}
+                    >
+                      View on Explorer <ExternalLink className="ml-2 h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+                
+                <div className="space-y-4">
+                  <Button
+                    className="w-full"
+                    onClick={() => router.push(`/dashboard/donations/${params.id}`)}
                   >
-                    View on Explorer <ExternalLink className="ml-2 h-3 w-3" />
+                    View Project
                   </Button>
-                </CardContent>
-              </Card>
-            )}
-            
-            <div className="space-y-4">
-              <Button
-                className="w-full"
-                onClick={() => router.push(`/dashboard/donations/${params.id}`)}
-              >
-                View Project
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => router.push("/dashboard/donations")}
-              >
-                Browse More Projects
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => router.push("/dashboard/donations")}
+                  >
+                    Browse More Projects
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </BlurContainer>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
-} 
+}

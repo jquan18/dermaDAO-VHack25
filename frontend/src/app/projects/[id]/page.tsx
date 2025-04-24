@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AIVerificationBadge } from '@/components/projects/ai-verification-badge';
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatEther } from "ethers";
+import { BlurContainer } from "@/components/ui/blur-container";
 
 // Define transaction interface similar to the wallet page
 interface Transaction {
@@ -190,17 +191,17 @@ export default function ProjectDetailsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <BlurContainer className="flex items-center justify-center h-96">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="ml-2">Loading project details...</span>
-      </div>
+      </BlurContainer>
     );
   }
 
   if (error || !project) {
     return (
-      <div className="container max-w-6xl py-8">
-        <Card>
+      <BlurContainer className="container max-w-6xl py-8">
+        <Card className="bg-transparent border-0">
           <CardHeader>
             <CardTitle>Error</CardTitle>
             <CardDescription>
@@ -211,7 +212,7 @@ export default function ProjectDetailsPage() {
             <Button onClick={() => router.push("/")}>Back to Home</Button>
           </CardContent>
         </Card>
-      </div>
+      </BlurContainer>
     );
   }
 
@@ -349,299 +350,301 @@ export default function ProjectDetailsPage() {
   };
 
   return (
-    <div className="container max-w-6xl py-8">
-      <Card className="mb-8">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle className="text-2xl md:text-3xl">{project.name}</CardTitle>
-              <CardDescription className="text-base mt-2">
-                by {project.charity_name}
-              </CardDescription>
-            </div>
-            <div className="flex items-center mt-4 md:mt-0 space-x-2">
-              {project.is_verified ? (
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  Verified
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                  Pending Verification
-                </Badge>
-              )}
-              {project.is_active ? (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                  Active
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-                  Inactive
-                </Badge>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-2">Funding Progress</h3>
-            <div className="flex justify-between mb-2">
-              <span>{formatCryptoAmount(raised)}</span>
-              <span>{formatCryptoAmount(goal)}</span>
-            </div>
-            <Progress value={progressPercentage} className="h-2" />
-            <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-              <span>{progressPercentage}% Funded</span>
-              <span>{project.funding?.donors_count || 0} Donors</span>
-            </div>
-          </div>
-
-          <Tabs defaultValue="details">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="transactions">Transactions</TabsTrigger>
-              <TabsTrigger value="verification">Verification</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="details" className="pt-4">
-              <div className="prose max-w-none">
-                <p>{project.description}</p>
+    <div className="container max-w-6xl py-8 space-y-6">
+      <BlurContainer intensity="medium" className="mb-6">
+        <Card className="border-0 bg-transparent">
+          <CardHeader>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle className="text-2xl md:text-3xl">{project.name}</CardTitle>
+                <CardDescription className="text-base mt-2">
+                  by {project.charity_name}
+                </CardDescription>
               </div>
+              <div className="flex items-center mt-4 md:mt-0 space-x-2">
+                {project.is_verified ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    Verified
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                    Pending Verification
+                  </Badge>
+                )}
+                {project.is_active ? (
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    Active
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                    Inactive
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-8">
+              <h3 className="text-lg font-medium mb-2">Funding Progress</h3>
+              <div className="flex justify-between mb-2">
+                <span>{formatCryptoAmount(raised)}</span>
+                <span>{formatCryptoAmount(goal)}</span>
+              </div>
+              <Progress value={progressPercentage} className="h-2" />
+              <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+                <span>{progressPercentage}% Funded</span>
+                <span>{project.funding?.donors_count || 0} Donors</span>
+              </div>
+            </div>
+
+            <Tabs defaultValue="details">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="transactions">Transactions</TabsTrigger>
+                <TabsTrigger value="verification">Verification</TabsTrigger>
+              </TabsList>
               
-              {project.pool && (
+              <TabsContent value="details" className="pt-4">
+                <div className="prose max-w-none bg-white/20 backdrop-blur-sm p-4 rounded-md mb-6">
+                  <p>{project.description}</p>
+                </div>
+                
+                {project.pool && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-medium mb-2">Funding Pool</h3>
+                    <Card className="bg-white/20 backdrop-blur-sm border-0">
+                      <CardHeader className="py-4">
+                        <CardTitle className="text-xl">{project.pool.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="py-2">
+                        <p>{project.pool.description}</p>
+                        <div className="mt-4">
+                          <Button 
+                            onClick={() => router.push(`/pools/${project.pool.id}`)}
+                            variant="outline"
+                          >
+                            View Pool
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
                 <div className="mt-6">
-                  <h3 className="text-lg font-medium mb-2">Funding Pool</h3>
-                  <Card>
-                    <CardHeader className="py-4">
-                      <CardTitle className="text-xl">{project.pool.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="py-2">
-                      <p>{project.pool.description}</p>
-                      <div className="mt-4">
-                        <Button 
-                          onClick={() => router.push(`/pools/${project.pool.id}`)}
-                          variant="outline"
-                        >
-                          View Pool
-                        </Button>
+                  <h3 className="text-lg font-medium mb-2">Project Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/20 backdrop-blur-sm p-4 rounded-md">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Start Date</p>
+                      <p>{formatDateTime(project.start_date)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">End Date</p>
+                      <p>{project.end_date ? formatDateTime(project.end_date) : 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Duration</p>
+                      <p>{project.duration_days} days</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Created</p>
+                      <p>{formatDateTime(project.created_at)}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {project.wallet_address && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-medium mb-2">Wallet Address</h3>
+                    <p className="font-mono bg-white/20 backdrop-blur-sm p-2 rounded break-all">
+                      {project.wallet_address}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      This is the project's blockchain wallet address where donations are sent.
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="transactions" className="pt-4">
+                <Card className="bg-white/20 backdrop-blur-sm border-0">
+                  <CardHeader className="pb-2">
+                    <CardTitle>Transaction History</CardTitle>
+                    <CardDescription>
+                      Blockchain transactions and donations for this project
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(loadingTransactions || loadingDonations) ? (
+                      <div className="space-y-4">
+                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-24 w-full" />
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-2">Project Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Start Date</p>
-                    <p>{formatDateTime(project.start_date)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">End Date</p>
-                    <p>{project.end_date ? formatDateTime(project.end_date) : 'Not specified'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Duration</p>
-                    <p>{project.duration_days} days</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Created</p>
-                    <p>{formatDateTime(project.created_at)}</p>
-                  </div>
-                </div>
-              </div>
+                    ) : getAllTransactions().length > 0 ? (
+                      <div className="mt-4 space-y-4">
+                        {getAllTransactions()
+                          .filter(tx => {
+                            // Include all database donations
+                            if (tx.is_database) return true;
+                            
+                            // Parse the transaction value for blockchain transactions
+                            let txValue = 0;
+                            try {
+                              if (tx.value) {
+                                txValue = parseFloat(formatEther(tx.value));
+                              } else if (tx.amount) {
+                                txValue = tx.amount;
+                              }
+                            } catch (err) {
+                              console.error("Error parsing tx value:", err);
+                              return false;
+                            }
+                            
+                            // Filter out blockchain transactions with value less than 0.0001 ETH
+                            return Math.abs(txValue) >= 0.0001;
+                          })
+                          .map((tx, index) => {
+                            // For database donations, they're always incoming
+                            const isIncoming = tx.is_database || (tx.to?.toLowerCase() === project.wallet_address?.toLowerCase());
+                            
+                            // Calculate transaction amount
+                            let txAmount = 0;
+                            try {
+                              if (tx.value) {
+                                txAmount = parseFloat(formatEther(tx.value));
+                              } else if (tx.amount) {
+                                txAmount = tx.amount;
+                              }
+                            } catch (err) {
+                              console.error("Error parsing transaction value:", err, tx);
+                              return null;
+                            }
+                            
+                            // Skip blockchain transactions with value less than 0.0001 ETH
+                            if (!tx.is_database && Math.abs(txAmount) < 0.0001) return null;
+                            
+                            // Format the transaction date
+                            let transactionDate = 'Unknown date';
+                            
+                            if (tx.is_database && tx.created_at) {
+                              // For database transactions, use the created_at date
+                              transactionDate = new Date(tx.created_at).toLocaleString();
+                            } else if (tx.timestamp) {
+                              // For blockchain transactions with timestamp
+                              transactionDate = new Date(parseInt(tx.timestamp.toString()) * 1000).toLocaleString();
+                            } else if (tx.block_number) {
+                              // For blockchain transactions with just block number, use a better format
+                              transactionDate = `Block ${tx.block_number}`;
+                              // You could potentially fetch the block timestamp here if needed
+                            }
+                            
+                            return (
+                              <div key={tx.hash || tx.id || index} className="flex justify-between items-center p-3 border rounded-md bg-white/10 backdrop-blur-xs">
+                                <div className="flex items-center">
+                                  <div className={`p-2 rounded-full mr-4 ${isIncoming ? 'bg-green-100' : 'bg-gray-100'}`}>
+                                    {isIncoming ? <ArrowDownRight className="h-6 w-6 text-green-600" /> : <ArrowUpRight className="h-6 w-6 text-gray-800" />}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium">
+                                      {getTransactionTypeLabel(tx, isIncoming)}
+                                      {tx.is_database && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-1 rounded">Database</span>}
+                                    </h4>
+                                    <p className="text-sm text-gray-500">
+                                      {transactionDate}
+                                    </p>
+                                    {tx.from && !tx.is_database && (
+                                      <p className="text-xs text-gray-500">
+                                        From: {truncateAddress(tx.from)}
+                                        {tx.to && tx.to !== project.wallet_address ? ` To: ${truncateAddress(tx.to)}` : ''}
+                                      </p>
+                                    )}
+                                    {tx.user_name ? (
+                                      <p className="text-xs text-gray-500">
+                                        From: {tx.user_name}
+                                      </p>
+                                    ) : tx.is_database ? (
+                                      <p className="text-xs text-gray-500">
+                                        From: DermaDAO User
+                                      </p>
+                                    ) : null}
+                                    {tx.hash && (
+                                      <a 
+                                        href={`https://sepolia-blockscout.scroll.io/tx/${tx.hash}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-500 flex items-center mt-1"
+                                      >
+                                        View on Scroll <ExternalLink className="h-3 w-3 ml-1" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className={`text-lg font-bold ${isIncoming ? 'text-green-600' : 'text-gray-800'}`}>
+                                  {isIncoming ? '+' : '-'}{formatCryptoAmount(Math.abs(txAmount))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 mt-4">No transactions found.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
               
-              {project.wallet_address && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-medium mb-2">Wallet Address</h3>
-                  <p className="font-mono bg-gray-100 p-2 rounded break-all">
-                    {project.wallet_address}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    This is the project's blockchain wallet address where donations are sent.
-                  </p>
+              <TabsContent value="verification" className="pt-4">
+                <div className="space-y-4 bg-white/20 backdrop-blur-sm p-4 rounded-md">
+                  <div>
+                    <h3 className="text-lg font-medium">Project Verification Status</h3>
+                    <p className="mt-1">
+                      {project.is_verified 
+                        ? "This project has been verified and is eligible to receive donations." 
+                        : "This project is pending verification."}
+                    </p>
+                    
+                    {!project.is_verified && (
+                      <Button 
+                        onClick={handleApproveProject}
+                        disabled={isVoting}
+                        className="mt-4"
+                      >
+                        {isVoting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Verifying...
+                          </>
+                        ) : (
+                          <>Verify Project</>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="mt-4">
+                    <h3 className="text-lg font-medium">About Project Verification</h3>
+                    <p className="mt-1">
+                      Project verification ensures that this charity project is legitimate and the funds will be used as described.
+                      Verified projects have been reviewed by the DermaDAO community and meet our standards for transparency and impact.
+                    </p>
+                  </div>
                 </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="transactions" className="pt-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle>Transaction History</CardTitle>
-                  <CardDescription>
-                    Blockchain transactions and donations for this project
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {(loadingTransactions || loadingDonations) ? (
-                    <div className="space-y-4">
-                      <Skeleton className="h-24 w-full" />
-                      <Skeleton className="h-24 w-full" />
-                    </div>
-                  ) : getAllTransactions().length > 0 ? (
-                    <div className="mt-4 space-y-4">
-                      {getAllTransactions()
-                        .filter(tx => {
-                          // Include all database donations
-                          if (tx.is_database) return true;
-                          
-                          // Parse the transaction value for blockchain transactions
-                          let txValue = 0;
-                          try {
-                            if (tx.value) {
-                              txValue = parseFloat(formatEther(tx.value));
-                            } else if (tx.amount) {
-                              txValue = tx.amount;
-                            }
-                          } catch (err) {
-                            console.error("Error parsing tx value:", err);
-                            return false;
-                          }
-                          
-                          // Filter out blockchain transactions with value less than 0.0001 ETH
-                          return Math.abs(txValue) >= 0.0001;
-                        })
-                        .map((tx, index) => {
-                          // For database donations, they're always incoming
-                          const isIncoming = tx.is_database || (tx.to?.toLowerCase() === project.wallet_address?.toLowerCase());
-                          
-                          // Calculate transaction amount
-                          let txAmount = 0;
-                          try {
-                            if (tx.value) {
-                              txAmount = parseFloat(formatEther(tx.value));
-                            } else if (tx.amount) {
-                              txAmount = tx.amount;
-                            }
-                          } catch (err) {
-                            console.error("Error parsing transaction value:", err, tx);
-                            return null;
-                          }
-                          
-                          // Skip blockchain transactions with value less than 0.0001 ETH
-                          if (!tx.is_database && Math.abs(txAmount) < 0.0001) return null;
-                          
-                          // Format the transaction date
-                          let transactionDate = 'Unknown date';
-                          
-                          if (tx.is_database && tx.created_at) {
-                            // For database transactions, use the created_at date
-                            transactionDate = new Date(tx.created_at).toLocaleString();
-                          } else if (tx.timestamp) {
-                            // For blockchain transactions with timestamp
-                            transactionDate = new Date(parseInt(tx.timestamp.toString()) * 1000).toLocaleString();
-                          } else if (tx.block_number) {
-                            // For blockchain transactions with just block number, use a better format
-                            transactionDate = `Block ${tx.block_number}`;
-                            // You could potentially fetch the block timestamp here if needed
-                          }
-                          
-                          return (
-                            <div key={tx.hash || tx.id || index} className="flex justify-between items-center p-3 border rounded-md">
-                              <div className="flex items-center">
-                                <div className={`p-2 rounded-full mr-4 ${isIncoming ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                  {isIncoming ? <ArrowDownRight className="h-6 w-6 text-green-600" /> : <ArrowUpRight className="h-6 w-6 text-gray-800" />}
-                                </div>
-                                <div>
-                                  <h4 className="font-medium">
-                                    {getTransactionTypeLabel(tx, isIncoming)}
-                                    {tx.is_database && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-1 rounded">Database</span>}
-                                  </h4>
-                                  <p className="text-sm text-gray-500">
-                                    {transactionDate}
-                                  </p>
-                                  {tx.from && !tx.is_database && (
-                                    <p className="text-xs text-gray-500">
-                                      From: {truncateAddress(tx.from)}
-                                      {tx.to && tx.to !== project.wallet_address ? ` To: ${truncateAddress(tx.to)}` : ''}
-                                    </p>
-                                  )}
-                                  {tx.user_name ? (
-                                    <p className="text-xs text-gray-500">
-                                      From: {tx.user_name}
-                                    </p>
-                                  ) : tx.is_database ? (
-                                    <p className="text-xs text-gray-500">
-                                      From: DermaDAO User
-                                    </p>
-                                  ) : null}
-                                  {tx.hash && (
-                                    <a 
-                                      href={`https://sepolia-blockscout.scroll.io/tx/${tx.hash}`} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-blue-500 flex items-center mt-1"
-                                    >
-                                      View on Scroll <ExternalLink className="h-3 w-3 ml-1" />
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                              <div className={`text-lg font-bold ${isIncoming ? 'text-green-600' : 'text-gray-800'}`}>
-                                {isIncoming ? '+' : '-'}{formatCryptoAmount(Math.abs(txAmount))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  ) : (
-                    <p className="text-center text-gray-500 mt-4">No transactions found.</p>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="verification" className="pt-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium">Project Verification Status</h3>
-                  <p className="mt-1">
-                    {project.is_verified 
-                      ? "This project has been verified and is eligible to receive donations." 
-                      : "This project is pending verification."}
-                  </p>
-                </div>
-                
-                <AIVerificationBadge 
-                  score={project.verification_score || 0} 
-                  notes={project.verification_notes || null}
-                />
-                
-                <Separator className="my-6" />
-                
-                <div className="flex flex-col md:flex-row gap-4">
-                  {!project.is_verified && (
-                    <Button 
-                      className="flex-1"
-                      variant="outline"
-                      onClick={handleApproveProject}
-                      disabled={isVoting}
-                    >
-                      {isVoting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          Approve Project
-                        </>
-                      )}
-                    </Button>
-                  )}
-                  <Button 
-                    className="flex-1"
-                    onClick={() => router.push(`/dashboard/donations?project=${projectId}`)}
-                  >
-                    Donate to this Project
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </BlurContainer>
+
+      {/* Action button */}
+      <BlurContainer intensity="light" className="flex justify-center">
+        <Button 
+          onClick={() => router.push(`/dashboard/donations/${projectId}`)}
+          size="lg"
+          className="mt-6"
+        >
+          Donate to This Project
+        </Button>
+      </BlurContainer>
     </div>
   );
 }
