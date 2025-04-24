@@ -211,6 +211,20 @@ export default function DonationsPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
+                Projects Supported
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <BarChart3 className="mr-2 h-4 w-4 text-primary" />
+                <div className="text-2xl font-bold">{donationStats.projects_supported}</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Donated
               </CardTitle>
             </CardHeader>
@@ -222,19 +236,6 @@ export default function DonationsPage() {
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Projects Supported
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <BarChart3 className="mr-2 h-4 w-4 text-primary" />
-                <div className="text-2xl font-bold">{donationStats.projects_supported}</div>
-              </div>
-            </CardContent>
-          </Card>
           
           <Card>
             <CardHeader className="pb-2">

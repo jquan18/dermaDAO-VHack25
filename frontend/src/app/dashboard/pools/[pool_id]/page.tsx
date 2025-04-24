@@ -423,20 +423,8 @@ export default function PoolDetailPage() {
   
   return (
     <DashboardLayout>
-      <div className="container py-8">
-        {/* Only render in development mode for debugging */}
-        {process.env.NODE_ENV === 'development' && debugInfo && (
-          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-            <details>
-              <summary className="cursor-pointer font-medium">Debug Information</summary>
-              <pre className="mt-2 text-xs overflow-auto max-h-60">
-                {JSON.stringify(debugInfo, null, 2)}
-              </pre>
-            </details>
-          </div>
-        )}
-        
-        <BlurContainer intensity="strong" className="mb-6">
+      <div className="container">
+        <BlurContainer intensity="strong" className="mb-6 -mt-20">
           <div className="flex items-center">
             <Button 
               variant="ghost" 
@@ -446,13 +434,12 @@ export default function PoolDetailPage() {
               <ChevronLeft className="h-4 w-4 mr-2" />
               Back to Pools
             </Button>
-            <h1 className="text-3xl font-bold">Pool Details</h1>
           </div>
         </BlurContainer>
         
         <PoolInfo pool={pool} />
         
-        <BlurContainer intensity="strong" className="mb-6">
+        <BlurContainer intensity="strong" className="mb-6 mt-6">
           <div className="flex flex-col sm:flex-row items-center justify-between">
             <h2 className="text-2xl font-semibold mb-4 sm:mb-0">Projects in this Pool</h2>
             <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-4">

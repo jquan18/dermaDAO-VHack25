@@ -319,7 +319,7 @@ export default function DonatePage({ params }: ProjectDetailProps) {
           </Button>
         </BlurContainer>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8"> {/* Adjust grid for transactions */} 
+        <div className="grid grid-cols-3 lg:grid-cols-1 gap-8"> {/* Adjust grid for transactions */} 
           {/* Project Details Card - Span 1 or 2 columns */}
           <BlurContainer className="lg:col-span-1">
             <Card className="border-0 bg-transparent">
@@ -372,51 +372,6 @@ export default function DonatePage({ params }: ProjectDetailProps) {
                             </a>
                         </div>
                    )}
-                </div>
-              </CardContent>
-            </Card>
-          </BlurContainer>
-
-          {/* Donation Card - Span 1 column */}
-          <BlurContainer className="lg:col-span-1"> 
-            <Card className="border-0 bg-transparent">
-              <CardHeader>
-                <CardTitle>Make a Donation</CardTitle>
-                <CardDescription>Support this project with ETH</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Amount (ETH)</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      placeholder="e.g., 0.1"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      min="0"
-                      step="any" // Allow any step for ETH
-                    />
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={handleDonate}
-                    disabled={isSubmitting || !isAuthenticated || !project} // Disable if project hasn't loaded
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      "Donate Now"
-                    )}
-                  </Button>
-                  {!isAuthenticated && (
-                    <p className="text-sm text-red-500 text-center">
-                      Please connect your wallet to make a donation.
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -479,6 +434,51 @@ export default function DonatePage({ params }: ProjectDetailProps) {
                         Transaction data provided by Scrollscan.
                      </div>
                 </CardContent>
+            </Card>
+          </BlurContainer>
+
+           {/* Donation Card - Span 1 column */}
+           <BlurContainer className="lg:col-span-1"> 
+            <Card className="border-0 bg-transparent">
+              <CardHeader>
+                <CardTitle>Make a Donation</CardTitle>
+                <CardDescription>Support this project with ETH</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Amount (ETH)</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="e.g., 0.1"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      min="0"
+                      step="any" // Allow any step for ETH
+                    />
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={handleDonate}
+                    disabled={isSubmitting || !isAuthenticated || !project} // Disable if project hasn't loaded
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Donate Now"
+                    )}
+                  </Button>
+                  {!isAuthenticated && (
+                    <p className="text-sm text-red-500 text-center">
+                      Please connect your wallet to make a donation.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
             </Card>
           </BlurContainer>
         </div>

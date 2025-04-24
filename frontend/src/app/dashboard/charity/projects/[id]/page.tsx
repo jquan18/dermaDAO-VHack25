@@ -333,11 +333,6 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </Button>
-          
-          <Button onClick={() => router.push(`/dashboard/charity/proposals/new?project=${projectId}`)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Proposal
-          </Button>
         </div>
       </div>
       
@@ -473,81 +468,13 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
             </Card>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="md:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Recent Donations</CardTitle>
-                  <CardDescription>Latest contributions to this project</CardDescription>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setActiveTab("donations")}
-                >
-                  View All
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {donationsLoading ? (
-                  <div className="space-y-4 animate-pulse">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="flex justify-between items-center border-b pb-3">
-                        <div className="space-y-2">
-                          <div className="h-4 bg-gray-200 rounded w-24"></div>
-                          <div className="h-3 bg-gray-200 rounded w-32"></div>
-                        </div>
-                        <div className="h-5 bg-gray-200 rounded w-16"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : recentDonations.length > 0 ? (
-                  <div className="space-y-4">
-                    {recentDonations.map((donation) => (
-                      <div key={donation.id} className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0">
-                        <div>
-                          <div className="font-medium flex items-center gap-2">
-                            {donation.donor || 'Anonymous Donor'}
-                            {donation.is_quadratic_funding && (
-                              <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800 hover:bg-purple-200">
-                                Quadratic Funding
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {donation.timestamp_ms ? formatDate(new Date(donation.timestamp_ms)) : 'Date unknown'}
-                          </div>
-                          {donation.transaction_hash && (
-                            <a
-                              href={`https://sepolia.scrollscan.com/tx/${donation.transaction_hash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-primary hover:underline flex items-center mt-1"
-                            >
-                              {donation.transaction_hash.slice(0, 6)}...{donation.transaction_hash.slice(-4)}
-                              <ExternalLink className="ml-1 h-3 w-3" />
-                            </a>
-                          )}
-                        </div>
-                        <div className="font-semibold">{formatCurrency(donation.amount)} ETH</div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">No donations yet</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 gap-6">
             
             <Card>
               <CardHeader>
                 <CardTitle>Project Stats</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 p-2 rounded-full">
                     <CircleDollarSign className="h-5 w-5 text-primary" />
