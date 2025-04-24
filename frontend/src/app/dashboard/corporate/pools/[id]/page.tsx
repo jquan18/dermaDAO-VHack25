@@ -693,18 +693,30 @@ export default function PoolDetailsPage() {
   const currency = pool.currency || 'ETH'; // Assuming ETH if not specified
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header>
-        <BlurContainer intensity="light" className="pb-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => router.back()} title="Back">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <h1 className="text-2xl font-bold tracking-tight">Pool Details</h1>
-              {isLoading ? (
-                <Skeleton className="h-6 w-28" />
-              ) : (
+    <div className="min-h-screen bg-black-50">
+        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <Button variant="outline" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Pools
+          </Button>
+        </div>
+      
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {/* Manual Distribution Alert - REMOVED */}
+        
+        <div className="space-y-6">
+          {/* Pool Header Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-2xl flex items-center">
+                    <CircleDollarSign className="h-6 w-6 mr-2 text-blue-600" />
+                    {pool.name}
+                  </CardTitle>
+                  <CardDescription className="mt-1">Theme: {pool.theme || "General"}</CardDescription>
+                </div>
+                {/* Updated Pool Status Badge */}
                 <Badge variant={isActive ? "success" : hasEnded ? "secondary" : isScheduled ? "outline" : "destructive"}>
                   {isScheduled ? "Scheduled" : isActive ? "Active" : hasEnded ? "Ended" : "Inactive"}
                 </Badge>

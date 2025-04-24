@@ -6,7 +6,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { Navbar } from "./navbar";
-import { Footer } from "./footer";
 import Iridescence from "@/components/ui/iridescence";
 import {
   LayoutDashboard,
@@ -238,7 +237,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>
-      <Footer />
     </div>
   );
 }

@@ -316,15 +316,11 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
           </Button>
           
           <div>
+            <div className="flex items-center text-black-500 text-sm gap-2">
             <h1 className="text-2xl font-bold">{project.name}</h1>
-            <div className="flex items-center text-gray-500 text-sm gap-2">
               <Badge variant={project.is_active ? "default" : "secondary"}>
                 {project.is_active ? "Active" : "Inactive"}
               </Badge>
-              <span>•</span>
-              <span>Created {formatDate(project.created_at)}</span>
-              <span>•</span>
-              <span>{calculateDaysRemaining()}</span>
             </div>
           </div>
         </div>
@@ -351,9 +347,8 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="grid grid-cols-5 md:grid-cols-6 mb-4">
+        <TabsList className="grid grid-cols-5 md:grid-cols-5 mb-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="milestones">Milestones</TabsTrigger>
           <TabsTrigger value="donations">Donations</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="proposals">Proposals</TabsTrigger>
