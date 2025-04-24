@@ -707,18 +707,13 @@ export default function PoolDetailsPage() {
   const currency = pool.currency || 'ETH'; // Assuming ETH if not specified
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-black-50">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <Button variant="outline" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Pools
           </Button>
-          <h1 className="text-xl font-semibold text-gray-900">Funding Pool Details</h1>
-          {/* Placeholder for potential header actions */}
-          <div></div> 
         </div>
-      </header>
       
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Manual Distribution Alert - REMOVED */}
