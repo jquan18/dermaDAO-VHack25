@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import PoolDetail from '@/components/pools/PoolDetail';
 
 interface PoolPageProps {
   params: {
@@ -55,7 +54,6 @@ export async function generateMetadata({ params }: PoolPageProps): Promise<Metad
 export default function PoolPage({ params }: PoolPageProps) {
   return (
     <div className="container py-8 max-w-7xl">
-      <PoolDetail poolId={params.id} />
     </div>
   );
 } 

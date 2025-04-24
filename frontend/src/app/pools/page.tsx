@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import PoolsList from '@/components/pools/PoolsList';
 
 export const metadata: Metadata = {
   title: 'Funding Pools | DermaDAO',
@@ -29,7 +28,6 @@ export default function PoolsPage() {
           </p>
         </div>
         
-        <PoolsList />
       </div>
     </div>
   );

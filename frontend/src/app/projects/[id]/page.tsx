@@ -17,6 +17,7 @@ import { AIVerificationBadge } from '@/components/projects/ai-verification-badge
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatEther } from "ethers";
 import { BlurContainer } from "@/components/ui/blur-container";
+import Link from "next/link";
 
 // Define transaction interface similar to the wallet page
 interface Transaction {
@@ -409,30 +410,7 @@ export default function ProjectDetailsPage() {
               </TabsList>
               
               <TabsContent value="details" className="pt-4">
-                
-                {project.pool && (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-medium mb-2">Sponsored By</h3>
-                    <Card className="bg-white/20 backdrop-blur-sm border-0">
-                      <CardHeader className="py-4">
-                        <CardTitle className="text-xl">{project.pool.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="py-2">
-                        <p>{project.pool.description}</p>
-                        <div className="mt-4">
-                          <Button 
-                            onClick={() => router.push(`/pools/${project.pool.id}`)}
-                            variant="outline"
-                          >
-                            View Pool
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-
-                <div className="mt-6">
+              <div className="mt-6">
                   <h3 className="text-lg font-medium mb-2">Project Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/20 backdrop-blur-sm p-4 rounded-md">
                     <div>
@@ -453,6 +431,30 @@ export default function ProjectDetailsPage() {
                     </div>
                   </div>
                 </div>
+                
+                {project.pool && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-medium mb-2">Sponsored By</h3>
+                    <Card className="bg-white/20 backdrop-blur-sm border-0">
+                      <CardHeader className="py-4">
+                        <CardTitle className="text-xl">{project.pool.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="py-2">
+                        <p>{project.pool.description}</p>
+                        <div className="mt-4">
+                          <Button 
+                            variant="outline"
+                            asChild
+                          >
+                            <Link href={`/dashboard/pools/${project.pool.id}`}>
+                              View Pool
+                            </Link>
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
                 
                 {project.wallet_address && (
                   <div className="mt-6">
