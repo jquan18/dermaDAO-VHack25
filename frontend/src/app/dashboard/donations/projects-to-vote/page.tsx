@@ -64,14 +64,14 @@ export default function ProjectVotingPage() {
 
   return (
     <DashboardLayout>
-      <BlurContainer intensity="light" className="mb-6">
+      <BlurContainer intensity="strong" className="mb-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Project Verification Voting</h1>
         </div>
       </BlurContainer>
 
       {error && (
-        <BlurContainer intensity="medium" className="mb-6">
+        <BlurContainer intensity="strong" className="mb-6">
           <Alert variant="destructive">
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>

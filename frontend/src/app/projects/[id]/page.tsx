@@ -351,7 +351,7 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="container max-w-6xl py-8 space-y-6">
-      <BlurContainer intensity="medium" className="mb-6">
+      <BlurContainer intensity="strong" className="mb-6">
         <Card className="border-0 bg-transparent">
           <CardHeader>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -636,7 +636,7 @@ export default function ProjectDetailsPage() {
       </BlurContainer>
 
       {/* Action button */}
-      <BlurContainer intensity="light" className="flex justify-center">
+      <BlurContainer intensity="strong" className="flex justify-center">
         <Button 
           onClick={() => router.push(`/dashboard/donations/${projectId}`)}
           size="lg"

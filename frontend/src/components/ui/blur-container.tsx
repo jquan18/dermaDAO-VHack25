@@ -10,14 +10,14 @@ type BlurContainerProps = {
 export function BlurContainer({
   children,
   className = "",
-  intensity = "medium",
+  intensity = "strong",
 }: BlurContainerProps) {
   const getIntensityStyles = () => {
     switch (intensity) {
       case "light":
         return "bg-white/20 backdrop-blur-sm";
       case "strong":
-        return "bg-white/40 backdrop-blur-xl";
+        return "bg-white/60 backdrop-blur-xl";
       case "medium":
       default:
         return "bg-white/30 backdrop-blur-md";

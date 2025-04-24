@@ -143,7 +143,7 @@ export default function AdminDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <BlurContainer intensity="light" className="py-2">
+        <BlurContainer intensity="strong" className="py-2">
           <div>
             <h1 className="text-2xl font-bold">Admin Dashboard</h1>
             <p className="text-muted-foreground">

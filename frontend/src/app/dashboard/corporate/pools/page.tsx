@@ -124,7 +124,7 @@ export default function CorporatePools() {
 
   return (
     <div className="py-6 space-y-6">
-      <BlurContainer intensity="light" className="mb-6">
+      <BlurContainer intensity="strong" className="mb-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Funding Pools</h1>

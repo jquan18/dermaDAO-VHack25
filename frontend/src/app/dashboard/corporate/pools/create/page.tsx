@@ -146,7 +146,7 @@ export default function CreatePoolPage() {
 
   return (
     <div className="py-6 space-y-6">
-      <BlurContainer intensity="light" className="mb-6">
+      <BlurContainer intensity="strong" className="mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create Funding Pool</h1>
           <p className="text-muted-foreground mt-1">
@@ -155,7 +155,7 @@ export default function CreatePoolPage() {
         </div>
       </BlurContainer>
 
-      <BlurContainer intensity="medium">
+      <BlurContainer intensity="strong">
         <div className="bg-blue-50/90 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
           <Info className="h-5 w-5 text-blue-500 mt-0.5" />
           <div>

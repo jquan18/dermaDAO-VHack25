@@ -53,7 +53,7 @@ export default function PoolDetailsPage() {
   const [pool, setPool] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("projects");
   const [donationAmount, setDonationAmount] = useState("");
   const [isDonating, setIsDonating] = useState(false);
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
@@ -227,6 +227,17 @@ export default function PoolDetailsPage() {
       console.error("Time calculation error:", e);
       return "Date calculation error";
     }
+  };
+
+  // Add the missing calculateProgress function
+  const calculateProgress = (startDate: Date, endDate: Date): number => {
+    const now = new Date();
+    if (now < startDate) return 0;
+    if (now > endDate) return 100;
+    
+    const total = endDate.getTime() - startDate.getTime();
+    const elapsed = now.getTime() - startDate.getTime();
+    return Math.round((elapsed / total) * 100);
   };
 
   // Auto-connect the ERC4337 wallet for corporate users
@@ -632,7 +643,7 @@ export default function PoolDetailsPage() {
     return (
       <div className="py-6 space-y-6">
         <header>
-          <BlurContainer intensity="light" className="pb-4">
+          <BlurContainer intensity="strong" className="pb-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon" onClick={() => router.back()} title="Back">
@@ -694,53 +705,14 @@ export default function PoolDetailsPage() {
 
   return (
     <div className="min-h-screen bg-black-50">
-        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+      <header>
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 flex justify-between items-center">
           <Button variant="outline" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Pools
           </Button>
+          <div></div>
         </div>
-      
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Manual Distribution Alert - REMOVED */}
-        
-        <div className="space-y-6">
-          {/* Pool Header Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-2xl flex items-center">
-                    <CircleDollarSign className="h-6 w-6 mr-2 text-blue-600" />
-                    {pool.name}
-                  </CardTitle>
-                  <CardDescription className="mt-1">Theme: {pool.theme || "General"}</CardDescription>
-                </div>
-                {/* Updated Pool Status Badge */}
-                <Badge variant={isActive ? "success" : hasEnded ? "secondary" : isScheduled ? "outline" : "destructive"}>
-                  {isScheduled ? "Scheduled" : isActive ? "Active" : hasEnded ? "Ended" : "Inactive"}
-                </Badge>
-              )}
-            </div>
-            
-            {isPoolSponsor && (
-              <div className="flex gap-2">
-                <Button variant="outline" asChild>
-                  <Link href={`/dashboard/corporate/pools/${poolId}/edit`}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Pool
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link href={`/dashboard/corporate/pools/${poolId}/projects/create`}>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Add Project
-                  </Link>
-                </Button>
-              </div>
-            )}
-          </div>
-        </BlurContainer>
       </header>
       
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -750,7 +722,10 @@ export default function PoolDetailsPage() {
               <CardHeader>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
-                    <CardTitle className="text-2xl">{pool.name}</CardTitle>
+                    <CardTitle className="text-2xl flex items-center font-['Sansation']">
+                      <CircleDollarSign className="h-6 w-6 mr-2 text-blue-600" />
+                      {pool.name}
+                    </CardTitle>
                     <CardDescription className="text-gray-500">{pool.theme || "General Funding"}</CardDescription>
                   </div>
                   <Badge
@@ -760,6 +735,23 @@ export default function PoolDetailsPage() {
                     {isActive ? "Active" : hasEnded ? (isDistributed ? "Completed" : "Ended") : "Scheduled"}
                   </Badge>
                 </div>
+                
+                {isPoolSponsor && (
+                  <div className="flex gap-2 mt-4">
+                    <Button variant="outline" asChild>
+                      <Link href={`/dashboard/corporate/pools/${poolId}/edit`}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Pool
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link href={`/dashboard/corporate/pools/${poolId}/projects/create`}>
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Add Project
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="bg-white/10 backdrop-blur-sm p-4 rounded-md mb-6">
@@ -835,78 +827,13 @@ export default function PoolDetailsPage() {
         </BlurContainer>
 
         {/* Tabs Section */}
-        <BlurContainer intensity="light">
+        <BlurContainer intensity="strong">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 mt-6">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-2">
               <TabsTrigger value="projects">Projects</TabsTrigger>
-              <TabsTrigger value="donations">Donations</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
             
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-4">
-              <Card className="border-0 bg-transparent">
-                <CardHeader>
-                  <CardTitle>Pool Details</CardTitle>
-                  <CardDescription>Summary of this quadratic funding pool</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/10 backdrop-blur-sm p-4 rounded-md">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Pool Name</h4>
-                      <p className="mt-1">{pool?.name}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Theme</h4>
-                      <p className="mt-1">{pool?.theme || "General"}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Start Date</h4>
-                      <p className="mt-1">{pool?.start_date ? new Date(pool.start_date).toLocaleDateString() : "Not specified"}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">End Date</h4>
-                      <p className="mt-1">{pool?.end_date ? new Date(pool.end_date).toLocaleDateString() : "Not specified"}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Sponsor</h4>
-                      <p className="mt-1 flex items-center">
-                        <Building className="h-4 w-4 mr-1 text-gray-400" />
-                        {pool?.sponsor_name || "Your company"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Total Funds</h4>
-                      <p className="mt-1 text-green-600 font-medium">${parseFloat(pool?.total_funds || "0").toLocaleString()}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white/10 backdrop-blur-sm p-4 rounded-md">
-                    <h3 className="text-lg font-medium mb-2">Quadratic Funding Information</h3>
-                    <div className="bg-indigo-50 p-4 rounded-md border border-indigo-100">
-                      <h4 className="font-medium text-indigo-700 flex items-center mb-2">
-                        <Info className="h-4 w-4 mr-2" /> 
-                        How Quadratic Funding Works
-                      </h4>
-                      <p className="text-sm text-indigo-800 mb-2">
-                        Quadratic funding amplifies the impact of smaller donations and focuses on the number of unique contributors rather than just large donations.
-                      </p>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-white/60 p-2 rounded">
-                          <p className="font-medium text-indigo-800 mb-1">Traditional Matching</p>
-                          <p className="text-gray-600">1:1 matching regardless of donation size</p>
-                        </div>
-                        <div className="bg-white/60 p-2 rounded border border-indigo-200">
-                          <p className="font-medium text-indigo-800 mb-1">Quadratic Matching</p>
-                          <p className="text-gray-600">Weighted towards projects with many small donors</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
             
             {/* Projects Tab */}
             <TabsContent value="projects" className="space-y-4">
@@ -953,20 +880,6 @@ export default function PoolDetailsPage() {
               </Card>
             </TabsContent>
             
-            {/* Donations Tab */}
-            <TabsContent value="donations" className="space-y-4">
-              <Card className="border-0 bg-transparent">
-                <CardHeader>
-                  <CardTitle>Donations</CardTitle>
-                  <CardDescription>Contribute to this funding pool</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-white/20 backdrop-blur-sm p-4 rounded-md">
-                    {renderWalletContent()}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
             
             {/* Settings Tab */}
             <TabsContent value="settings" className="space-y-4">

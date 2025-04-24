@@ -179,7 +179,7 @@ function PoolInfo({ pool }) {
   };
 
   return (
-    <BlurContainer>
+    <BlurContainer intensity="strong">
       <Card className="mb-8 shadow-sm overflow-hidden border-0 bg-transparent">
         {/* Optional Banner Image */}
         {pool.banner_image && (
@@ -436,7 +436,7 @@ export default function PoolDetailPage() {
           </div>
         )}
         
-        <BlurContainer intensity="light" className="mb-6">
+        <BlurContainer intensity="strong" className="mb-6">
           <div className="flex items-center">
             <Button 
               variant="ghost" 
@@ -452,7 +452,7 @@ export default function PoolDetailPage() {
         
         <PoolInfo pool={pool} />
         
-        <BlurContainer intensity="light" className="mb-6">
+        <BlurContainer intensity="strong" className="mb-6">
           <div className="flex flex-col sm:flex-row items-center justify-between">
             <h2 className="text-2xl font-semibold mb-4 sm:mb-0">Projects in this Pool</h2>
             <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-4">
