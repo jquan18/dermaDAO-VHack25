@@ -1,8 +1,8 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   CircleDollarSign, 
   Wallet,
@@ -19,12 +19,20 @@ interface CorporateLayoutProps {
 
 export default function CorporateLayout({ children }: CorporateLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuthStore();
+
+  // Redirect to pools if on the corporate dashboard root
+  useEffect(() => {
+    if (pathname === "/dashboard/corporate") {
+      router.replace("/dashboard/corporate/pools");
+    }
+  }, [pathname, router]);
 
   const sidebarNavItems = [
     {
       name: "Dashboard",
-      href: "/dashboard/corporate",
+      href: "/dashboard/corporate/pools",
       icon: Home,
     },
     {
