@@ -18,7 +18,7 @@ export function Navbar() {
   const { user, isAuthenticated, logout, loadUser, isLoading } = useAuthStore();
 
   // Check if we're on the landing page
-  const isLandingPage = pathname === "/";
+  const isLandingPage = pathname === "/" || pathname === "/auth/login" || pathname === "/auth/register";
 
   useEffect(() => {
     // Only load user data if we're not authenticated, not loading, and don't have user data

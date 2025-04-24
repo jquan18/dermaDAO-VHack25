@@ -77,8 +77,8 @@
     @apply border-border;
   }
   body {
-    @apply text-white;
-    background-color: rgb(3 7 18); /* bg-gray-950 as direct CSS */
+    /* Use CSS variables for light/dark backgrounds */
+    @apply bg-background text-foreground;
   }
 }
 
