@@ -17,6 +17,8 @@ import {
   Layers,
   Plus,
   Users,
+  CircleDollarSign,
+  Calendar,
 } from "lucide-react";
 import { QuadraticFundingInfo } from "@/components/funding/quadratic-funding-info";
 import { projectsApi, donationsApi, proposalsApi, bankAccountsApi, bankTransfersApi, walletApi } from "@/lib/api";
@@ -173,7 +175,7 @@ export default function CharityDashboard() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -258,205 +260,6 @@ export default function CharityDashboard() {
         </Card>
       </div>
 
-      {/* Recent Projects */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Recent Projects</h2>
-          <Link href="/dashboard/charity/projects/new">
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" /> Add Project
-            </Button>
-          </Link>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {projects.map((project) => (
-            <Card key={project.id} className="mb-4">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-xl">{project.name}</CardTitle>
-                    <p className="text-sm text-gray-500 mt-1">{project.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-gray-500">Wallet Balance</div>
-                    <div className="text-lg font-semibold">{Number(project.wallet_balance).toFixed(3)} ETH</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {project.wallet_address.slice(0, 6)}...{project.wallet_address.slice(-4)}
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Funding Progress</div>
-                    <div className="mt-1">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>{formatCurrency(project.funding_progress?.raised || 0)} ETH raised</span>
-                        <span>{formatCurrency(project.funding_goal)} ETH goal</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full"
-                          style={{
-                            width: `${calculateProgress(
-                              project.funding_progress?.raised || 0,
-                              project.funding_goal
-                            )}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-500">Status</div>
-                    <div className="mt-1">
-                      <Badge variant={project.is_active ? "success" : "secondary"}>
-                        {project.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => router.push(`/dashboard/charity/projects/${project.id}`)}
-                >
-                  View Details
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Recent Proposals and Transfers */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Donations */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Donations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentDonations.length > 0 ? (
-                recentDonations.map((donation) => (
-                  <div key={donation.id} className="flex items-center justify-between border-b pb-3 last:border-0">
-                    <div>
-                      <h4 className="font-medium">{donation.donor || "Anonymous"}</h4>
-                      <p className="text-sm text-gray-500">
-                        {donation.project_name} • {formatDate(donation.created_at)}
-                      </p>
-                    </div>
-                    <div className="text-sm font-semibold">{formatCurrency(donation.amount)} ETH</div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-6">
-                  <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">No recent donations</p>
-                </div>
-              )}
-            </div>
-            
-            <div className="mt-4 text-center">
-              <Link href="/dashboard/charity/projects">
-                <Button variant="outline" size="sm">View All Projects</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Proposals */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Proposals</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {proposals.slice(0, 3).map((proposal) => (
-                <div key={proposal.id} className="flex items-center justify-between border-b pb-3 last:border-0">
-                  <div>
-                    <h4 className="font-medium">{proposal.description}</h4>
-                    <p className="text-sm text-gray-500">
-                      Created: {formatDate(proposal.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm font-semibold">{formatCurrency(proposal.amount)}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      proposal.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      proposal.status === 'approved' ? 'bg-green-100 text-green-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-4 text-center">
-              <Link href="/dashboard/charity/proposals">
-                <Button variant="outline" size="sm">View All Proposals</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Transfers */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Transfers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {transfers.map((transfer) => (
-                <div key={transfer.id} className="flex items-center justify-between border-b pb-3 last:border-0">
-                  <div>
-                    <h4 className="font-medium">{transfer.reference}</h4>
-                    <p className="text-sm text-gray-500">
-                      Initiated: {formatDate(transfer.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm font-semibold">{formatCurrency(transfer.amount)}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      transfer.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                      transfer.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {transfer.status.charAt(0).toUpperCase() + transfer.status.slice(1)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-4 text-center">
-              <Link href="/dashboard/charity/transfers">
-                <Button variant="outline" size="sm">View All Transfers</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          {/* Main content cards */}
-          {/* ... existing content ... */}
-        </div>
-        
-        <div className="space-y-6">
-          {/* Sidebar cards */}
-          <QuadraticFundingInfo />
-          {/* ... existing sidebar content ... */}
-        </div>
-      </div>
     </DashboardLayout>
   );
 } 
