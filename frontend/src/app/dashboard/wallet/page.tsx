@@ -348,7 +348,7 @@ export default function WalletPage() {
       case 'deposit':
         return 'Deposit';
       case 'donation':
-        return 'Donation';
+        return user?.role === "corporate" ? 'Fund' : 'Donation';
       case 'transfer':
         return 'Transfer';
       case 'self':
@@ -621,7 +621,7 @@ export default function WalletPage() {
           <TabsList>
             <TabsTrigger value="all">All Transactions</TabsTrigger>
             <TabsTrigger value="deposits">Deposits</TabsTrigger>
-            <TabsTrigger value="donations">Donations</TabsTrigger>
+            <TabsTrigger value="donations">{user?.role === "corporate" ? "Funds" : "Donations"}</TabsTrigger>
             <TabsTrigger value="internal">Internal</TabsTrigger>
           </TabsList>
           <TabsContent value="all" className="mt-4">
@@ -817,7 +817,7 @@ export default function WalletPage() {
           <TabsContent value="donations" className="mt-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle>Donations</CardTitle>
+                <CardTitle>{user?.role === "corporate" ? "Funds" : "Donations"}</CardTitle>
                 <CardDescription>Your contributions to projects</CardDescription>
               </CardHeader>
               <CardContent>
