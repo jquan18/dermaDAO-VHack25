@@ -61,7 +61,6 @@ export function Navbar() {
       : user?.role === "corporate"
       ? [
           { name: "Dashboard", href: "/dashboard/corporate" },
-          { name: "Funding Pools", href: "/dashboard/corporate/pools" },
         ]
       : [
           { name: "My Donations", href: "/dashboard/donations" },

@@ -171,7 +171,7 @@ export default function PoolsPage() {
   return (
     <DashboardLayout>
       <div className="container py-6 max-w-7xl">
-        <BlurContainer intensity="light" className="mb-6">
+        <BlurContainer intensity="strong" className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tight">Funding Pools</h1>
@@ -191,7 +191,7 @@ export default function PoolsPage() {
           </div>
         </BlurContainer>
 
-        <BlurContainer intensity="medium" className="mt-6">
+        <BlurContainer intensity="strong" className="mt-6">
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-500 mt-0.5" />
             <div>
@@ -203,7 +203,7 @@ export default function PoolsPage() {
           </div>
         </BlurContainer>
 
-        <BlurContainer intensity="light" className="my-6">
+        <BlurContainer intensity="strong" className="my-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
             <Input
               placeholder="Search pools by name or description..."

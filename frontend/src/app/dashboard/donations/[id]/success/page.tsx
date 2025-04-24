@@ -100,7 +100,7 @@ export default function DonationSuccessPage({ params }: SuccessPageProps) {
   return (
     <DashboardLayout>
       <div className="container mx-auto py-8">
-        <BlurContainer intensity="light" className="mb-6">
+        <BlurContainer intensity="strong" className="mb-6">
           <Button
             variant="ghost"
             onClick={() => router.push("/dashboard/donations")}

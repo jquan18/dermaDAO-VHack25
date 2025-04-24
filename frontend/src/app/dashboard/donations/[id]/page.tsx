@@ -309,7 +309,7 @@ export default function DonatePage({ params }: ProjectDetailProps) {
   return (
     <DashboardLayout>
       <div className="container mx-auto py-8 space-y-8"> {/* Add spacing between sections */} 
-        <BlurContainer intensity="light" className="flex items-center">
+        <BlurContainer intensity="strong" className="flex items-center">
           <Button
             variant="ghost"
             onClick={() => router.push("/dashboard/donations")}
