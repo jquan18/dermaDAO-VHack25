@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { projectsApi, donationsApi, proposalsApi, walletApi } from "@/lib/api";
 import { formatCurrency, formatDate, calculateProgress } from "@/lib/utils";
+import { ethToMyr, formatMyr, formatEth } from "@/lib/currency";
 import { AIVerificationBadge } from '@/components/projects/ai-verification-badge';
 
 type ProjectDetailProps = {
@@ -383,7 +384,10 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                     {isLoadingBalance ? (
                       <div className="text-lg font-semibold">Loading...</div>
                     ) : (
-                      <div className="text-lg font-semibold">{Number(walletBalance).toFixed(3)} ETH</div>
+                      <div className="text-lg font-semibold">
+                        {formatMyr(ethToMyr(parseFloat(walletBalance)))}
+                        <span className="text-sm text-gray-500 ml-2">({formatEth(walletBalance)})</span>
+                      </div>
                     )}
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
@@ -394,7 +398,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1">Funding Goal</h3>
-                    <p className="text-xl font-semibold">{formatCurrency(project.funding_goal)} ETH</p>
+                    <p className="text-xl font-semibold">
+                      {formatMyr(ethToMyr(project.funding_goal))}
+                    </p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1">Duration</h3>
@@ -446,11 +452,15 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Raised</span>
-                    <span className="font-medium">{formatCurrency(project.funding?.raised || 0)} ETH</span>
+                    <span className="font-medium">
+                      {formatMyr(ethToMyr(project.funding?.raised || 0))}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Goal</span>
-                    <span className="font-medium">{formatCurrency(project.funding_goal)} ETH</span>
+                    <span className="font-medium">
+                      {formatMyr(ethToMyr(project.funding_goal))}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Unique Donors</span>
@@ -460,7 +470,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                   {project.funding?.quadratic_match > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">Quadratic Match</span>
-                      <span className="font-medium">{formatCurrency(project.funding?.quadratic_match)} ETH</span>
+                      <span className="font-medium">
+                        {formatMyr(ethToMyr(project.funding?.quadratic_match))}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -481,7 +493,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Funding Goal</div>
-                    <div className="font-medium">{formatCurrency(project.funding_goal)} ETH</div>
+                    <div className="font-medium">
+                      {formatMyr(ethToMyr(project.funding_goal))}
+                    </div>
                   </div>
                 </div>
                 
@@ -587,7 +601,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                           </div>
                           <div className="text-gray-500">
                             Funds: <span className="font-medium">
-                              {formatCurrency((project.funding_goal * milestone.percentage) / 100)} ETH
+                              {formatMyr(ethToMyr((project.funding_goal * milestone.percentage) / 100))}
                             </span>
                           </div>
                         </div>
@@ -659,7 +673,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                           </a>
                         )}
                       </div>
-                      <div className="font-semibold">{formatCurrency(donation.amount)} ETH</div>
+                      <div className="font-semibold">
+                        {formatMyr(ethToMyr(parseFloat(donation.amount)))}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -690,7 +706,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Total Raised</div>
-                    <div className="font-medium">{formatCurrency(project.funding?.raised || 0)} ETH</div>
+                    <div className="font-medium">
+                      {formatMyr(ethToMyr(parseFloat(project.funding?.raised || 0)))}
+                    </div>
                   </div>
                 </div>
                 {quadraticFundingTotal > 0 && (
@@ -700,7 +718,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                     </div>
                     <div>
                       <div className="text-sm text-gray-500">Quadratic Funding</div>
-                      <div className="font-medium">{formatCurrency(quadraticFundingTotal)} ETH</div>
+                      <div className="font-medium">
+                        {formatMyr(ethToMyr(parseFloat(quadraticFundingTotal)))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -792,7 +812,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Wallet Balance</div>
-                    <div className="font-medium">{walletBalance} ETH</div>
+                    <div className="font-medium">
+                      {formatMyr(ethToMyr(parseFloat(walletBalance)))}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -848,7 +870,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="text-right">
-                            <div className="font-medium">{formatCurrency(proposal.amount)} ETH</div>
+                            <div className="font-medium">
+                              {formatMyr(ethToMyr(parseFloat(proposal.amount)))}
+                            </div>
                             <Badge variant={
                               proposal.status === 'approved' || proposal.status === 'completed' ? 'success' :
                               proposal.status === 'pending_verification' ? 'warning' :

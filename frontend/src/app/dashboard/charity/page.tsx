@@ -24,6 +24,7 @@ import { QuadraticFundingInfo } from "@/components/funding/quadratic-funding-inf
 import { projectsApi, donationsApi, proposalsApi, bankAccountsApi, bankTransfersApi, walletApi } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
+import { ethToMyr, formatMyr } from "@/lib/currency";
 
 export default function CharityDashboard() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
@@ -181,7 +182,7 @@ export default function CharityDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Donations</p>
-                <h3 className="text-2xl font-bold mt-1">{formatCurrency(dashboardData.totalDonations)}</h3>
+                <h3 className="text-2xl font-bold mt-1">{formatMyr(ethToMyr(dashboardData.totalDonations))}</h3>
               </div>
               <div className="bg-primary/10 p-3 rounded-full">
                 <DollarSign className="h-6 w-6 text-primary" />

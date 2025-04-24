@@ -24,7 +24,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { BlurContainer } from "@/components/ui/blur-container";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { ethToMyr, formatMyr, myrToEth } from "@/lib/currency";
+import { ethToMyr, formatMyr, formatEth } from "@/lib/currency";
 
 interface ProjectDetailProps {
   params: {
@@ -417,7 +417,9 @@ export default function DonatePage({ params }: ProjectDetailProps) {
                                       .map((tx) => (
                                       <TableRow key={tx.hash}>
                                           <TableCell className="font-mono text-xs">{shortenAddress(tx.from)}</TableCell>
-                                          <TableCell className="text-right text-xs">{parseFloat(tx.value).toFixed(4)} ETH</TableCell>
+                                          <TableCell className="text-right text-xs">
+                                              {formatMyr(ethToMyr(parseFloat(tx.value)))}
+                                          </TableCell>
                                           <TableCell className="text-right text-xs whitespace-nowrap">
                                               {formatDistanceToNow(new Date(tx.timestamp * 1000), { addSuffix: true })}
                                           </TableCell>
@@ -444,12 +446,12 @@ export default function DonatePage({ params }: ProjectDetailProps) {
             <Card className="border-0 bg-transparent">
               <CardHeader>
                 <CardTitle>Make a Donation</CardTitle>
-                <CardDescription>Support this project with ETH</CardDescription>
+                <CardDescription>Support this project with MYR</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="amount">Amount (ETH)</Label>
+                    <Label htmlFor="amount">Amount (MYR)</Label>
                     <CurrencyInput
                       onChange={(ethValue, usdValue) => {
                         setAmount(usdValue.toString());

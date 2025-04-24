@@ -42,6 +42,7 @@ import { ConnectWallet } from "@/components/blockchain/connect-wallet";
 import { useAuthStore } from "@/store/auth-store";
 import { formatDistanceToNow } from 'date-fns';
 import { BlurContainer } from "@/components/ui/blur-container";
+import { ethToMyr, formatMyr } from "@/lib/currency";
 
 export default function PoolDetailsPage() {
   const router = useRouter();
@@ -753,7 +754,7 @@ export default function PoolDetailsPage() {
                     <CardContent>
                       <div className="flex items-center">
                         <CircleDollarSign className="h-5 w-5 text-blue-500 mr-2" />
-                        <div className="text-2xl font-bold">${parseFloat(pool.total_funds || "0").toLocaleString()}</div>
+                        <div className="text-2xl font-bold">{formatMyr(ethToMyr(parseFloat(pool.total_funds || "0")))}</div>
                       </div>
                     </CardContent>
                   </Card>

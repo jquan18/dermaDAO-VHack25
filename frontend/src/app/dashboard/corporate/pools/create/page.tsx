@@ -129,12 +129,14 @@ export default function CreatePoolPage() {
               toast({
                 title: "Pool created and funded successfully",
                 description: `${values.name} has been created and funded with ${amount} ETH.`,
+                variant: "default"
               });
             } else {
               console.error("Failed to make initial donation:", donationResult.error);
               toast({
                 title: "Pool created but funding failed",
                 description: `${values.name} has been created, but the initial funding of ${amount} ETH failed.`,
+                variant: "destructive"
               });
             }
           } catch (donationError) {
@@ -142,6 +144,7 @@ export default function CreatePoolPage() {
             toast({
               title: "Pool created but funding failed",
               description: `${values.name} has been created, but the initial funding failed.`,
+              variant: "destructive"
             });
           } finally {
             setIsFunding(false);
@@ -150,6 +153,7 @@ export default function CreatePoolPage() {
           toast({
             title: "Pool created successfully",
             description: `${values.name} has been created, but could not make initial funding.`,
+            variant: "destructive"
           });
         }
         
@@ -163,6 +167,7 @@ export default function CreatePoolPage() {
       toast({
         title: "Failed to create pool",
         description: "There was an error creating your funding pool. Please try again.",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
