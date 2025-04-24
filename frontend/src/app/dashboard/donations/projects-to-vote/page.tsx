@@ -9,8 +9,9 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import projectsApi from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { BlurContainer } from "@/components/ui/blur-container";
 
 export default function ProjectVotingPage() {
   const router = useRouter();
@@ -63,52 +64,73 @@ export default function ProjectVotingPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Project Verification Voting</h1>
-      </div>
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : projects.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center h-40">
-            <p className="text-muted-foreground text-center mb-4">No projects pending your approval.</p>
-            <Button asChild variant="outline">
-              <Link href="/dashboard/donations">View Your Donations</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {projects.map((project) => (
-            <Card key={project.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle>{project.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>{project.description}</CardDescription>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button
-                  onClick={() => handleVote(project.id)}
-                  isLoading={voting[project.id] || false}
-                >
-                  Approve
-                </Button>
-                <Button variant="link" asChild>
-                  <Link href={`/projects/${project.id}`}>
-                    View Details <ChevronRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+      <BlurContainer intensity="light" className="mb-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Project Verification Voting</h1>
         </div>
+      </BlurContainer>
+
+      {error && (
+        <BlurContainer intensity="medium" className="mb-6">
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </BlurContainer>
+      )}
+
+      {isLoading ? (
+        <BlurContainer>
+          <div className="p-8 text-center">Loading...</div>
+        </BlurContainer>
+      ) : projects.length === 0 ? (
+        <BlurContainer>
+          <Card className="border-0 bg-transparent">
+            <CardContent className="flex flex-col items-center justify-center h-40">
+              <p className="text-muted-foreground text-center mb-4">No projects pending your approval.</p>
+              <Button asChild variant="outline">
+                <Link href="/dashboard/donations">View Your Donations</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </BlurContainer>
+      ) : (
+        <BlurContainer>
+          <div className="space-y-4">
+            {projects.map((project) => (
+              <Card key={project.id} className="hover:shadow-md transition-shadow border-0 bg-transparent/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle>{project.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-md p-3">
+                    <CardDescription>{project.description}</CardDescription>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button
+                    onClick={() => handleVote(project.id)}
+                    disabled={voting[project.id] || false}
+                  >
+                    {voting[project.id] ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Approving...
+                      </>
+                    ) : (
+                      'Approve'
+                    )}
+                  </Button>
+                  <Button variant="link" asChild>
+                    <Link href={`/projects/${project.id}`}>
+                      View Details <ChevronRight className="ml-1 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </BlurContainer>
       )}
     </DashboardLayout>
   );

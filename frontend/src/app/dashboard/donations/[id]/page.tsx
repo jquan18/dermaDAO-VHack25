@@ -17,9 +17,12 @@ import {
 } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Loader2, ExternalLink, AlertCircle } from "lucide-react";
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { BlurContainer } from "@/components/ui/blur-container";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ProjectDetailProps {
   params: {
@@ -274,23 +277,29 @@ export default function DonatePage({ params }: ProjectDetailProps) {
 
   if (isLoadingProject) {
     return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"> {/* Adjust height */} 
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
+      <DashboardLayout>
+        <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"> {/* Adjust height */} 
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
     );
   }
 
   // If project loading finished but project is still null (due to error)
   if (!project) {
     return (
-      <div className="container mx-auto py-8 text-center">
-        <h1 className="text-2xl font-bold mb-4 text-red-600">Failed to Load Project</h1>
-        <p className="text-gray-600 mb-4">Could not retrieve project details. Please try again later or go back.</p>
-        <Button onClick={() => router.push("/dashboard/donations")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-          Return to Projects
-        </Button>
-      </div>
+      <DashboardLayout>
+        <div className="container mx-auto py-8 text-center">
+          <BlurContainer>
+            <h1 className="text-2xl font-bold mb-4 text-red-600">Failed to Load Project</h1>
+            <p className="text-gray-600 mb-4">Could not retrieve project details. Please try again later or go back.</p>
+            <Button onClick={() => router.push("/dashboard/donations")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Return to Projects
+            </Button>
+          </BlurContainer>
+        </div>
+      </DashboardLayout>
     );
   }
 
@@ -298,164 +307,182 @@ export default function DonatePage({ params }: ProjectDetailProps) {
   const scrollscanBaseUrl = "https://scrollscan.com/tx/";
 
   return (
-    <div className="container mx-auto py-8 space-y-8"> {/* Add spacing between sections */} 
-      <Button
-        variant="ghost"
-        onClick={() => router.push("/dashboard/donations")}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Projects
-      </Button>
+    <DashboardLayout>
+      <div className="container mx-auto py-8 space-y-8"> {/* Add spacing between sections */} 
+        <BlurContainer intensity="light" className="flex items-center">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/dashboard/donations")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Projects
+          </Button>
+        </BlurContainer>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8"> {/* Adjust grid for transactions */} 
-        {/* Project Details Card - Span 1 or 2 columns */}
-        <Card className="lg:col-span-1"> 
-          <CardHeader>
-            <CardTitle>{project.name}</CardTitle>
-            <CardDescription>by {project.charity_name}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4 break-words">{project.description}</p>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Funding Goal</span>
-                <span className="font-medium">{formatCurrency(project.funding_goal)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Raised</span> {/* Show actual raised amount */} 
-                <span className="font-medium">{formatCurrency(project.funding_progress?.raised || 0)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Progress</span>
-                <span className="font-medium">
-                  {calculateProgress(project.funding_progress?.raised || 0, project.funding_goal)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                <div
-                  className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out"
-                  style={{
-                    width: `${calculateProgress(
-                      project.funding_progress?.raised || 0,
-                      project.funding_goal
-                    )}%`,
-                  }}
-                ></div>
-              </div>
-               {/* Display Wallet Address */}
-               {project.wallet_address && (
-                    <div className="pt-4 text-sm text-gray-500">
-                        <span>Project Wallet: </span>
-                        <a 
-                            href={`https://scrollscan.com/address/${project.wallet_address}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="font-mono hover:underline break-all"
-                        >
-                            {shortenAddress(project.wallet_address)}
-                            <ExternalLink className="inline-block ml-1 h-3 w-3" />
-                        </a>
-                    </div>
-               )}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8"> {/* Adjust grid for transactions */} 
+          {/* Project Details Card - Span 1 or 2 columns */}
+          <BlurContainer className="lg:col-span-1">
+            <Card className="border-0 bg-transparent">
+              <CardHeader>
+                <CardTitle>{project.name}</CardTitle>
+                <CardDescription>by {project.charity_name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-white/20 backdrop-blur-sm rounded-md p-3 mb-4">
+                  <p className="text-sm text-gray-600 break-words">{project.description}</p>
+                </div>
+                <div className="bg-white/30 backdrop-blur-md rounded-md p-3 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Funding Goal</span>
+                    <span className="font-medium">{formatCurrency(project.funding_goal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Raised</span> {/* Show actual raised amount */} 
+                    <span className="font-medium">{formatCurrency(project.funding_progress?.raised || 0)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Progress</span>
+                    <span className="font-medium">
+                      {calculateProgress(project.funding_progress?.raised || 0, project.funding_goal)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                    <div
+                      className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width: `${calculateProgress(
+                          project.funding_progress?.raised || 0,
+                          project.funding_goal
+                        )}%`,
+                      }}
+                    ></div>
+                  </div>
+                   {/* Display Wallet Address */}
+                   {project.wallet_address && (
+                        <div className="pt-4 text-sm text-gray-500">
+                            <span>Project Wallet: </span>
+                            <a 
+                                href={`https://scrollscan.com/address/${project.wallet_address}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="font-mono hover:underline break-all"
+                            >
+                                {shortenAddress(project.wallet_address)}
+                                <ExternalLink className="inline-block ml-1 h-3 w-3" />
+                            </a>
+                        </div>
+                   )}
+                </div>
+              </CardContent>
+            </Card>
+          </BlurContainer>
 
-        {/* Donation Card - Span 1 column */}
-        <Card className="lg:col-span-1"> 
-          <CardHeader>
-            <CardTitle>Make a Donation</CardTitle>
-            <CardDescription>Support this project with ETH</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount (ETH)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="e.g., 0.1"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  min="0"
-                  step="any" // Allow any step for ETH
-                />
-              </div>
-              <Button
-                className="w-full"
-                onClick={handleDonate}
-                disabled={isSubmitting || !isAuthenticated || !project} // Disable if project hasn't loaded
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Donate Now"
-                )}
-              </Button>
-              {!isAuthenticated && (
-                <p className="text-sm text-red-500 text-center">
-                  Please connect your wallet to make a donation.
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Donation Card - Span 1 column */}
+          <BlurContainer className="lg:col-span-1"> 
+            <Card className="border-0 bg-transparent">
+              <CardHeader>
+                <CardTitle>Make a Donation</CardTitle>
+                <CardDescription>Support this project with ETH</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Amount (ETH)</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="e.g., 0.1"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      min="0"
+                      step="any" // Allow any step for ETH
+                    />
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={handleDonate}
+                    disabled={isSubmitting || !isAuthenticated || !project} // Disable if project hasn't loaded
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Donate Now"
+                    )}
+                  </Button>
+                  {!isAuthenticated && (
+                    <p className="text-sm text-red-500 text-center">
+                      Please connect your wallet to make a donation.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </BlurContainer>
 
-        {/* Transaction History Card - Span 1 column */} 
-        <Card className="lg:col-span-1"> 
-            <CardHeader>
-                <CardTitle>Recent Donations</CardTitle>
-                <CardDescription>Latest incoming transactions to the project wallet.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {isLoadingTransactions ? (
-                    <div className="flex justify-center items-center h-20">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    </div>
-                ) : transactionError ? (
-                    <p className="text-sm text-red-500 text-center">{transactionError}</p>
-                ) : transactions.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center">No transactions found for this project yet.</p>
-                ) : (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>From</TableHead>
-                                <TableHead className="text-right">Value</TableHead>
-                                <TableHead className="text-right">Age</TableHead>
-                                <TableHead className="text-right">Tx</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {transactions
-                                .filter(tx => tx.isIncoming)
-                                .slice(0, 5)
-                                .map((tx) => (
-                                <TableRow key={tx.hash}>
-                                    <TableCell className="font-mono text-xs">{shortenAddress(tx.from)}</TableCell>
-                                    <TableCell className="text-right text-xs">{parseFloat(tx.value).toFixed(4)} ETH</TableCell>
-                                    <TableCell className="text-right text-xs whitespace-nowrap">
-                                        {formatDistanceToNow(new Date(tx.timestamp * 1000), { addSuffix: true })}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <a href={`${scrollscanBaseUrl}${tx.hash}`} target="_blank" rel="noopener noreferrer" title="View on Scrollscan">
-                                            <ExternalLink className="h-4 w-4 text-blue-500 hover:text-blue-700" />
-                                        </a>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                )}
-                 <div className="pt-4 text-center text-xs text-gray-400">
-                    Transaction data provided by Scrollscan.
-                 </div>
-            </CardContent>
-        </Card>
+          {/* Transaction History Card - Span 1 column */}
+          <BlurContainer className="lg:col-span-1"> 
+            <Card className="border-0 bg-transparent">
+                <CardHeader>
+                    <CardTitle>Recent Donations</CardTitle>
+                    <CardDescription>Latest incoming transactions to the project wallet.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isLoadingTransactions ? (
+                        <div className="flex justify-center items-center h-20">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                    ) : transactionError ? (
+                        <div className="bg-white/20 backdrop-blur-sm rounded-md p-3">
+                          <p className="text-sm text-red-500 text-center">{transactionError}</p>
+                        </div>
+                    ) : transactions.length === 0 ? (
+                        <div className="bg-white/20 backdrop-blur-sm rounded-md p-3">
+                          <p className="text-sm text-gray-500 text-center">No transactions found for this project yet.</p>
+                        </div>
+                    ) : (
+                        <div className="bg-white/30 backdrop-blur-md rounded-md p-3">
+                          <Table>
+                              <TableHeader>
+                                  <TableRow>
+                                      <TableHead>From</TableHead>
+                                      <TableHead className="text-right">Value</TableHead>
+                                      <TableHead className="text-right">Age</TableHead>
+                                      <TableHead className="text-right">Tx</TableHead>
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {transactions
+                                      .filter(tx => tx.isIncoming)
+                                      .slice(0, 5)
+                                      .map((tx) => (
+                                      <TableRow key={tx.hash}>
+                                          <TableCell className="font-mono text-xs">{shortenAddress(tx.from)}</TableCell>
+                                          <TableCell className="text-right text-xs">{parseFloat(tx.value).toFixed(4)} ETH</TableCell>
+                                          <TableCell className="text-right text-xs whitespace-nowrap">
+                                              {formatDistanceToNow(new Date(tx.timestamp * 1000), { addSuffix: true })}
+                                          </TableCell>
+                                          <TableCell className="text-right">
+                                              <a href={`${scrollscanBaseUrl}${tx.hash}`} target="_blank" rel="noopener noreferrer" title="View on Scrollscan">
+                                                  <ExternalLink className="h-4 w-4 text-blue-500 hover:text-blue-700" />
+                                              </a>
+                                          </TableCell>
+                                      </TableRow>
+                                  ))}
+                              </TableBody>
+                          </Table>
+                        </div>
+                    )}
+                     <div className="pt-4 text-center text-xs text-gray-400">
+                        Transaction data provided by Scrollscan.
+                     </div>
+                </CardContent>
+            </Card>
+          </BlurContainer>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
-} 
+}

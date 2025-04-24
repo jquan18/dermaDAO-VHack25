@@ -19,6 +19,7 @@ import {
 import { quadraticFundingApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/auth-store";
+import { BlurContainer } from "@/components/ui/blur-container";
 
 // Define interface for pool data
 interface Pool {
@@ -123,58 +124,64 @@ export default function CorporatePools() {
 
   return (
     <div className="py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Funding Pools</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your sponsored quadratic funding pools
-          </p>
+      <BlurContainer intensity="light" className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Funding Pools</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your sponsored quadratic funding pools
+            </p>
+          </div>
+          <Link href="/dashboard/corporate/pools/create">
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create New Pool
+            </Button>
+          </Link>
         </div>
-        <Link href="/dashboard/corporate/pools/create">
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create New Pool
-          </Button>
-        </Link>
-      </div>
+      </BlurContainer>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, i) => (
-          <Card key={i} className={`${stat.bgColor} border-none`}>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-sm font-medium text-gray-600">{stat.title}</CardTitle>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{isLoading ? "..." : stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-4 w-64 mt-1" />
+      <BlurContainer>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statCards.map((stat, i) => (
+            <Card key={i} className={`${stat.bgColor} border-none`}>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-sm font-medium text-gray-600">{stat.title}</CardTitle>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                </div>
+                <div className="text-2xl font-bold">{isLoading ? "..." : stat.value}</div>
               </CardContent>
             </Card>
           ))}
         </div>
+      </BlurContainer>
+
+      {isLoading ? (
+        <BlurContainer>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="bg-transparent border-0">
+                <CardHeader>
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-4 w-64 mt-1" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </BlurContainer>
       ) : pools.length === 0 ? (
-        <>
-          <Card className="bg-gray-50 border border-dashed border-gray-200">
+        <BlurContainer>
+          <Card className="bg-gray-50 border border-dashed border-gray-200 border-0 bg-white/10 backdrop-blur-sm">
             <CardContent className="py-8">
               <div className="text-center space-y-3">
                 <CircleDollarSign className="h-10 w-10 mx-auto text-gray-400" />
@@ -191,60 +198,60 @@ export default function CorporatePools() {
               </div>
             </CardContent>
           </Card>
-          
-          {/* First Pool Creation Guide */}
-        </>
+        </BlurContainer>
       ) : (
-        <div className="space-y-4">
-          {pools.map((pool) => (
-            <Card key={pool.id}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{pool.name}</CardTitle>
-                    <CardDescription>{pool.theme}</CardDescription>
+        <BlurContainer>
+          <div className="space-y-4">
+            {pools.map((pool) => (
+              <Card key={pool.id} className="border-0 bg-white/20 backdrop-blur-sm">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle>{pool.name}</CardTitle>
+                      <CardDescription>{pool.theme}</CardDescription>
+                    </div>
+                    <div className={`px-2 py-1 rounded text-xs font-medium ${
+                      pool.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {pool.is_active ? 'Active' : 'Inactive'}
+                    </div>
                   </div>
-                  <div className={`px-2 py-1 rounded text-xs font-medium ${
-                    pool.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {pool.is_active ? 'Active' : 'Inactive'}
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <p className="text-sm text-gray-600 line-clamp-2 mb-4">{pool.description}</p>
+                  
+                  <div className="grid grid-cols-3 gap-4 text-sm bg-white/10 backdrop-blur-xs p-2 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <CircleDollarSign className="h-4 w-4 text-gray-500" />
+                      <span>${parseFloat(typeof pool.total_funds === 'string' ? pool.total_funds : "0").toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-gray-500" />
+                      <span>{pool.project_count || 0} Projects</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-gray-500" />
+                      <span>
+                        {pool.end_date 
+                          ? new Date(pool.end_date).toLocaleDateString() 
+                          : 'No end date'}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pb-2">
-                <p className="text-sm text-gray-600 line-clamp-2 mb-4">{pool.description}</p>
-                
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <CircleDollarSign className="h-4 w-4 text-gray-500" />
-                    <span>${parseFloat(typeof pool.total_funds === 'string' ? pool.total_funds : "0").toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span>{pool.project_count || 0} Projects</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-gray-500" />
-                    <span>
-                      {pool.end_date 
-                        ? new Date(pool.end_date).toLocaleDateString() 
-                        : 'No end date'}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="pt-2">
-                <Link href={`/dashboard/corporate/pools/${pool.id}`} className="w-full">
-                  <Button variant="secondary" className="w-full">
-                    View Details
-                    <ArrowUpRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+                <CardFooter className="pt-2">
+                  <Link href={`/dashboard/corporate/pools/${pool.id}`} className="w-full">
+                    <Button variant="secondary" className="w-full">
+                      View Details
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </BlurContainer>
       )}
     </div>
   );
-} 
+}

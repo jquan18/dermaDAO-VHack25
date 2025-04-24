@@ -27,6 +27,8 @@ import {
 import { api } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { BlurContainer } from '@/components/ui/blur-container';
+import { DashboardLayout } from '@/components/layout/dashboard-layout';
 
 // Helper function to normalize API responses
 function normalizeResponse(response) {
@@ -111,11 +113,13 @@ function ProjectCard({ project }) {
         </CardHeader>
         
         <CardContent className="flex-grow">
-          <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-            {project.description || 'No description available'}
-          </p>
+          <div className="bg-white/20 backdrop-blur-sm rounded-md p-3 mb-4">
+            <p className="text-sm text-muted-foreground line-clamp-3">
+              {project.description || 'No description available'}
+            </p>
+          </div>
           
-          <div className="space-y-3">
+          <div className="bg-white/30 backdrop-blur-md rounded-md p-3 space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Raised</span>
               <span className="font-medium">
@@ -175,102 +179,102 @@ function PoolInfo({ pool }) {
   };
 
   return (
-    <Card className="mb-8 shadow-sm overflow-hidden">
-      {/* Optional Banner Image */}
-      {pool.banner_image && (
-        <div className="relative w-full h-40 md:h-48 bg-muted">
-          <Image
-            src={pool.banner_image}
-            alt={`${pool.name} Banner`}
-            fill
-            className="object-cover"
-          />
-        </div>
-      )}
+    <BlurContainer>
+      <Card className="mb-8 shadow-sm overflow-hidden border-0 bg-transparent">
+        {/* Optional Banner Image */}
+        {pool.banner_image && (
+          <div className="relative w-full h-40 md:h-48 bg-muted">
+            <Image
+              src={pool.banner_image}
+              alt={`${pool.name} Banner`}
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
 
-      <CardHeader className="pt-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          {/* Logo and Title */}
-          <div className="flex items-center gap-4">
-            {pool.logo_image && (
-              <div className="relative w-16 h-16 rounded-md overflow-hidden border flex-shrink-0">
-                <Image 
-                  src={pool.logo_image} 
-                  alt={`${pool.name} Logo`}
-                  fill
-                  className="object-contain"
-                />
+        <CardHeader className="pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Logo and Title */}
+            <div className="flex items-center gap-4">
+              {pool.logo_image && (
+                <div className="relative w-16 h-16 rounded-md overflow-hidden border flex-shrink-0">
+                  <Image 
+                    src={pool.logo_image} 
+                    alt={`${pool.name} Logo`}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              )}
+              <div>
+                <CardTitle className="text-2xl font-bold tracking-tight">{pool.name}</CardTitle>
+                <CardDescription className="flex flex-wrap items-center gap-x-2 mt-1">
+                  <Badge variant={isActive ? "success" : hasEnded ? (isDistributed ? "secondary" : "outline") : "outline"} className="capitalize">
+                    {isActive ? "Active" : hasEnded ? (isDistributed ? "Completed" : "Ended") : "Scheduled"}
+                  </Badge>
+                  <span className="text-muted-foreground">Theme: {pool.theme}</span>
+                  {pool.company_name && <span className="text-muted-foreground">By: {pool.company_name}</span>}
+                </CardDescription>
               </div>
-            )}
-            <div>
-              <CardTitle className="text-2xl font-bold tracking-tight">{pool.name}</CardTitle>
-              <CardDescription className="flex flex-wrap items-center gap-x-2 mt-1">
-                <Badge variant={isActive ? "success" : hasEnded ? (isDistributed ? "secondary" : "outline") : "outline"} className="capitalize">
-                  {isActive ? "Active" : hasEnded ? (isDistributed ? "Completed" : "Ended") : "Scheduled"}
-                </Badge>
-                <span className="text-muted-foreground">Theme: {pool.theme}</span>
-                {pool.company_name && <span className="text-muted-foreground">By: {pool.company_name}</span>}
-              </CardDescription>
+            </div>
+            {/* Action Button - Example */}
+             <Button asChild>
+               <Link href={`/dashboard/donations?pool=${pool.id}`}>
+                 Donate to Projects
+               </Link>
+             </Button>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          <p className="text-muted-foreground mb-6 text-sm leading-relaxed">{pool.description}</p>
+          
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            {/* Projects */}
+            <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
+               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Projects</p>
+               <p className="text-xl font-semibold">{pool?.projects?.length || 0}</p> 
+            </div>
+            {/* Total Funds */}
+            <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
+               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Funds</p>
+               <p className="text-xl font-semibold">{totalFunds.toFixed(2)} {currency}</p> 
+            </div>
+            {/* Allocated */}
+            <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
+               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Allocated</p>
+               <p className="text-xl font-semibold">{allocatedFunds.toFixed(2)} {currency}</p> 
+            </div>
+            {/* Duration/Status */}
+            <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
+               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+               <p className="text-base font-medium">
+                  {isActive && endDate ? `Ends ${formatDistanceToNow(endDate, { addSuffix: true })}` : 
+                   hasEnded ? (isDistributed ? "Completed" : "Ended") : 
+                   isScheduled && startDate ? `Starts ${formatPoolDate(pool.start_date)}` : 
+                   pool.is_active ? "Active (No End Date)" : "Inactive"}
+               </p>
             </div>
           </div>
-          {/* Action Button - Example */}
-           <Button asChild>
-             <Link href={`/dashboard/donations?pool=${pool.id}`}>
-               Donate to Projects
-             </Link>
-           </Button>
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        <p className="text-muted-foreground mb-6 text-sm leading-relaxed">{pool.description}</p>
-        
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          {/* Projects */}
-          <div className="bg-muted/50 rounded-lg p-3 text-center">
-             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Projects</p>
-             <p className="text-xl font-semibold">{pool?.projects?.length || 0}</p> 
+          
+          {/* Funding Allocation Progress Bar */}
+          <div className="bg-white/30 backdrop-blur-md rounded-lg p-4 space-y-2">
+            <h3 className="text-sm font-semibold">Funding Allocation</h3>
+            <Progress value={fundingPercentage} className="h-2" />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>
+                {allocatedFunds.toFixed(4)} {currency} allocated
+              </span>
+              <span>
+                {fundingPercentage}% of total funds ({totalFunds.toFixed(4)} {currency})
+              </span>
+            </div>
           </div>
-          {/* Total Funds */}
-          <div className="bg-muted/50 rounded-lg p-3 text-center">
-             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Funds</p>
-             <p className="text-xl font-semibold">{totalFunds.toFixed(2)} {currency}</p> 
-          </div>
-          {/* Allocated */}
-          <div className="bg-muted/50 rounded-lg p-3 text-center">
-             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Allocated</p>
-             <p className="text-xl font-semibold">{allocatedFunds.toFixed(2)} {currency}</p> 
-          </div>
-          {/* Duration/Status */}
-          <div className="bg-muted/50 rounded-lg p-3 text-center">
-             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Status</p>
-             <p className="text-base font-medium">
-                {isActive && endDate ? `Ends ${formatDistanceToNow(endDate, { addSuffix: true })}` : 
-                 hasEnded ? (isDistributed ? "Completed" : "Ended") : 
-                 isScheduled && startDate ? `Starts ${formatPoolDate(pool.start_date)}` : 
-                 pool.is_active ? "Active (No End Date)" : "Inactive"}
-             </p>
-          </div>
-        </div>
-        
-        {/* Removed Funding Round Section */}
-
-        {/* Funding Allocation Progress Bar */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Funding Allocation</h3>
-          <Progress value={fundingPercentage} className="h-2" />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>
-              {allocatedFunds.toFixed(4)} {currency} allocated
-            </span>
-            <span>
-              {fundingPercentage}% of total funds ({totalFunds.toFixed(4)} {currency})
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </BlurContainer>
   );
 }
 
@@ -393,107 +397,119 @@ export default function PoolDetailPage() {
   
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[500px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-        <span>Loading pool information...</span>
-      </div>
+      <DashboardLayout>
+        <div className="flex justify-center items-center min-h-[500px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+          <span>Loading pool information...</span>
+        </div>
+      </DashboardLayout>
     );
   }
   
   if (!pool) {
     return (
-      <div className="text-center py-16">
-        <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold">Pool not found</h2>
-        <p className="text-muted-foreground mt-2">The pool you are looking for does not exist.</p>
-        <Button onClick={() => router.push('/dashboard/pools')} className="mt-6">
-          Back to Pools
-        </Button>
-      </div>
+      <DashboardLayout>
+        <BlurContainer className="text-center py-16">
+          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold">Pool not found</h2>
+          <p className="text-muted-foreground mt-2">The pool you are looking for does not exist.</p>
+          <Button onClick={() => router.push('/dashboard/pools')} className="mt-6">
+            Back to Pools
+          </Button>
+        </BlurContainer>
+      </DashboardLayout>
     );
   }
   
   return (
-    <div className="container py-8">
-      {/* Only render in development mode for debugging */}
-      {process.env.NODE_ENV === 'development' && debugInfo && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-          <details>
-            <summary className="cursor-pointer font-medium">Debug Information</summary>
-            <pre className="mt-2 text-xs overflow-auto max-h-60">
-              {JSON.stringify(debugInfo, null, 2)}
-            </pre>
-          </details>
-        </div>
-      )}
-      
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          className="mr-2" 
-          onClick={() => router.push('/dashboard/pools')}
-        >
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Back to Pools
-        </Button>
-        <h1 className="text-3xl font-bold">Pool Details</h1>
-      </div>
-      
-      <PoolInfo pool={pool} />
-      
-      <div className="flex flex-col sm:flex-row items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold mb-4 sm:mb-0">Projects in this Pool</h2>
-        <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-4">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search projects..."
-              className="pl-9"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <DashboardLayout>
+      <div className="container py-8">
+        {/* Only render in development mode for debugging */}
+        {process.env.NODE_ENV === 'development' && debugInfo && (
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <details>
+              <summary className="cursor-pointer font-medium">Debug Information</summary>
+              <pre className="mt-2 text-xs overflow-auto max-h-60">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </details>
           </div>
-          <Select value={sortOption} onValueChange={setSortOption}>
-            <SelectTrigger className="w-full sm:w-44">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Sort by..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
-              <SelectItem value="raised_high">Funding: High to Low</SelectItem>
-              <SelectItem value="raised_low">Funding: Low to High</SelectItem>
-              <SelectItem value="contributions">Most Contributions</SelectItem>
-              <SelectItem value="name_asc">Name (A-Z)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      {filteredProjects.length > 0 ? (
-        <motion.div 
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {filteredProjects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </motion.div>
-      ) : (
-        <div className="text-center py-16">
-          <p className="text-muted-foreground">No projects found in this pool.</p>
-          {searchTerm && (
+        )}
+        
+        <BlurContainer intensity="light" className="mb-6">
+          <div className="flex items-center">
             <Button 
-              variant="outline" 
-              onClick={() => setSearchTerm('')} 
-              className="mt-4"
+              variant="ghost" 
+              className="mr-2" 
+              onClick={() => router.push('/dashboard/pools')}
             >
-              Clear search
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Back to Pools
             </Button>
+            <h1 className="text-3xl font-bold">Pool Details</h1>
+          </div>
+        </BlurContainer>
+        
+        <PoolInfo pool={pool} />
+        
+        <BlurContainer intensity="light" className="mb-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between">
+            <h2 className="text-2xl font-semibold mb-4 sm:mb-0">Projects in this Pool</h2>
+            <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-4">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search projects..."
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Select value={sortOption} onValueChange={setSortOption}>
+                <SelectTrigger className="w-full sm:w-44">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sort by..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Default</SelectItem>
+                  <SelectItem value="raised_high">Funding: High to Low</SelectItem>
+                  <SelectItem value="raised_low">Funding: Low to High</SelectItem>
+                  <SelectItem value="contributions">Most Contributions</SelectItem>
+                  <SelectItem value="name_asc">Name (A-Z)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </BlurContainer>
+        
+        <BlurContainer>
+          {filteredProjects.length > 0 ? (
+            <motion.div 
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {filteredProjects.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </motion.div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">No projects found in this pool.</p>
+              {searchTerm && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSearchTerm('')} 
+                  className="mt-4"
+                >
+                  Clear search
+                </Button>
+              )}
+            </div>
           )}
-        </div>
-      )}
-    </div>
+        </BlurContainer>
+      </div>
+    </DashboardLayout>
   );
-} 
+}

@@ -10,6 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@/components/ui/progress";
+import { BlurContainer } from "@/components/ui/blur-container";
 
 interface PoolCardProps {
   pool: {
@@ -89,28 +90,32 @@ export function PoolCard({ pool }: PoolCardProps) {
       </CardHeader>
       
       <CardContent className="flex-grow">
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-          {pool.description}
-        </p>
-        
-        <div className="grid gap-3 text-sm">
-        <div className="grid gap-3">
-          <div className="flex justify-between items-center text-sm">
-            <div className="flex items-center">
-              <CircleDollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
-              <span>Total Funding</span>
-            </div>
-            <span className="font-medium">${(pool.total_funds || 0).toLocaleString()}</span>
-          </div>
-          
-          <div>
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-muted-foreground">Allocated</span>
-              <span className="font-medium">${(pool.allocated_funds || 0).toLocaleString()}</span>
-            </div>
-            <Progress value={fundingPercentage} className="h-2" />
-          </div>
+        <div className="bg-white/20 backdrop-blur-sm rounded-md p-3 mb-4">
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {pool.description}
+          </p>
         </div>
+        
+        <div className="bg-white/30 backdrop-blur-md rounded-md p-3">
+          <div className="grid gap-3 text-sm">
+          <div className="grid gap-3">
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center">
+                <CircleDollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
+                <span>Total Funding</span>
+              </div>
+              <span className="font-medium">${(pool.total_funds || 0).toLocaleString()}</span>
+            </div>
+            
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-muted-foreground">Allocated</span>
+                <span className="font-medium">${(pool.allocated_funds || 0).toLocaleString()}</span>
+              </div>
+              <Progress value={fundingPercentage} className="h-2" />
+            </div>
+          </div>
+          </div>
         </div>
       </CardContent>
       
@@ -123,4 +128,4 @@ export function PoolCard({ pool }: PoolCardProps) {
       </CardFooter>
     </Card>
   );
-} 
+}

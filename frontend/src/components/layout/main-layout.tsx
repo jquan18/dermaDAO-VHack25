@@ -13,7 +13,7 @@ export function MainLayout({ children, fullWidthHero = false }: MainLayoutProps)
   return (
     <div className="flex flex-col min-h-screen relative">
       {fullWidthHero && (
-        <div className="fixed inset-0 z-0">
+        <div className="fixed inset-0 z-0 backdrop-blur-md bg-white/30">
           {/* This will hold the background element passed as the first child */}
           {Array.isArray(children) ? children[0] : null}
         </div>
