@@ -37,6 +37,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { quadraticFundingApi } from "@/lib/api";
 import { BlurContainer } from "@/components/ui/blur-container";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { myrToEth } from "@/lib/currency";
 
 // Form schema with validation
 const formSchema = z.object({
@@ -114,7 +116,7 @@ export default function CreatePoolPage() {
         const poolId = result.data.id || result.data.pool_id;
         
         if (poolId) {
-          // Get the initial funding amount
+          // Get the initial funding amount in ETH (already converted by the CurrencyInput)
           const amount = parseFloat(values.initialFunding);
           
           // Make donation to the newly created pool
@@ -289,9 +291,16 @@ export default function CreatePoolPage() {
                     name="initialFunding"
                     render={({ field }) => (
                       <FormItem className="bg-white/10 backdrop-blur-sm p-3 rounded-lg">
-                        <FormLabel>Initial Funding (ETH)</FormLabel>
+                        <FormLabel>Initial Funding</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" min="0.01" placeholder="e.g., 10.00" {...field} />
+                          <CurrencyInput
+                            onChange={(ethValue, usdValue) => {
+                              field.onChange(ethValue.toString());
+                            }}
+                            initialEthValue={field.value ? parseFloat(field.value) : 0}
+                            placeholder="0"
+                            min={1}
+                          />
                         </FormControl>
                         <FormDescription>
                           Amount your company will contribute to the pool

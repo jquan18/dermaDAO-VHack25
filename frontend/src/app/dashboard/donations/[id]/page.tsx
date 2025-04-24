@@ -23,6 +23,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { BlurContainer } from "@/components/ui/blur-container";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { ethToMyr, formatMyr, myrToEth } from "@/lib/currency";
 
 interface ProjectDetailProps {
   params: {
@@ -65,6 +67,7 @@ export default function DonatePage({ params }: ProjectDetailProps) {
   const [isLoadingProject, setIsLoadingProject] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [amount, setAmount] = useState("");
+  const [ethAmount, setEthAmount] = useState(0);
   // const [walletBalance, setWalletBalance] = useState("0.00"); // Removed as it wasn't used
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -172,7 +175,7 @@ export default function DonatePage({ params }: ProjectDetailProps) {
       return;
     }
 
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!ethAmount || ethAmount <= 0) {
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid donation amount",
@@ -216,7 +219,7 @@ export default function DonatePage({ params }: ProjectDetailProps) {
         },
         body: JSON.stringify({
           project_id: project.id,
-          amount: parseFloat(amount)
+          amount: ethAmount // Using the converted ETH amount
         }),
       });
 
@@ -264,10 +267,9 @@ export default function DonatePage({ params }: ProjectDetailProps) {
   };
 
   const formatCurrency = (value: string | number) => {
-      const numValue = typeof value === 'string' ? parseFloat(value) : value;
-      if (isNaN(numValue)) return "Invalid Number";
-      // Basic formatting, adjust precision as needed
-      return `${numValue.toFixed(6)} ETH`;
+    if (!value) return "RM0";
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    return formatMyr(ethToMyr(numValue));
   };
 
   const calculateProgress = (raised: number, goal: number) => {
@@ -448,14 +450,13 @@ export default function DonatePage({ params }: ProjectDetailProps) {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="amount">Amount (ETH)</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      placeholder="e.g., 0.1"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      min="0"
-                      step="any" // Allow any step for ETH
+                    <CurrencyInput
+                      onChange={(ethValue, usdValue) => {
+                        setAmount(usdValue.toString());
+                        setEthAmount(ethValue);
+                      }}
+                      placeholder="0"
+                      min={1}
                     />
                   </div>
                   <Button
