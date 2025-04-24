@@ -721,411 +721,262 @@ export default function PoolDetailsPage() {
       </header>
       
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Manual Distribution Alert - Shows at the top for better visibility */}
-        {canDistribute && manualDistributionEligible && !distributionEligible && (
-          <Alert variant="warning" className="mb-6 bg-amber-50 border-amber-200">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            <AlertTitle className="text-amber-800">Manual Distribution Available</AlertTitle>
-            <AlertDescription className="text-amber-700">
-              As a pool sponsor, you can manually distribute funds from this pool even though it hasn't ended yet.
-              This will immediately end the pool and distribute funds to all eligible projects.
-              <Button 
-                variant="outline" 
-                className="mt-2 bg-white border-amber-300 text-amber-800 hover:bg-amber-100"
-                onClick={() => {
-                  setActiveTab("settings");
-                  // Add a small delay to ensure the tab has changed before scrolling
-                  setTimeout(() => {
-                    const distributionSection = document.getElementById("distribution-controls");
-                    if (distributionSection) {
-                      distributionSection.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }, 100);
-                }}
-              >
-                View Distribution Options
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Manual Distribution Alert - REMOVED */}
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Pool Info & Actions */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Pool Header Card */}
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-2xl flex items-center">
-                      <CircleDollarSign className="h-6 w-6 mr-2 text-blue-600" />
-                      {pool.name}
-                    </CardTitle>
-                    <CardDescription className="mt-1">Theme: {pool.theme || "General"}</CardDescription>
-                  </div>
-                  {/* Updated Pool Status Badge */}
-                  <Badge variant={isActive ? "success" : hasEnded ? "secondary" : isScheduled ? "outline" : "destructive"}>
-                    {isActive ? "Active" : hasEnded ? (isDistributed ? "Completed" : "Ended") : isScheduled ? "Scheduled" : "Inactive"}
-                  </Badge>
+        <div className="space-y-6">
+          {/* Pool Header Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-2xl flex items-center">
+                    <CircleDollarSign className="h-6 w-6 mr-2 text-blue-600" />
+                    {pool.name}
+                  </CardTitle>
+                  <CardDescription className="mt-1">Theme: {pool.theme || "General"}</CardDescription>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-6">{pool.description}</p>
-                
-                {/* Pool Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    {/* Total Funding */}
-                    <div className="bg-blue-50 rounded-lg p-4 flex flex-col">
-                      <span className="text-xs text-blue-600 font-medium mb-1">Total Funding</span>
-                      <div className="flex items-center">
-                        <CircleDollarSign className="h-5 w-5 mr-1 text-blue-600" />
-                        <span className="text-xl font-bold">${parseFloat(pool.total_funds || 0).toLocaleString()}</span>
-                      </div>
-                    </div>
-                    {/* Projects */}
-                    <div className="bg-purple-50 rounded-lg p-4 flex flex-col">
-                      <span className="text-xs text-purple-600 font-medium mb-1">Projects</span>
-                      <div className="flex items-center">
-                        <Users className="h-5 w-5 mr-1 text-purple-600" />
-                        <span className="text-xl font-bold">{projects.length}</span>
-                      </div>
-                    </div>
-                    {/* Matching Ratio - Assuming this still exists */}
-                    <div className="bg-amber-50 rounded-lg p-4 flex flex-col">
-                      <span className="text-xs text-amber-600 font-medium mb-1">Matching Ratio</span>
-                      <div className="flex items-center">
-                        <LineChart className="h-5 w-5 mr-1 text-amber-600" />
-                        <span className="text-xl font-bold">{pool.matching_ratio || 1}:1</span>
-                      </div>
-                    </div>
-                </div>
-                
-                <Separator className="my-4"/>
-                
-                {/* Pool Period & Status Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="text-sm font-medium mb-1">Period</h3>
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                      <div>
-                        <p>Start: {formatDate(pool.start_date)}</p>
-                        <p>End: {formatDate(pool.end_date)}</p>
-                      </div>
+                {/* Updated Pool Status Badge */}
+                <Badge variant={isActive ? "success" : hasEnded ? "secondary" : isScheduled ? "outline" : "destructive"}>
+                  {isActive ? "Active" : hasEnded ? (isDistributed ? "Completed" : "Ended") : isScheduled ? "Scheduled" : "Inactive"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-6">{pool.description}</p>
+              
+              {/* Pool Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  {/* Total Funding */}
+                  <div className="bg-blue-50 rounded-lg p-4 flex flex-col">
+                    <span className="text-xs text-blue-600 font-medium mb-1">Total Funding</span>
+                    <div className="flex items-center">
+                      <CircleDollarSign className="h-5 w-5 mr-1 text-blue-600" />
+                      <span className="text-xl font-bold">${parseFloat(pool.total_funds || 0).toLocaleString()}</span>
                     </div>
                   </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium mb-1">Status</h3>
-                    <div className="flex flex-col gap-1 text-sm">
+                  {/* Projects */}
+                  <div className="bg-purple-50 rounded-lg p-4 flex flex-col">
+                    <span className="text-xs text-purple-600 font-medium mb-1">Projects</span>
+                    <div className="flex items-center">
+                      <Users className="h-5 w-5 mr-1 text-purple-600" />
+                      <span className="text-xl font-bold">{projects.length}</span>
+                    </div>
+                  </div>
+              </div>
+              
+              <Separator className="my-4"/>
+              
+              {/* Pool Period & Status Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Period</h3>
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                    <div>
+                      <p>Start: {formatDate(pool.start_date)}</p>
+                      <p>End: {formatDate(pool.end_date)}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Status</h3>
+                  <div className="flex flex-col gap-1 text-sm">
+                    <div className="flex items-center text-gray-600">
+                      <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                      <p>{calculateTimeRemaining()}</p>
+                    </div>
+                    {/* Display Distribution Status */}
+                     <div className="flex items-center text-gray-600">
+                        {isDistributed ? 
+                          <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" /> : 
+                          <Clock className="h-4 w-4 mr-2 text-orange-500" /> 
+                        }
+                        <p>{isDistributed ? 
+                            `Distributed on ${formatDate(pool.distributed_at)}` : 
+                            (hasEnded ? "Awaiting Distribution" : "Distribution Pending")}
+                        </p>
+                     </div>
+                    {pool.company_id && (
                       <div className="flex items-center text-gray-600">
-                        <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                        <p>{calculateTimeRemaining()}</p>
+                        <Building className="h-4 w-4 mr-2 text-gray-500" />
+                        <p>Sponsored by {pool.company_name || "Company"}</p>
                       </div>
-                      {/* Display Distribution Status */}
-                       <div className="flex items-center text-gray-600">
-                          {isDistributed ? 
-                            <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" /> : 
-                            <Clock className="h-4 w-4 mr-2 text-orange-500" /> 
-                          }
-                          <p>{isDistributed ? 
-                              `Distributed on ${formatDate(pool.distributed_at)}` : 
-                              (hasEnded ? "Awaiting Distribution" : "Distribution Pending")}
-                          </p>
-                       </div>
-                      {pool.company_id && (
-                        <div className="flex items-center text-gray-600">
-                          <Building className="h-4 w-4 mr-2 text-gray-500" />
-                          <p>Sponsored by {pool.company_name || "Company"}</p>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Tabs Section */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
             
-            {/* Tabs Section */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="projects">Projects ({projects.length})</TabsTrigger>
-                <TabsTrigger value="donations">Donate</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
-              
-              {/* Overview Tab */}
-              <TabsContent value="overview">
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Featured Projects</CardTitle>
-                      <CardDescription>
-                        Projects currently receiving funding from this pool
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {projects.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <p>No projects in this funding pool yet.</p>
-                          <Button variant="link" className="mt-2">
-                            <PlusCircle className="h-4 w-4 mr-1" /> Add a project
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {projects.slice(0, 3).map((project) => (
-                            <div key={project.id} className="border rounded-lg p-4">
-                              <div className="flex justify-between mb-2">
-                                <h3 className="font-medium">{project.name}</h3>
-                                <Badge variant="outline">{project.charity_name || "Charity"}</Badge>
-                              </div>
-                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                                {project.description}
-                              </p>
-                              <div className="flex justify-between items-center">
-                                <div className="flex items-center text-sm text-gray-500">
-                                  <CircleDollarSign className="h-4 w-4 mr-1" />
-                                  <span>${parseFloat(project.funds_raised || 0).toLocaleString()} raised</span>
-                                </div>
-                                <Link href={`/dashboard/projects/${project.id}`}>
-                                  <Button variant="ghost" size="sm">View Project</Button>
-                                </Link>
-                              </div>
-                            </div>
-                          ))}
-                          
-                          {projects.length > 3 && (
-                            <div className="text-center mt-2">
-                              <Button variant="link" onClick={() => setActiveTab("projects")}>
-                                View all {projects.length} projects
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-              
-              {/* Donations Tab */}
-              <TabsContent value="donations">
-                {renderWalletContent()}
-              </TabsContent>
-              
-              {/* Settings Tab */}
-              <TabsContent value="settings">
+            {/* Overview Tab */}
+            <TabsContent value="overview">
+              <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Pool Settings</CardTitle>
+                    <CardTitle>Featured Projects</CardTitle>
                     <CardDescription>
-                      Configure settings for this funding pool
+                      Projects currently receiving funding from this pool
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-6">
-                      {/* Distribution Settings */}
-                      {canDistribute && (
-                        <div id="distribution-controls" className="bg-white p-4 rounded-lg border">
-                          <h3 className="text-lg font-medium mb-2">Distribution Controls</h3>
-                          
-                          {isDistributed ? (
-                            <Alert className="bg-green-50 border-green-200 mb-4">
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
-                              <AlertTitle>Funds Distributed</AlertTitle>
-                              <AlertDescription>
-                                This pool has already been distributed on {formatDate(pool.distributed_at)}.
-                                {pool.distribution_tx_hash && (
-                                  <a 
-                                    href={`https://scrollscan.com/tx/${pool.distribution_tx_hash}`} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-green-700 underline flex items-center mt-1"
-                                  >
-                                    View transaction <ExternalLink className="h-3 w-3 ml-1" />
-                                  </a>
-                                )}
-                              </AlertDescription>
-                            </Alert>
-                          ) : (
-                            <>
-                              {distributionEligible ? (
-                                <div className="space-y-3">
-                                  <Alert className="bg-blue-50 border-blue-200">
-                                    <Info className="h-4 w-4 text-blue-600" />
-                                    <AlertTitle>Ready for Distribution</AlertTitle>
-                                    <AlertDescription>
-                                      This pool has ended and is ready for funds distribution.
-                                    </AlertDescription>
-                                  </Alert>
-                                  
-                                  <Button 
-                                    className="w-full"
-                                    onClick={() => handleDistributeFunds(false)} 
-                                    disabled={isDistributing}
-                                  >
-                                    {isDistributing ? (
-                                      <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                        Distributing...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                                        Distribute Funds
-                                      </>
-                                    )}
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="space-y-3">
-                                  <Alert className="bg-amber-50 border-amber-200">
-                                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                                    <AlertTitle>Manual Distribution</AlertTitle>
-                                    <AlertDescription>
-                                      This pool has not ended yet. You can manually distribute funds, but this will immediately end the pool and prevent further donations.
-                                    </AlertDescription>
-                                  </Alert>
-                                  
-                                  <Button 
-                                    variant="destructive"
-                                    className="w-full"
-                                    onClick={() => handleDistributeFunds(true)} 
-                                    disabled={isDistributing || !manualDistributionEligible}
-                                  >
-                                    {isDistributing ? (
-                                      <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                        Distributing...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <AlertCircle className="h-4 w-4 mr-2" />
-                                        Manually Distribute Funds
-                                      </>
-                                    )}
-                                  </Button>
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="py-2 text-center">
-                        <p className="text-muted-foreground">Additional settings coming soon</p>
+                    {projects.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>No projects in this funding pool yet.</p>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {projects.slice(0, 3).map((project) => (
+                          <div key={project.id} className="border rounded-lg p-4">
+                            <div className="flex justify-between mb-2">
+                              <h3 className="font-medium">{project.name}</h3>
+                              <Badge variant="outline">{project.charity_name || "Charity"}</Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                              {project.description}
+                            </p>
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center text-sm text-gray-500">
+                                <CircleDollarSign className="h-4 w-4 mr-1" />
+                                <span>${parseFloat(project.funds_raised || 0).toLocaleString()} raised</span>
+                              </div>
+                              <Link href={`/dashboard/projects/${project.id}`}>
+                                <Button variant="ghost" size="sm">View Project</Button>
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {projects.length > 3 && (
+                          <div className="text-center mt-2">
+                            <Link href={`/dashboard/corporate/pools/projects/${pool.id}`}>
+                              <Button variant="link">
+                                View all {projects.length} projects
+                              </Button>
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-          
-          {/* Right Column: Wallet & Quick Actions */}
-          <div className="space-y-6">
-            {/* Wallet Card */}
-            <Card>
-              {renderWalletContent()}
-            </Card>
+              </div>
+            </TabsContent>
             
-            {/* Quick Actions Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {/* Add Project to Pool */}
-                <Link href={`/dashboard/projects/create?pool_id=${pool.id}`}>
-                  <Button variant="outline" className="w-full justify-start" size="sm">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Add Project to Pool
-                  </Button>
-                </Link>
-                
-                {/* Edit Pool Button - only shown for pool sponsors or admins */}
-                {(isPoolSponsor || isAdmin) && (
-                  <Link href={`/dashboard/corporate/pools/edit/${pool.id}`}>
-                    <Button variant="outline" className="w-full justify-start" size="sm">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Pool Details
-                    </Button>
-                  </Link>
-                )}
-                
-                {/* Add Funding Button */}
-                <Link href={`/dashboard/corporate/pools/${pool.id}?tab=donations`} onClick={() => setActiveTab("donations")}>
-                  <Button variant="outline" className="w-full justify-start" size="sm">
-                    <CircleDollarSign className="h-4 w-4 mr-2" />
-                    Add More Funding
-                  </Button>
-                </Link>
-                
-                {/* Updated Distribute Funds Button */} 
-                {canDistribute && distributionEligible && (
-                  <Button 
-                    variant="default" 
-                    className="w-full justify-start" 
-                    size="sm"
-                    onClick={() => handleDistributeFunds(false)}
-                    disabled={isDistributing}
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    {isDistributing ? "Distributing..." : "Distribute Pool Funds"}
-                  </Button>
-                )}
-                
-                {/* Manual Distribution Button - shown even if pool hasn't ended */}
-                {canDistribute && !isDistributed && !distributionEligible && (
-                  <Button 
-                    variant="destructive" 
-                    className="w-full justify-start" 
-                    size="sm"
-                    onClick={() => handleDistributeFunds(true)}
-                    disabled={isDistributing}
-                  >
-                    <AlertCircle className="h-4 w-4 mr-2" />
-                    {isDistributing ? "Distributing..." : "Manual Distribution"}
-                  </Button>
-                )}
-                
-                {/* Impact Report Button */}
-                <Link href={`/dashboard/reports/pool/${pool.id}`}>
-                  <Button variant="outline" className="w-full justify-start" size="sm">
-                    <LineChart className="h-4 w-4 mr-2" />
-                    View Impact Report
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-            
-            {/* Distribution Info Alert (Refactored) */}
-            {canDistribute && distributionEligible && (
-              <Alert variant="default">
-                <Info className="h-4 w-4" />
-                <AlertTitle>Distribution Ready</AlertTitle>
-                <AlertDescription>
-                  This funding pool has ended and is ready for fund distribution.
-                </AlertDescription>
-              </Alert>
-            )}
-            {hasEnded && isDistributed && (
-                 <Alert variant="success">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <AlertTitle>Distribution Completed</AlertTitle>
-                    <AlertDescription>
-                       Funds were distributed on {formatDate(pool.distributed_at)}. 
-                       {pool.distribution_tx_hash && (
-                           <a href={`YOUR_EXPLORER_URL/${pool.distribution_tx_hash}`} target="_blank" rel="noopener noreferrer" className="underline ml-1">
-                               (View Tx <ExternalLink className="inline h-3 w-3"/>)
-                           </a>
-                       )}
-                    </AlertDescription>
-                 </Alert>
-            )}
-            {/* Removed Alert for round in progress */} 
-          </div>
+            {/* Settings Tab */}
+            <TabsContent value="settings">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pool Settings</CardTitle>
+                  <CardDescription>
+                    Configure settings for this funding pool
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Distribution Settings */}
+                    {canDistribute && (
+                      <div id="distribution-controls" className="bg-white p-4 rounded-lg border">
+                        <h3 className="text-lg font-medium mb-2">Distribution Controls</h3>
+                        
+                        {isDistributed ? (
+                          <Alert className="bg-green-50 border-green-200 mb-4">
+                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            <AlertTitle>Funds Distributed</AlertTitle>
+                            <AlertDescription>
+                              This pool has already been distributed on {formatDate(pool.distributed_at)}.
+                              {pool.distribution_tx_hash && (
+                                <a 
+                                  href={`https://scrollscan.com/tx/${pool.distribution_tx_hash}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-green-700 underline flex items-center mt-1"
+                                >
+                                  View transaction <ExternalLink className="h-3 w-3 ml-1" />
+                                </a>
+                              )}
+                            </AlertDescription>
+                          </Alert>
+                        ) : (
+                          <>
+                            {distributionEligible ? (
+                              <div className="space-y-3">
+                                <Alert className="bg-blue-50 border-blue-200">
+                                  <Info className="h-4 w-4 text-blue-600" />
+                                  <AlertTitle>Ready for Distribution</AlertTitle>
+                                  <AlertDescription>
+                                    This pool has ended and is ready for funds distribution.
+                                  </AlertDescription>
+                                </Alert>
+                                
+                                <Button 
+                                  className="w-full"
+                                  onClick={() => handleDistributeFunds(false)} 
+                                  disabled={isDistributing}
+                                >
+                                  {isDistributing ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Distributing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                                      Distribute Funds
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                <Alert className="bg-amber-50 border-amber-200">
+                                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                                  <AlertTitle>Manual Distribution</AlertTitle>
+                                  <AlertDescription>
+                                    This pool has not ended yet. You can manually distribute funds, but this will immediately end the pool and prevent further donations.
+                                  </AlertDescription>
+                                </Alert>
+                                
+                                <Button 
+                                  variant="destructive"
+                                  className="w-full"
+                                  onClick={() => handleDistributeFunds(true)} 
+                                  disabled={isDistributing || !manualDistributionEligible}
+                                >
+                                  {isDistributing ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Distributing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <AlertCircle className="h-4 w-4 mr-2" />
+                                      Manually Distribute Funds
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="py-2 text-center">
+                      <p className="text-muted-foreground">Additional settings coming soon</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>

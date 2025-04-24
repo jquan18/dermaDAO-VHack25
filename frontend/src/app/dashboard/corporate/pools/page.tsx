@@ -193,23 +193,6 @@ export default function CorporatePools() {
           </Card>
           
           {/* First Pool Creation Guide */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-8">
-            <div className="flex gap-4 items-start">
-              <Lightbulb className="h-6 w-6 text-blue-500 mt-1" />
-              <div>
-                <h3 className="text-lg font-medium text-blue-800 mb-2">Create Your First Funding Pool</h3>
-                <p className="text-blue-700 mb-4">
-                  You can create themed funding pools aligned with your corporate ESG goals. Your contributions will be matched with donation volume for maximum impact.
-                </p>
-                <Link href="/dashboard/corporate/pools/create">
-                  <Button>
-                    Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
         </>
       ) : (
         <div className="space-y-4">
