@@ -98,12 +98,12 @@ export default function ProjectVotingPage() {
         <BlurContainer>
           <div className="space-y-4">
             {projects.map((project) => (
-              <Card key={project.id} className="hover:shadow-md transition-shadow border-0 bg-transparent/80 backdrop-blur-sm">
+              <Card key={project.id} className="hover:shadow-md transition-shadow border-0 bg-transparent backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle>{project.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-md p-3">
+                  <div className="bg-white/30 backdrop-blur-sm rounded-md p-3">
                     <CardDescription>{project.description}</CardDescription>
                   </div>
                 </CardContent>
