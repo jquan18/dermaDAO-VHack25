@@ -41,6 +41,7 @@ import { projectsApi, donationsApi, proposalsApi, walletApi } from "@/lib/api";
 import { formatCurrency, formatDate, calculateProgress } from "@/lib/utils";
 import { ethToMyr, formatMyr, formatEth } from "@/lib/currency";
 import { AIVerificationBadge } from '@/components/projects/ai-verification-badge';
+import { Switch } from "@/components/ui/switch";
 
 type ProjectDetailProps = {
   params: {
@@ -76,6 +77,10 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
   // Quadratic funding total
   const [quadraticFundingTotal, setQuadraticFundingTotal] = useState(0);
   
+  // Shariah compliance toggle
+  const [isShariah, setIsShariah] = useState(false);
+  const [isUpdatingShariah, setIsUpdatingShariah] = useState(false);
+  
   // Fetch project details
   const fetchProject = async () => {
     try {
@@ -84,6 +89,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
       
       const response = await projectsApi.getProject(projectId);
       setProject(response.data);
+      
+      // Set Shariah compliance state
+      setIsShariah(response.data.is_shariah_compliant || false);
       
       // Fetch wallet balance
       setIsLoadingBalance(true);
@@ -261,6 +269,47 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
     }
   };
   
+  // Update Shariah compliance
+  const handleShariaToggle = async (value: boolean) => {
+    // Check if user is authorized to update this project
+    if (!user || !project) return;
+    
+    // Only charity admins can update their projects
+    const isCharityAdmin = user.role === 'charity' && project.charity_id && user.charity_id === project.charity_id;
+    const isAdmin = user.role === 'admin';
+    
+    if (!isCharityAdmin && !isAdmin) {
+      return;
+    }
+    
+    try {
+      setIsUpdatingShariah(true);
+      
+      const result = await projectsApi.updateProject(projectId, {
+        is_shariah_compliant: value
+      });
+      
+      if (result.success) {
+        setIsShariah(value);
+        setProject((prev: any) => ({ ...prev, is_shariah_compliant: value }));
+        
+        // Show success message
+        // Using a simple alert as we don't have the toast component imported
+        alert(`The project is now ${value ? "Shariah compliant" : "not Shariah compliant"}.`);
+      } else {
+        throw new Error(result.error?.message || "Failed to update project");
+      }
+    } catch (error) {
+      console.error("Error updating project:", error);
+      // Show error message
+      alert("Failed to update Shariah compliance status. Please try again.");
+      // Reset to previous value
+      setIsShariah(!value);
+    } finally {
+      setIsUpdatingShariah(false);
+    }
+  };
+  
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -318,9 +367,12 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
           
           <div>
             <div className="flex items-center text-black-500 text-sm gap-2">
-            <h1 className="text-2xl font-bold">{project.name}</h1>
+              <h1 className="text-2xl font-bold">{project.name}</h1>
               <Badge variant={project.is_active ? "default" : "secondary"}>
                 {project.is_active ? "Active" : "Inactive"}
+              </Badge>
+              <Badge variant={isShariah ? "success" : "outline"}>
+                {isShariah ? "Shariah Compliant" : "Non-Shariah"}
               </Badge>
             </div>
           </div>
@@ -913,15 +965,44 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
         {/* Verification Tab */}
         <TabsContent value="verification" className="space-y-6">
           <Card className="border-none">
-            <CardHeader>
-              <CardTitle>Verification Status</CardTitle>
-              <CardDescription>Current verification status and suggestions for improvement</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Verification Status</CardTitle>
+                <CardDescription>Current verification status and suggestions for improvement</CardDescription>
+              </div>
+              {(user?.role === 'charity' || user?.role === 'admin') && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">Shariah Compliant</span>
+                  <Switch 
+                    checked={isShariah}
+                    onCheckedChange={handleShariaToggle}
+                    disabled={isUpdatingShariah}
+                  />
+                  {isUpdatingShariah && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-primary border-r-2" />
+                  )}
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-8">
               <AIVerificationBadge 
                 score={project.verification_score || 0} 
                 notes={project.verification_notes || null}
               />
+              
+              {/* Shariah compliance status display */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className={`h-5 w-5 ${isShariah ? 'text-green-500' : 'text-gray-400'}`} />
+                  <div>
+                    <h3 className="font-medium text-blue-800">Shariah Compliance</h3>
+                    <p className="text-sm text-blue-700">
+                      This project {isShariah ? 'is' : 'is not'} marked as Shariah compliant, 
+                      which indicates it {isShariah ? 'follows' : 'does not specifically follow'} Islamic finance principles.
+                    </p>
+                  </div>
+                </div>
+              </div>
               
               {/* Improvement Suggestions based on score */}
               {project.verification_score < 80 && (

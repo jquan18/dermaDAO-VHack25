@@ -43,6 +43,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { formatDistanceToNow } from 'date-fns';
 import { BlurContainer } from "@/components/ui/blur-container";
 import { ethToMyr, formatMyr } from "@/lib/currency";
+import { Switch } from "@/components/ui/switch";
 
 export default function PoolDetailsPage() {
   const router = useRouter();
@@ -62,6 +63,8 @@ export default function PoolDetailsPage() {
   const [isLoadingWallet, setIsLoadingWallet] = useState(true);
   const [isAutoConnecting, setIsAutoConnecting] = useState(false);
   const [isDistributing, setIsDistributing] = useState(false);
+  const [isShariah, setIsShariah] = useState(false);
+  const [isUpdatingShariah, setIsUpdatingShariah] = useState(false);
   const [isManuallyDistributed, setIsManuallyDistributed] = useState(false);
 
   // --- Status Calculation (moved up for clarity) ---
@@ -99,6 +102,8 @@ export default function PoolDetailsPage() {
         const poolResponse = await quadraticFundingApi.getPool(poolId);
         if (poolResponse.success && poolResponse.data) {
           setPool(poolResponse.data);
+          // Set Shariah compliance state
+          setIsShariah(poolResponse.data.is_shariah_compliant || false);
         }
         
         // Fetch projects in this pool
@@ -517,6 +522,48 @@ export default function PoolDetailsPage() {
     }
   };
 
+  // Add a function to update Shariah compliance status
+  const handleShariaToggle = async (value: boolean) => {
+    if (!isPoolSponsor && !isAdmin) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to update this pool.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsUpdatingShariah(true);
+      
+      const result = await quadraticFundingApi.updatePool(poolId, {
+        is_shariah_compliant: value
+      });
+      
+      if (result.success) {
+        setIsShariah(value);
+        setPool((prevPool: any) => ({ ...prevPool, is_shariah_compliant: value }));
+        
+        toast({
+          title: "Pool Updated",
+          description: `The pool is now ${value ? "Shariah compliant" : "not Shariah compliant"}.`,
+        });
+      } else {
+        throw new Error(result.error?.message || "Failed to update pool");
+      }
+    } catch (error) {
+      console.error("Error updating pool:", error);
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+      // Reset to previous value
+      setIsShariah(!value);
+    } finally {
+      setIsUpdatingShariah(false);
+    }
+  
   // Add a function to handle impact report download
   const handleDownloadImpactReport = () => {
     // Create a link element to trigger the download
@@ -745,6 +792,12 @@ export default function PoolDetailsPage() {
                       {pool.name}
                     </CardTitle>
                     <CardDescription className="text-gray-500">Theme: {pool.theme || "General Funding"}</CardDescription>
+                    <Badge 
+                      variant={pool.is_shariah_compliant ? "success" : "outline"} 
+                      className="mt-2"
+                    >
+                      {pool.is_shariah_compliant ? "Shariah Compliant" : "Non-Shariah"}
+                    </Badge>
                   </div>
                   <Badge
                     variant={isActive ? "success" : hasEnded ? (isDistributed ? "secondary" : "outline") : "outline"}
@@ -894,7 +947,29 @@ export default function PoolDetailsPage() {
                   <CardTitle>Pool Settings</CardTitle>
                   <CardDescription>Manage pool settings and distribution</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-6">
+                  {/* Shariah compliance toggle section */}
+                  {(isPoolSponsor || isAdmin) && (
+                    <div className="bg-white/20 backdrop-blur-sm p-4 rounded-md">
+                      <h3 className="text-lg font-medium mb-2">Shariah Compliance</h3>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">
+                            Mark this pool as Shariah compliant to indicate it follows Islamic finance principles.
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={isShariah}
+                            onCheckedChange={handleShariaToggle}
+                            disabled={isUpdatingShariah}
+                          />
+                          {isUpdatingShariah && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="bg-white/20 backdrop-blur-sm p-4 rounded-md">
                     {isDistributed ? (
                       <Alert className="bg-green-50 border-green-200">

@@ -17,7 +17,7 @@ const poolController = {
                p.company_id, p.admin_id, p.contract_pool_id, p.logo_image, 
                p.banner_image, p.matching_ratio, p.start_date, p.end_date, 
                COALESCE(p.total_funds, 0) as total_funds, p.created_at, p.updated_at,
-               u.full_name as sponsor_name 
+               p.is_shariah_compliant, u.full_name as sponsor_name 
         FROM funding_pools p
         LEFT JOIN users u ON p.sponsor_id = u.id
         WHERE 1=1
@@ -131,7 +131,7 @@ const poolController = {
                p.company_id, p.admin_id, p.contract_pool_id, p.logo_image, 
                p.banner_image, p.matching_ratio, p.start_date, p.end_date, 
                COALESCE(p.total_funds, 0) as total_funds, p.created_at, p.updated_at, 
-               u.full_name as sponsor_name, c.name as company_name
+               p.is_shariah_compliant, u.full_name as sponsor_name, c.name as company_name
         FROM funding_pools p
         LEFT JOIN users u ON p.sponsor_id = u.id
         LEFT JOIN companies c ON p.company_id = c.id
@@ -152,7 +152,7 @@ const poolController = {
       // Get projects in this pool
       const projectsQuery = `
         SELECT p.id, p.name, p.description, p.is_active, p.verification_score,
-               p.funding_goal as raised_amount, -- Assuming funding_goal tracks raised funds now
+               p.funding_goal as raised_amount, p.is_shariah_compliant, -- Include is_shariah_compliant
                c.name as charity_name
         FROM projects p
         JOIN charities c ON p.charity_id = c.id
@@ -204,7 +204,7 @@ const poolController = {
     try {
       const {
         name, description, theme, sponsor_id, admin_id, company_id, company_name,
-        logo_image, banner_image, matching_ratio, start_date, end_date
+        logo_image, banner_image, matching_ratio, start_date, end_date, is_shariah_compliant
       } = req.body;
       const userId = req.user.id;
 
@@ -289,8 +289,9 @@ const poolController = {
       const result = await db.query(
         `INSERT INTO funding_pools 
          (id, name, description, theme, sponsor_id, admin_id, company_id, contract_pool_id, 
-          logo_image, banner_image, matching_ratio, start_date, end_date, total_funds, is_active, created_at, updated_at) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 0, true, NOW(), NOW()) 
+          logo_image, banner_image, matching_ratio, start_date, end_date, total_funds, is_active, 
+          is_shariah_compliant, created_at, updated_at) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 0, true, $14, NOW(), NOW()) 
          RETURNING *`, // Return the full pool object
         [
           nextPoolId, // Use the determined ID
@@ -305,7 +306,8 @@ const poolController = {
           banner_image || null,
           matching_ratio || 1,
           start_date,         // Store provided start date
-          end_date            // Store provided end date
+          end_date,           // Store provided end date
+          is_shariah_compliant || false // Default to false if not provided
         ]
       );
 
@@ -336,7 +338,7 @@ const poolController = {
   updatePool: async (req, res) => {
     try {
       const { id } = req.params;
-      const { name, description, theme, is_active } = req.body;
+      const { name, description, theme, is_active, is_shariah_compliant } = req.body;
       const userId = req.user.id;
 
       // Check if pool exists and user is authorized
@@ -369,7 +371,7 @@ const poolController = {
       }
 
       // Check if any update fields provided
-      if (!name && !description && !theme && is_active === undefined) {
+      if (!name && !description && !theme && is_active === undefined && is_shariah_compliant === undefined) {
         return res.status(400).json({
           success: false,
           error: {
@@ -404,6 +406,11 @@ const poolController = {
         updateValues.push(is_active);
       }
 
+      if (is_shariah_compliant !== undefined) {
+        updateParts.push(`is_shariah_compliant = $${paramCounter++}`);
+        updateValues.push(is_shariah_compliant);
+      }
+
       // Add updated_at timestamp
       updateParts.push(`updated_at = NOW()`);
       
@@ -430,7 +437,8 @@ const poolController = {
           id,
           JSON.stringify({
             name: name || poolCheck.rows[0].name,
-            is_active: is_active !== undefined ? is_active : poolCheck.rows[0].is_active
+            is_active: is_active !== undefined ? is_active : poolCheck.rows[0].is_active,
+            is_shariah_compliant: is_shariah_compliant !== undefined ? is_shariah_compliant : poolCheck.rows[0].is_shariah_compliant
           }),
           req.ip
         ]

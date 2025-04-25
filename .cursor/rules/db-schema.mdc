@@ -531,3 +531,17 @@ WHERE status = 'pending_donor_approval';
 
 UPDATE proposals
 SET required_approvals = 0, current_approvals = 0;
+
+
+
+Latest update: 
+-- Add is_shariah_compliant field to projects table
+ALTER TABLE projects
+ADD COLUMN is_shariah_compliant BOOLEAN DEFAULT FALSE;
+
+-- Add is_shariah_compliant field to funding_pools table
+ALTER TABLE funding_pools
+ADD COLUMN is_shariah_compliant BOOLEAN DEFAULT FALSE;
+-- Add indexes for optimized querying
+CREATE INDEX idx_projects_shariah ON projects(is_shariah_compliant);
+CREATE INDEX idx_funding_pools_shariah ON funding_pools(is_shariah_compliant);
