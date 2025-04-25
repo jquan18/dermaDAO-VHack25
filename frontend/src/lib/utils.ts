@@ -20,9 +20,9 @@ export function calculateProgress(raised: number, goal: number): number {
  * Format currency values with appropriate symbol and decimals
  */
 export function formatCurrency(amount: number, currency: string = "MYR", maximumFractionDigits: number = 2): string {
-  // Use exaggerated conversion for ETH to MYR
+  // When currency is ETH, convert to MYR and return only the MYR value
   if (currency === "ETH") {
-    // Use our exaggerated conversion rate and formatting
+    // Convert ETH to MYR and format as MYR without showing "ETH"
     return formatMyr(ethToMyr(amount));
   }
 

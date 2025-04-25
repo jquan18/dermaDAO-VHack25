@@ -65,7 +65,7 @@ export default function HomePage() {
     <MainLayout fullWidthHero={true}>
       <Iridescence
   color={[1, 1, 1]}
-  mouseReact={true}
+  mouseReact={false}
   amplitude={0.6}
   speed={0.8}
 />
@@ -74,18 +74,17 @@ export default function HomePage() {
       <div className="relative z-10"> {/* Added relative z-10 to ensure content is above background */}
         {/* Hero Section content */}
         <motion.section
-          className="flex items-center justify-center px-4 py-48" 
+          className="flex items-center justify-center px-4 min-h-screen" 
           initial="hidden"
           animate="visible"
           variants={fadeIn}
         >
           <div className="max-w-5xl mx-auto text-center">
             <h1 className="text-5xl md:text-7xl font-bold text-black mb-6 tracking-tight">
-              The first modular<br />charity funding platform
+              Amplify Your Impact<br />
             </h1>
             <p className="text-xl md:text-2xl text-black/90 mb-10 max-w-3xl mx-auto">
-              DermaDAO is a decentralized platform that brings transparency and
-              accountability to charity donations through blockchain technology.
+            DermaDAO leverages blockchain and artificial intelligence to magnify your donations through quadratic funding, featuring seamless onboarding and transparent tracking.
             </p>
             <div className="flex flex-wrap justify-center gap-6">
               <Link href="/auth/register">
@@ -99,8 +98,8 @@ export default function HomePage() {
 
         {/* Features Section */}
         {/* Changed py-20 to pt-20 pb-48 for more bottom spacing */}
-        <section className="pt-20 pb-20 text-black">
-        <FeatureGrid features={features} columns={2} />
+        {/* <section className="pt-20 pb-20 text-black"> */}
+        {/* <FeatureGrid features={features} columns={2} /> */}
           {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold mb-4">Revolutionizing Charity Transparency</h2>
@@ -132,7 +131,7 @@ export default function HomePage() {
               </div>
             </div>
           </div> */}
-        </section>
+        {/* </section> */}
       </div>
     </MainLayout>
   );

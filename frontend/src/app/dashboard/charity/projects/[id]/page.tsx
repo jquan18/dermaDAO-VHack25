@@ -789,7 +789,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                         </div>
                       </div>
                       <div className={`font-semibold ${tx.isIncoming ? 'text-green-600' : 'text-red-600'}`}>
-                        {tx.isIncoming ? '+' : '-'}{parseFloat(tx.value).toFixed(4)} ETH
+                        {tx.isIncoming ? '+' : '-'}{formatMyr(ethToMyr(parseFloat(tx.value)))}
                       </div>
                     </div>
                   ))}

@@ -289,7 +289,7 @@ export default function ProjectsPage() {
                   <div className="flex items-center text-sm text-gray-500">
                     <CircleDollarSign className="h-4 w-4 mr-2 text-primary/70" />
                     <span className="mr-1">Goal:</span>
-                    <span className="font-medium text-gray-700">{formatCurrency(project.funding_goal)} ETH</span>
+                    <span className="font-medium text-gray-700">{formatCurrency(project.funding_goal, "ETH")}</span>
                   </div>
                   
                   <div className="flex items-center text-sm text-gray-500">
@@ -305,7 +305,7 @@ export default function ProjectsPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Raised:</span>
                       <span className="font-medium">
-                        {formatCurrency(project.raised || 0)} ETH 
+                        {formatCurrency(project.raised || 0, "ETH")} 
                         ({calculateProgress(project.raised || 0, project.funding_goal)}%)
                       </span>
                     </div>
