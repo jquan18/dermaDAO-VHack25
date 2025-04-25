@@ -563,7 +563,8 @@ export default function PoolDetailsPage() {
     } finally {
       setIsUpdatingShariah(false);
     }
-  
+  };
+
   // Add a function to handle impact report download
   const handleDownloadImpactReport = () => {
     // Create a link element to trigger the download
