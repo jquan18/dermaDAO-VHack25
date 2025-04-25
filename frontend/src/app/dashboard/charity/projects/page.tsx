@@ -138,12 +138,14 @@ export default function ProjectsPage() {
   
   // Add image imports for hardcoded project images
   const projectImages = [
+    "/landing/flood_relief.jpg",
+    "/landing/gas_leak_pipeline.jpg",
     "/landing/baby.jpg",
     "/landing/old_folks.jpg",
-    "/landing/old_man_harold.jpg",
     "/landing/smiling_kids.jpg",
     "/landing/water.jpg",
-    "/landing/wildlife.jpg"
+    "/landing/wildlife.jpg",
+    "/landing/old_man_harold.jpg",
   ];
 
   return (

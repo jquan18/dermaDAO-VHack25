@@ -76,12 +76,14 @@ const item = {
 
 // Hardcoded project images logic (copied from charity projects page)
 const projectImages = [
+  "/landing/flood_relief.jpg",
+  "/landing/gas_leak_pipeline.jpg",
   '/landing/baby.jpg',
   '/landing/old_folks.jpg',
-  '/landing/old_man_harold.jpg',
   '/landing/smiling_kids.jpg',
   '/landing/water.jpg',
   '/landing/wildlife.jpg',
+  '/landing/old_man_harold.jpg',
 ];
 
 // Project Card Component
