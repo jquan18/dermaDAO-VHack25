@@ -113,7 +113,7 @@ const getThemeData = (theme: string): ThemeStyles => {
   // Default theme styling if the theme doesn't match any in our map
   const defaultTheme: ThemeStyles = {
     gradient: "from-primary/20 to-primary/5",
-    progress: undefined,
+    progress: "rgb(100, 116, 139)",
     badge: {
       bg: "rgba(100, 116, 139, 0.1)",
       text: "rgb(51, 65, 85)",
@@ -140,6 +140,7 @@ interface PoolCardProps {
     total_funds: number;
     allocated_funds: number;
     project_count?: number;
+    is_shariah_compliant?: boolean;
   };
 }
 
@@ -193,6 +194,9 @@ export function PoolCard({ pool }: PoolCardProps) {
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="line-clamp-2 font-semibold text-lg">{pool.name}</CardTitle>
+          {pool.is_shariah_compliant && (
+            <Badge variant="success" className="ml-2">Shariah Compliant</Badge>
+          )}
         </div>
         <CardDescription className="flex items-center text-sm flex-wrap gap-x-2">
           {pool.sponsor_name && (
