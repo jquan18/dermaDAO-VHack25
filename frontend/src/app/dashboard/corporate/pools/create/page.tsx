@@ -303,7 +303,7 @@ export default function CreatePoolPage() {
                               field.onChange(ethValue.toString());
                             }}
                             initialEthValue={field.value ? parseFloat(field.value) : 0}
-                            placeholder="0"
+                            placeholder=""
                             min={1}
                           />
                         </FormControl>

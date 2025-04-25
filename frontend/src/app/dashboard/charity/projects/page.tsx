@@ -136,6 +136,16 @@ export default function ProjectsPage() {
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };
   
+  // Add image imports for hardcoded project images
+  const projectImages = [
+    "/landing/baby.jpg",
+    "/landing/old_folks.jpg",
+    "/landing/old_man_harold.jpg",
+    "/landing/smiling_kids.jpg",
+    "/landing/water.jpg",
+    "/landing/wildlife.jpg"
+  ];
+
   return (
     <DashboardLayout>
       <div className="mb-8 flex items-center justify-between">
@@ -253,21 +263,29 @@ export default function ProjectsPage() {
       {/* Projects grid */}
       {!isLoading && sortedProjects.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sortedProjects.map((project) => (
+          {sortedProjects.map((project, idx) => (
             <Card key={project.id} className="overflow-hidden h-full flex flex-col">
               <div className="relative h-40 bg-gray-100">
-                {/* Placeholder image - in real app would use project.image_url */}
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-tr from-primary/20 to-primary/5">
-                  <Layers className="h-16 w-16 text-primary/30" />
-                </div>
-                
+                {/* Display project image, fallback to placeholder if out of images */}
+                {projectImages[idx % projectImages.length] ? (
+                  <Image
+                    src={projectImages[idx % projectImages.length]}
+                    alt={project.name}
+                    layout="fill"
+                    objectFit="cover"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-tr from-primary/20 to-primary/5">
+                    <Layers className="h-16 w-16 text-primary/30" />
+                  </div>
+                )}
                 {/* Status badge */}
                 <div className="absolute top-3 left-3">
                   <Badge variant={project.is_active ? "default" : "secondary"}>
                     {project.is_active ? "Active" : "Inactive"}
                   </Badge>
                 </div>
-                
                 {/* Verification score */}
                 <div className="absolute top-3 right-3">
                   <Badge 
