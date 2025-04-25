@@ -44,6 +44,7 @@ interface PoolDetailsProps {
       verification_score: number;
     }>;
     allocated_funds?: number;
+    is_shariah_compliant?: boolean;
   };
   className?: string;
 }
@@ -124,16 +125,13 @@ export function PoolDetails({ pool, className }: PoolDetailsProps) {
                   {isActive ? "Active" : hasEnded ? (isDistributed ? "Completed" : "Ended") : isScheduled ? "Scheduled" : "Inactive"}
                 </Badge>
                 <span className="text-muted-foreground">Theme: {pool.theme}</span>
+                {pool.is_shariah_compliant && (
+                  <Badge variant="success" className="ml-2">Shariah Compliant</Badge>
+                )}
               </CardDescription>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button asChild>
-                <Link href={`/dashboard/donations?pool=${pool.id}`}>
-                  Donate to Projects
-                </Link>
-              </Button>
-              
               {canDistribute && distributionEligible && (
                 <Button
                   onClick={() => handleDistribute()}

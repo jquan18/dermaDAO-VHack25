@@ -323,7 +323,15 @@ export default function DonatePage({ params }: ProjectDetailProps) {
 
         <div className="grid grid-cols-3 lg:grid-cols-1 gap-8"> {/* Adjust grid for transactions */} 
           {/* Project Details Card - Span 1 or 2 columns */}
-          <BlurContainer className="lg:col-span-1">
+          <BlurContainer className="lg:col-span-1 relative">
+            {/* Shariah Compliance Badge */}
+            {project.is_shariah_compliant && (
+              <div className="absolute top-4 right-4 z-10">
+                <span className="inline-block bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded shadow-lg">
+                  Shariah Compliant
+                </span>
+              </div>
+            )}
             <Card className="border-0 bg-transparent">
               <CardHeader>
                 <CardTitle>{project.name}</CardTitle>

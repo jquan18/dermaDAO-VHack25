@@ -230,15 +230,12 @@ function PoolInfo({ pool }) {
                   </Badge>
                   <span className="text-muted-foreground">Theme: {pool.theme}</span>
                   {pool.company_name && <span className="text-muted-foreground">By: {pool.company_name}</span>}
+                  {pool.is_shariah_compliant && (
+                    <Badge variant="success">Shariah Compliant</Badge>
+                  )}
                 </CardDescription>
               </div>
             </div>
-            {/* Action Button - Example */}
-             <Button asChild>
-               <Link href={`/dashboard/donations?pool=${pool.id}`}>
-                 Donate to Projects
-               </Link>
-             </Button>
           </div>
         </CardHeader>
         
