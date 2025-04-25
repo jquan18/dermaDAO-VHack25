@@ -58,13 +58,37 @@ export default function CharityDashboard() {
     try {
       if (!user?.charity_id) return;
       
+      console.log("Fetching dashboard data for charity ID:", user.charity_id);
+      
       // Fetch projects for this charity
       const projectsResponse = await projectsApi.getCharityProjects(user.charity_id);
-      const charityProjects = projectsResponse?.projects || [];
+      console.log("Projects response:", projectsResponse);
+      
+      // Ensure we get a proper array of projects, fixing data structure access
+      let charityProjects = [];
+      if (projectsResponse?.success) {
+        // If the response is successful, it should have a data property with formattedProjects
+        charityProjects = Array.isArray(projectsResponse.data) ? 
+                          projectsResponse.data : 
+                          projectsResponse.data?.formattedProjects || 
+                          projectsResponse.data || [];
+      } else {
+        // Fallback for other response formats
+        charityProjects = projectsResponse?.projects || projectsResponse?.data || [];
+      }
+      
+      console.log("Charity projects after formatting:", charityProjects);
       
       // Fetch wallet balances for each project
       for (const project of charityProjects) {
         try {
+          if (!project.wallet_address) {
+            console.log(`Project ${project.id} has no wallet address, skipping wallet data fetch`);
+            project.wallet_balance = '0.00';
+            continue;
+          }
+          
+          console.log(`Fetching wallet data for project ${project.id} with address ${project.wallet_address}`);
           const walletData = await walletApi.getWalletDataFromScrollScan(project.wallet_address);
           console.log(`Wallet data for project ${project.id}:`, walletData);
           project.wallet_balance = walletData.data?.balance || '0.00';
@@ -80,10 +104,41 @@ export default function CharityDashboard() {
       let totalDonations = 0;
       let allDonations: any[] = [];
       
+      console.log("Calculating total donations for", charityProjects.length, "projects");
+      
       for (const project of charityProjects) {
         try {
+          console.log(`Processing project ${project.id}:`, project);
+          
+          // First add the project's raised amount if available
+          // The backend SQL query selects the sum of donations as 'raised'
+          if (typeof project.raised !== 'undefined') {
+            const projectRaised = parseFloat(project.raised || 0);
+            console.log(`Project ${project.id} raised amount from response:`, projectRaised);
+            totalDonations += projectRaised;
+          } else {
+            console.log(`Project ${project.id} has no raised field, fetching donations`);
+          }
+          
+          // Also fetch donations directly to get the most up-to-date data
+          console.log(`Fetching donations for project ${project.id}`);
           const donationStats = await donationsApi.getProjectDonations(project.id);
-          totalDonations += donationStats.data?.total_raised || 0;
+          console.log(`Donation stats for project ${project.id}:`, donationStats);
+          
+          // Add the donation stats raised amount if higher than project.raised
+          const donationStatsRaised = parseFloat(donationStats.data?.total_raised || 0);
+          console.log(`Donation stats total_raised for project ${project.id}:`, donationStatsRaised);
+          
+          // If we didn't get raised from the project, or if the donation stats are higher
+          if (typeof project.raised === 'undefined' || donationStatsRaised > parseFloat(project.raised || 0)) {
+            console.log(`Using donation stats amount for project ${project.id}`);
+            // If we already counted project.raised, subtract it to avoid double counting
+            if (typeof project.raised !== 'undefined') {
+              totalDonations = totalDonations - parseFloat(project.raised || 0) + donationStatsRaised;
+            } else {
+              totalDonations += donationStatsRaised;
+            }
+          }
           
           // Collect donations for the recent donations section
           if (donationStats.data?.donations && Array.isArray(donationStats.data.donations)) {
@@ -94,9 +149,12 @@ export default function CharityDashboard() {
             }))];
           }
         } catch (err) {
-          console.error(`Error fetching donations for project ${project.id}:`, err);
+          console.error(`Error processing donations for project ${project.id}:`, err);
         }
       }
+      
+      console.log("Final total donations calculated:", totalDonations);
+      console.log("All donations collected:", allDonations.length);
       
       // Sort donations by date and take the most recent 5
       const sortedDonations = allDonations.sort((a, b) => 
@@ -126,10 +184,14 @@ export default function CharityDashboard() {
         const bankAccountsResponse = await bankAccountsApi.listBankAccounts();
         setBankAccounts(bankAccountsResponse.accounts || []);
         
+        // Count active projects properly - look for is_active property
+        const activeProjects = charityProjects.filter((p: any) => p.is_active !== false).length;
+        console.log("Active projects count:", activeProjects);
+        
         // Update dashboard data
         setDashboardData({
           totalDonations,
-          activeProjects: charityProjects.filter((p: any) => p.status === 'active').length,
+          activeProjects,
           pendingProposals: allProposals.filter((p: any) => p.status === 'pending').length,
           verifiedBankAccounts: (bankAccountsResponse?.accounts || []).filter((a: any) => a.is_verified).length,
         });
@@ -137,10 +199,13 @@ export default function CharityDashboard() {
         console.error("Error fetching bank accounts:", err);
         setBankAccounts([]);
         
-        // Update dashboard data without bank accounts info
+        // Update dashboard data without bank accounts info, still count active projects
+        const activeProjects = charityProjects.filter((p: any) => p.is_active !== false).length;
+        console.log("Active projects count (after bank error):", activeProjects);
+        
         setDashboardData({
           totalDonations,
-          activeProjects: charityProjects.filter((p: any) => p.status === 'active').length,
+          activeProjects,
           pendingProposals: allProposals.filter((p: any) => p.status === 'pending').length,
           verifiedBankAccounts: 0,
         });
@@ -159,11 +224,13 @@ export default function CharityDashboard() {
       
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Format charity name (derived from user state)
-  const charityName = user?.charity_id ? `${user.name}'s Charity` : 'Your Charity';
+  // Fix the charity name logic to avoid "undefined's Charity"
+  const charityName = user?.name ? `${user.name}'s Charity` : 'Your Charity';
 
   return (
     <DashboardLayout>
