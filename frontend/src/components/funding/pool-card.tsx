@@ -12,6 +12,117 @@ import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { BlurContainer } from "@/components/ui/blur-container";
 
+// Consolidated theme styling data
+interface ThemeStyles {
+  gradient: string;
+  progress: string;
+  badge: {
+    bg: string;
+    text: string;
+    border: string;
+  };
+}
+
+// Get all theme-related styling data in one place
+const getThemeData = (theme: string): ThemeStyles => {
+  const themeMap: Record<string, ThemeStyles> = {
+    "Environmental Sustainability": {
+      gradient: "from-green-500/30 to-green-700/10",
+      progress: "rgb(34, 197, 94)",
+      badge: {
+        bg: "rgba(34, 197, 94, 0.1)",
+        text: "rgb(22, 101, 52)",
+        border: "rgba(34, 197, 94, 0.3)"
+      }
+    },
+    "Healthcare Access": {
+      gradient: "from-sky-500/30 to-sky-700/10",
+      progress: "rgb(14, 165, 233)",
+      badge: {
+        bg: "rgba(14, 165, 233, 0.1)",
+        text: "rgb(7, 89, 133)",
+        border: "rgba(14, 165, 233, 0.3)"
+      }
+    },
+    "Education": {
+      gradient: "from-amber-500/30 to-amber-700/10", 
+      progress: "rgb(245, 158, 11)",
+      badge: {
+        bg: "rgba(245, 158, 11, 0.1)",
+        text: "rgb(146, 64, 14)",
+        border: "rgba(245, 158, 11, 0.3)"
+      }
+    },
+    "Social Justice": {
+      gradient: "from-purple-500/30 to-purple-700/10",
+      progress: "rgb(168, 85, 247)",
+      badge: {
+        bg: "rgba(168, 85, 247, 0.1)",
+        text: "rgb(107, 33, 168)",
+        border: "rgba(168, 85, 247, 0.3)"
+      }
+    },
+    "Disaster Relief": {
+      gradient: "from-red-500/30 to-red-700/10",
+      progress: "rgb(239, 68, 68)",
+      badge: {
+        bg: "rgba(239, 68, 68, 0.1)",
+        text: "rgb(153, 27, 27)",
+        border: "rgba(239, 68, 68, 0.3)"
+      }
+    },
+    "Scientific Research": {
+      gradient: "from-teal-500/30 to-teal-700/10",
+      progress: "rgb(20, 184, 166)",
+      badge: {
+        bg: "rgba(20, 184, 166, 0.1)",
+        text: "rgb(17, 94, 89)",
+        border: "rgba(20, 184, 166, 0.3)"
+      }
+    },
+    "Arts & Culture": {
+      gradient: "from-orange-500/30 to-orange-700/10",
+      progress: "rgb(249, 115, 22)",
+      badge: {
+        bg: "rgba(249, 115, 22, 0.1)",
+        text: "rgb(154, 52, 18)",
+        border: "rgba(249, 115, 22, 0.3)"
+      }
+    },
+    "Poverty Alleviation": {
+      gradient: "from-amber-700/30 to-amber-900/10",
+      progress: "rgb(180, 83, 9)",
+      badge: {
+        bg: "rgba(180, 83, 9, 0.1)",
+        text: "rgb(120, 53, 15)",
+        border: "rgba(180, 83, 9, 0.3)"
+      }
+    },
+    "Other": {
+      gradient: "from-gray-500/30 to-gray-700/10",
+      progress: "rgb(156, 163, 175)",
+      badge: {
+        bg: "rgba(156, 163, 175, 0.1)",
+        text: "rgb(75, 85, 99)",
+        border: "rgba(156, 163, 175, 0.3)"
+      }
+    }
+  };
+  
+  // Default theme styling if the theme doesn't match any in our map
+  const defaultTheme: ThemeStyles = {
+    gradient: "from-primary/20 to-primary/5",
+    progress: undefined,
+    badge: {
+      bg: "rgba(100, 116, 139, 0.1)",
+      text: "rgb(51, 65, 85)",
+      border: "rgba(100, 116, 139, 0.3)"
+    }
+  };
+  
+  return themeMap[theme] || defaultTheme;
+};
+
 interface PoolCardProps {
   pool: {
     id: string;
@@ -43,6 +154,9 @@ export function PoolCard({ pool }: PoolCardProps) {
     ? Math.min(100, Math.round((pool.allocated_funds / pool.total_funds) * 100))
     : 0;
 
+  // Get theme-specific styling data
+  const themeData = getThemeData(pool.theme);
+
   let statusBadge;
   if (isActiveNow) {
     statusBadge = <Badge variant="success">Active</Badge>;
@@ -65,7 +179,7 @@ export function PoolCard({ pool }: PoolCardProps) {
              className="object-cover"
            />
          ) : (
-             <div className="absolute inset-0 bg-gradient-to-br from-muted to-primary/10 flex items-center justify-center">
+             <div className={`absolute inset-0 bg-gradient-to-br ${themeData.gradient} flex items-center justify-center`}>
                  <Layers className="w-12 h-12 text-primary/30" />
              </div>
          )}
@@ -83,7 +197,15 @@ export function PoolCard({ pool }: PoolCardProps) {
           {pool.sponsor_name && (
             <span className="text-xs">by {pool.sponsor_name}</span>
           )}
-          <Badge variant="outline" className="font-normal text-xs">
+          <Badge 
+            variant="outline" 
+            className="font-normal text-xs"
+            style={{
+              backgroundColor: themeData.badge.bg,
+              color: themeData.badge.text,
+              borderColor: themeData.badge.border,
+            }}
+          >
             {pool.theme}
           </Badge>
         </CardDescription>
@@ -112,7 +234,12 @@ export function PoolCard({ pool }: PoolCardProps) {
                 <span className="text-muted-foreground">Allocated</span>
                 <span className="font-medium">${(pool.allocated_funds || 0).toLocaleString()}</span>
               </div>
-              <Progress value={fundingPercentage} className="h-2" />
+              <Progress 
+                value={fundingPercentage} 
+                className="h-2" 
+                indicatorColor={themeData.progress}
+                style={{ backgroundColor: "rgba(229, 231, 235, 0.3)" }}
+              />
             </div>
           </div>
           </div>
