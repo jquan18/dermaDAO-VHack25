@@ -39,6 +39,7 @@ import { quadraticFundingApi } from "@/lib/api";
 import { BlurContainer } from "@/components/ui/blur-container";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { myrToEth } from "@/lib/currency";
+import { Switch } from "@/components/ui/switch";
 
 // Form schema with validation
 const formSchema = z.object({
@@ -69,6 +70,7 @@ const formSchema = z.object({
   matchingRatio: z.string().default("1"),
   bannerImage: z.string().optional(),
   logoImage: z.string().optional(),
+  is_shariah_compliant: z.boolean().default(false),
 });
 
 export default function CreatePoolPage() {
@@ -88,6 +90,7 @@ export default function CreatePoolPage() {
       matchingRatio: "1",
       bannerImage: "",
       logoImage: "",
+      is_shariah_compliant: false,
     },
   });
 
@@ -104,7 +107,8 @@ export default function CreatePoolPage() {
         round_duration: Math.floor((values.endDate.getTime() - values.startDate.getTime()) / 1000),
         logo_image: values.logoImage || undefined,
         banner_image: values.bannerImage || undefined,
-        matching_ratio: parseInt(values.matchingRatio) || 1
+        matching_ratio: parseInt(values.matchingRatio) || 1,
+        is_shariah_compliant: values.is_shariah_compliant,
       };
       
       // Call the API to create the pool
@@ -212,16 +216,35 @@ export default function CreatePoolPage() {
       </BlurContainer>
 
       <BlurContainer>
-        <Card className="border-0 bg-transparent">
-          <CardHeader>
-            <CardTitle>Pool Details</CardTitle>
-            <CardDescription>
-              Define the parameters for your new funding pool
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card className="border-0 bg-transparent">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Pool Details</CardTitle>
+                  <CardDescription>
+                    Define the parameters for your new funding pool
+                  </CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">Shariah Compliant</span>
+                  <FormField
+                    control={form.control}
+                    name="is_shariah_compliant"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
@@ -479,10 +502,10 @@ export default function CreatePoolPage() {
                     {isSubmitting ? (isFunding ? "Creating and Funding..." : "Creating...") : "Create Pool"}
                   </Button>
                 </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </form>
+        </Form>
       </BlurContainer>
     </div>
   );

@@ -33,6 +33,7 @@ const validatePoolCreate = [
   body('company_id').optional().isInt().withMessage('Company ID must be an integer'),
   body('sponsor_id').optional().isInt().withMessage('Sponsor ID must be an integer'),
   body('admin_id').optional().isInt().withMessage('Admin ID must be an integer'),
+  body('is_shariah_compliant').optional().isBoolean().withMessage('Is Shariah compliant must be a boolean'),
   validateRequest
 ];
 
@@ -54,6 +55,7 @@ const validatePoolUpdate = [
         return true;
     }),
   body('matching_ratio').optional().isInt({ min: 1 }),
+  body('is_shariah_compliant').optional().isBoolean(),
   // Add other updatable fields as needed
   validateRequest
 ];

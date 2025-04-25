@@ -18,6 +18,7 @@ const projectValidation = [
   body('milestones.*.title').optional().notEmpty().withMessage('Milestone title is required'),
   body('milestones.*.description').optional().notEmpty().withMessage('Milestone description is required'),
   body('milestones.*.percentage').optional().isInt({ min: 1, max: 100 }).withMessage('Percentage must be between 1 and 100'),
+  body('is_shariah_compliant').optional().isBoolean().withMessage('Is Shariah compliant must be a boolean'),
   validateRequest
 ];
 

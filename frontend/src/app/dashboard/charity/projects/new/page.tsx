@@ -17,6 +17,7 @@ import { charityApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function NewProjectPage() {
   const [fundingGoal, setFundingGoal] = useState("");
   const [ipfsHash, setIpfsHash] = useState("");
   const [selectedPoolId, setSelectedPoolId] = useState("");
+  const [isShariah, setIsShariah] = useState(false);
 
   // Fetch user's charity info if not already present
   useEffect(() => {
@@ -163,7 +165,8 @@ export default function NewProjectPage() {
         charity_id: effectiveCharityId,
         funding_goal: Number(fundingGoal),
         ipfs_hash: ipfsHash,
-        pool_id: Number(selectedPoolId)
+        pool_id: Number(selectedPoolId),
+        is_shariah_compliant: isShariah
       };
       
       const response = await projectsApi.createProject(projectData);
@@ -209,11 +212,20 @@ export default function NewProjectPage() {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6 mb-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Project Details</CardTitle>
-                <CardDescription>
-                  Basic information about your project
-                </CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Project Details</CardTitle>
+                  <CardDescription>
+                    Basic information about your project
+                  </CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">Shariah Compliant</span>
+                  <Switch 
+                    checked={isShariah} 
+                    onCheckedChange={setIsShariah}
+                  />
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">

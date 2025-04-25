@@ -147,7 +147,7 @@ const projectController = {
       const projectQuery = `
         SELECT p.*, c.name as charity_name, c.admin_id,
                fp.name as pool_name, fp.description as pool_description, 
-               fp.theme as pool_theme, fp.id as pool_id
+               fp.theme as pool_theme, fp.id as pool_id, fp.is_shariah_compliant as pool_is_shariah_compliant
         FROM projects p 
         JOIN charities c ON p.charity_id = c.id
         LEFT JOIN funding_pools fp ON p.pool_id = fp.id 
@@ -214,7 +214,8 @@ const projectController = {
         id: project.rows[0].pool_id,
         name: project.rows[0].pool_name,
         description: project.rows[0].pool_description,
-        theme: project.rows[0].pool_theme
+        theme: project.rows[0].pool_theme,
+        is_shariah_compliant: project.rows[0].pool_is_shariah_compliant
       } : null;
 
       // Construct the detailed project object
@@ -235,6 +236,7 @@ const projectController = {
       delete projectData.pool_name;
       delete projectData.pool_description;
       delete projectData.pool_theme;
+      delete projectData.pool_is_shariah_compliant;
 
       res.json({
         success: true,
@@ -307,7 +309,7 @@ const projectController = {
   // Create new project with milestones
   createProject: async (req, res) => {
     try {
-      const { charity_id, pool_id, name, description, ipfs_hash, funding_goal, duration_days } = req.body;
+      const { charity_id, pool_id, name, description, ipfs_hash, funding_goal, duration_days, is_shariah_compliant } = req.body;
       
       // Validate required parameters
       if (!pool_id) {
@@ -424,12 +426,13 @@ const projectController = {
           wallet_address: ${walletAddress}
           start_date: ${start_date.toISOString()}
           end_date: ${end_date.toISOString()}
+          is_shariah_compliant: ${is_shariah_compliant || false}
         `);
         
         const result = await db.query(
           `INSERT INTO projects 
-           (charity_id, pool_id, name, description, ipfs_hash, funding_goal, duration_days, wallet_address, start_date, end_date, verification_score, is_active) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
+           (charity_id, pool_id, name, description, ipfs_hash, funding_goal, duration_days, wallet_address, start_date, end_date, verification_score, is_active, is_shariah_compliant) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
            RETURNING id`,
           [
             charity_id,
@@ -443,7 +446,8 @@ const projectController = {
             start_date,
             end_date,
             0, // Initial verification score is 0
-            true // Project active by default, needs verification
+            true, // Project active by default, needs verification
+            is_shariah_compliant || false // Default to false if not provided
           ]
         );
         
@@ -510,14 +514,7 @@ const projectController = {
   updateProject: async (req, res) => {
     try {
       const { id } = req.params;
-      const { 
-        name, 
-        description, 
-        funding_goal, 
-        duration_days,
-        ipfs_hash,
-        is_active
-      } = req.body;
+      const { name, description, ipfs_hash, funding_goal, duration_days, is_active, is_shariah_compliant } = req.body;
       
       const userId = req.user.id;
       
@@ -551,32 +548,76 @@ const projectController = {
         });
       }
       
-      // Calculate new end date if duration_days is provided
-      let endDate = projectCheck.rows[0].end_date;
-      if (duration_days) {
-        const startDate = projectCheck.rows[0].start_date || new Date();
-        endDate = new Date(startDate.getTime() + duration_days * 24 * 60 * 60 * 1000);
-      }
-      
-      const project = await db.query(
-        `UPDATE projects 
-         SET name = COALESCE($1, name),
-             description = COALESCE($2, description),
-             funding_goal = COALESCE($3, funding_goal),
-             duration_days = COALESCE($4, duration_days),
-             ipfs_hash = COALESCE($5, ipfs_hash),
-             is_active = COALESCE($6, is_active),
-             end_date = COALESCE($7, end_date),
-             updated_at = CURRENT_TIMESTAMP
-         WHERE id = $8 
-         RETURNING *`,
-        [name, description, funding_goal, duration_days, ipfs_hash, is_active, endDate, id]
-      );
+      if (name || description || ipfs_hash || funding_goal || duration_days !== undefined || is_active !== undefined || is_shariah_compliant !== undefined) {
+        const updates = [];
+        const values = [];
+        let paramIndex = 1;
+        
+        if (name) {
+          updates.push(`name = $${paramIndex++}`);
+          values.push(name);
+        }
+        
+        if (description) {
+          updates.push(`description = $${paramIndex++}`);
+          values.push(description);
+        }
+        
+        if (ipfs_hash) {
+          updates.push(`ipfs_hash = $${paramIndex++}`);
+          values.push(ipfs_hash);
+        }
+        
+        if (funding_goal) {
+          updates.push(`funding_goal = $${paramIndex++}`);
+          values.push(funding_goal);
+        }
+        
+        if (duration_days !== undefined) {
+          updates.push(`duration_days = $${paramIndex++}`);
+          values.push(duration_days);
+          
+          // Update end date based on new duration if provided
+          if (duration_days) {
+            const currentDate = new Date();
+            const newEndDate = new Date();
+            newEndDate.setDate(currentDate.getDate() + parseInt(duration_days, 10));
+            
+            updates.push(`end_date = $${paramIndex++}`);
+            values.push(newEndDate);
+          }
+        }
+        
+        if (is_active !== undefined) {
+          updates.push(`is_active = $${paramIndex++}`);
+          values.push(is_active);
+        }
+        
+        if (is_shariah_compliant !== undefined) {
+          updates.push(`is_shariah_compliant = $${paramIndex++}`);
+          values.push(is_shariah_compliant);
+        }
+        
+        updates.push(`updated_at = NOW()`);
+        
+        const project = await db.query(
+          `UPDATE projects 
+           SET ${updates.join(', ')}
+           WHERE id = $${paramIndex} 
+           RETURNING *`,
+          [...values, id]
+        );
 
-      res.json({
-        success: true,
-        data: project.rows[0]
-      });
+        res.json({
+          success: true,
+          data: project.rows[0]
+        });
+      } else {
+        res.json({
+          success: true,
+          data: projectCheck.rows[0]
+        });
+      }
     } catch (error) {
       logger.error('Error updating project:', error);
       res.status(500).json({
@@ -797,25 +838,15 @@ const projectController = {
     }
   },
 
-  // Verify a project (admin only)
+  // Admin verification of a project
   verifyProject: async (req, res) => {
     try {
       const { id } = req.params;
-      const { verified, verification_notes } = req.body;
-      
-      // Check if user is admin
-      if (req.user.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: {
-            message: 'Only administrators can verify projects',
-            code: 'PERMISSION_DENIED'
-          }
-        });
-      }
-      
+      const { verification_score, verification_notes, is_active, is_shariah_compliant } = req.body;
+
       // Check if project exists
-      const projectCheck = await db.query('SELECT id FROM projects WHERE id = $1', [id]);
+      const projectCheck = await db.query('SELECT * FROM projects WHERE id = $1', [id]);
+      
       if (projectCheck.rows.length === 0) {
         return res.status(404).json({
           success: false,
@@ -825,34 +856,75 @@ const projectController = {
           }
         });
       }
-      
-      // Update project verification status
-      const project = await db.query(
-        `UPDATE projects 
-         SET is_verified = $1,
-             verification_notes = $2,
-             verified_at = CASE WHEN $1 = true THEN CURRENT_TIMESTAMP ELSE verified_at END,
-             updated_at = CURRENT_TIMESTAMP
-         WHERE id = $3 
-         RETURNING *`,
-        [verified, verification_notes, id]
-      );
-      
-      // Update blockchain verification status
-      try {
-        // Call blockchain service to verify project
-        await blockchainService.verifyProject(id, verified);
-      } catch (blockchainError) {
-        logger.error('Error verifying project on blockchain:', blockchainError);
-        // Continue with database update even if blockchain update fails
+
+      // Update verification status
+      const updateFields = [];
+      const updateValues = [];
+      let paramIndex = 1;
+
+      if (verification_score !== undefined) {
+        updateFields.push(`verification_score = $${paramIndex++}`);
+        updateValues.push(verification_score);
+      }
+
+      if (verification_notes) {
+        updateFields.push(`verification_notes = $${paramIndex++}`);
+        updateValues.push(verification_notes);
+      }
+
+      if (is_active !== undefined) {
+        updateFields.push(`is_active = $${paramIndex++}`);
+        updateValues.push(is_active);
       }
       
+      if (is_shariah_compliant !== undefined) {
+        updateFields.push(`is_shariah_compliant = $${paramIndex++}`);
+        updateValues.push(is_shariah_compliant);
+      }
+
+      updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
+      updateValues.push(id);
+
+      const result = await db.query(
+        `UPDATE projects 
+         SET ${updateFields.join(', ')} 
+         WHERE id = $${paramIndex} 
+         RETURNING *`,
+        updateValues
+      );
+
+      // Create audit log
+      await db.query(
+        `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details, ip_address) 
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          req.user.id, 
+          'VERIFY_PROJECT', 
+          'project', 
+          id, 
+          JSON.stringify({ 
+            verification_score, 
+            is_active,
+            is_shariah_compliant 
+          }), 
+          req.ip
+        ]
+      );
+
+      // Update verification on blockchain
+      try {
+        const verificationThreshold = 50; // Minimum score to be considered verified
+        const isVerified = verification_score >= verificationThreshold;
+        await blockchainService.verifyProject(id, isVerified);
+        logger.info(`Project ${id} verification status set to ${isVerified} on blockchain`);
+      } catch (blockchainError) {
+        logger.error(`Error setting project ${id} verification on blockchain:`, blockchainError);
+        // Continue even if blockchain verification fails
+      }
+
       res.json({
         success: true,
-        data: {
-          project_id: project.rows[0].id,
-          is_verified: project.rows[0].is_verified
-        }
+        data: result.rows[0]
       });
     } catch (error) {
       logger.error('Error verifying project:', error);
@@ -860,7 +932,7 @@ const projectController = {
         success: false,
         error: {
           message: 'Failed to verify project',
-          code: 'UPDATE_ERROR'
+          code: 'VERIFICATION_ERROR'
         }
       });
     }

@@ -18,9 +18,10 @@ DermaDAO is a revolutionary blockchain-based philanthropic platform that reduces
 Key innovations:
 - **ERC-4337 Account Abstraction:** Smart contract wallets, gasless transactions, session keys  
 - **Corporate-Themed Quadratic Funding:** Custom funding rounds with on-chain matching, zero fees  
-- **Three-Layer Verification:** AI + human evaluators + on-chain record for fraud-resistant vetting  
+- **Multi-Layer Verification:** AI + human evaluators + on-chain record for fraud-resistant vetting  
 - **Milestone-Based Releases:** Direct bank transfers upon proof of project milestones  
-- **Worldcoin Integration:** Optional Sybil-resistance for quadratic funding    
+- **Worldcoin Integration:** Optional Sybil-resistance for quadratic funding
+
 
 ---
 
@@ -31,7 +32,7 @@ Key innovations:
 - Theme-specific funding rounds with transparent matching algorithm  
 - Live impact tracking: proofs, scores, and bank transfers  
 - Corporate dashboard with Iridescence animated background for fund management and CSR reporting  
-- Cross-border fiat on/off ramps (Coinbase & Wise)  
+- Cross-border fiat on/off ramps (Transak)  
 
 ---
 
@@ -43,7 +44,7 @@ Key innovations:
 | Smart Contracts | Solidity, Hardhat, Scroll L2                                 |
 | Backend         | Node.js, Express.js, PostgreSQL, Sequelize, ethers.js       |
 | Infra & CI/CD   | AWS/Heroku, Docker (optional), GitHub Actions               |
-| Integrations    | Coinbase API, Wise API, Worldcoin SDK                      |
+| Integrations    | Transak API, Worldcoin SDK                      |
 
 ---
 
@@ -79,7 +80,7 @@ npm run dev
 
 ### Usage
 
-- Open your browser at `http://localhost:3000`  
+- Open your browser at `http://localhost:9000`  
 - Sign up, fund your wallet, and explore themed funding rounds  
 - For corporate sponsors, log in and visit `/dashboard/corporate`  
 
@@ -123,4 +124,3 @@ This project is licensed under the MIT License.
 
 ---
 
-*Good luck at VHack USM 2025!*
