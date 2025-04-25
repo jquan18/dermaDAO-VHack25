@@ -46,6 +46,7 @@ interface Pool {
   total_funding_amount: number;
   allocated_funding: number;
   current_round?: PoolRound;
+  is_shariah_compliant?: boolean;
 }
 
 export default function PoolsPage() {
@@ -83,6 +84,7 @@ export default function PoolsPage() {
             logo_url: pool.logo_url,
             total_funding_amount: pool.total_funding_amount || pool.total_funds || 0,
             allocated_funding: pool.allocated_funding || pool.allocated_funds || 0,
+            is_shariah_compliant: pool.is_shariah_compliant || false,
             current_round: pool.current_round ? {
               id: pool.current_round.id,
               start_time: pool.current_round.start_time,
@@ -303,7 +305,8 @@ export default function PoolsPage() {
                 start_date: pool.current_round?.start_time,
                 end_date: pool.current_round?.end_time,
                 is_distributed: pool.current_round?.is_distributed,
-                project_count: pool.current_round?.active_project_count
+                project_count: pool.current_round?.active_project_count,
+                is_shariah_compliant: pool.is_shariah_compliant
               }} />
             </motion.div>
           ))}
