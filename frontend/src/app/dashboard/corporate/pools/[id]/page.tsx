@@ -62,6 +62,7 @@ export default function PoolDetailsPage() {
   const [isLoadingWallet, setIsLoadingWallet] = useState(true);
   const [isAutoConnecting, setIsAutoConnecting] = useState(false);
   const [isDistributing, setIsDistributing] = useState(false);
+  const [isManuallyDistributed, setIsManuallyDistributed] = useState(false);
 
   // --- Status Calculation (moved up for clarity) ---
   const now = new Date();
@@ -489,6 +490,12 @@ export default function PoolDetailsPage() {
 
         // Refresh the pool data locally or refetch
         setPool((prevPool: any) => ({ ...prevPool, is_distributed: true, distributed_at: new Date().toISOString() }));
+        
+        // Set manually distributed state if this was a manual distribution
+        if (isManualDistribution) {
+          setIsManuallyDistributed(true);
+        }
+        
         // Optionally: router.refresh() if backend update is fast enough
 
       } else {
@@ -508,6 +515,17 @@ export default function PoolDetailsPage() {
     } finally {
       setIsDistributing(false);
     }
+  };
+
+  // Add a function to handle impact report download
+  const handleDownloadImpactReport = () => {
+    // Create a link element to trigger the download
+    const link = document.createElement('a');
+    link.href = '/mock/Quadratic_Funding_Impact_Report_Disaster_Relief_v2.pdf'; 
+    link.download = 'Quadratic_Funding_Impact_Report.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const renderWalletContent = () => {
@@ -954,6 +972,17 @@ export default function PoolDetailsPage() {
                                 </>
                               )}
                             </Button>
+                            
+                            <div className="mt-4">
+                              <Button 
+                                variant="outline"
+                                className="w-full flex items-center justify-center bg-white text-gray-800 border border-gray-300 hover:bg-gray-100"
+                                onClick={handleDownloadImpactReport}
+                              >
+                                <LineChart className="h-4 w-4 mr-2" />
+                                Purchase Impact Report
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </>
