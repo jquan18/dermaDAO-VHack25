@@ -20,6 +20,7 @@ import { quadraticFundingApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/auth-store";
 import { BlurContainer } from "@/components/ui/blur-container";
+import { ethToMyr, formatMyr } from "@/lib/currency";
 
 // Define interface for pool data
 interface Pool {
@@ -101,7 +102,7 @@ export default function CorporatePools() {
     },
     {
       title: "Total Funded",
-      value: `$${stats.totalFunded}`,
+      value: formatMyr(ethToMyr(parseFloat(stats.totalFunded))),
       icon: LineChart,
       color: "text-green-500",
       bgColor: "bg-green-50",
@@ -223,7 +224,7 @@ export default function CorporatePools() {
                   <div className="grid grid-cols-3 gap-4 text-sm bg-white/10 backdrop-blur-xs p-2 rounded-md">
                     <div className="flex items-center gap-2">
                       <CircleDollarSign className="h-4 w-4 text-gray-500" />
-                      <span>${parseFloat(typeof pool.total_funds === 'string' ? pool.total_funds : "0").toLocaleString()}</span>
+                      <span>{formatMyr(ethToMyr(parseFloat(typeof pool.total_funds === 'string' ? pool.total_funds : "0")))}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-gray-500" />

@@ -37,6 +37,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { quadraticFundingApi } from "@/lib/api";
 import { BlurContainer } from "@/components/ui/blur-container";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { myrToEth } from "@/lib/currency";
 
 // Form schema with validation
 const formSchema = z.object({
@@ -73,6 +75,7 @@ export default function CreatePoolPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFunding, setIsFunding] = useState(false);
 
   // Initialize form with react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -109,10 +112,50 @@ export default function CreatePoolPage() {
       const result = await quadraticFundingApi.createPool(poolData);
       
       if (result.success) {
-        toast({
-          title: "Pool created successfully",
-          description: `${values.name} has been created.`,
-        });
+        // Extract the pool ID from the result
+        const poolId = result.data.id || result.data.pool_id;
+        
+        if (poolId) {
+          // Get the initial funding amount in ETH (already converted by the CurrencyInput)
+          const amount = parseFloat(values.initialFunding);
+          
+          // Make donation to the newly created pool
+          try {
+            setIsFunding(true);
+            console.log(`Making initial donation of ${amount} ETH to pool ${poolId}`);
+            const donationResult = await quadraticFundingApi.donateToPool(poolId, amount);
+            
+            if (donationResult.success) {
+              toast({
+                title: "Pool created and funded successfully",
+                description: `${values.name} has been created and funded with ${amount} ETH.`,
+                variant: "default"
+              });
+            } else {
+              console.error("Failed to make initial donation:", donationResult.error);
+              toast({
+                title: "Pool created but funding failed",
+                description: `${values.name} has been created, but the initial funding of ${amount} ETH failed.`,
+                variant: "destructive"
+              });
+            }
+          } catch (donationError) {
+            console.error("Error making initial donation:", donationError);
+            toast({
+              title: "Pool created but funding failed",
+              description: `${values.name} has been created, but the initial funding failed.`,
+              variant: "destructive"
+            });
+          } finally {
+            setIsFunding(false);
+          }
+        } else {
+          toast({
+            title: "Pool created successfully",
+            description: `${values.name} has been created, but could not make initial funding.`,
+            variant: "destructive"
+          });
+        }
         
         // Redirect to pools list
         router.push("/dashboard/corporate/pools");
@@ -124,7 +167,7 @@ export default function CreatePoolPage() {
       toast({
         title: "Failed to create pool",
         description: "There was an error creating your funding pool. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -253,9 +296,16 @@ export default function CreatePoolPage() {
                     name="initialFunding"
                     render={({ field }) => (
                       <FormItem className="bg-white/10 backdrop-blur-sm p-3 rounded-lg">
-                        <FormLabel>Initial Funding (ETH)</FormLabel>
+                        <FormLabel>Initial Funding</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" min="0.01" placeholder="e.g., 10.00" {...field} />
+                          <CurrencyInput
+                            onChange={(ethValue, usdValue) => {
+                              field.onChange(ethValue.toString());
+                            }}
+                            initialEthValue={field.value ? parseFloat(field.value) : 0}
+                            placeholder="0"
+                            min={1}
+                          />
                         </FormControl>
                         <FormDescription>
                           Amount your company will contribute to the pool
@@ -425,8 +475,8 @@ export default function CreatePoolPage() {
                   <Button type="button" variant="outline" onClick={() => router.back()}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create Pool"}
+                  <Button type="submit" disabled={isSubmitting || isFunding}>
+                    {isSubmitting ? (isFunding ? "Creating and Funding..." : "Creating...") : "Create Pool"}
                   </Button>
                 </div>
               </form>

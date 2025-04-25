@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { projectsApi, donationsApi } from "@/lib/api";
-import { Loader2, Search, PieChart, BarChart3, CalendarDays, Landmark, ExternalLink } from "lucide-react";
+import { projectsApi, donationsApi, userApi } from "@/lib/api";
+import { Loader2, Search, PieChart, BarChart3, CalendarDays, Landmark, ExternalLink, BadgeCheck, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { QuadraticFundingInfo } from "@/components/funding/quadratic-funding-info";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { ethToMyr, formatMyr } from "@/lib/currency";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Define the Project interface
 interface Project {
@@ -131,12 +133,7 @@ export default function DonationsPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "ETH",
-      minimumFractionDigits: 4,
-      maximumFractionDigits: 8
-    }).format(amount ?? 0);
+    return formatMyr(ethToMyr(amount));
   };
 
   const formatDate = (dateString: string) => {

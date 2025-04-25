@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TransakFunding } from "@/components/wallet/transak-funding";
 import { VerificationOptions } from "@/components/auth/VerificationOptions";
 import dynamic from "next/dynamic";
+import { ethToMyr, formatMyr, formatEth } from "@/lib/currency";
 
 // Define transaction type
 interface Transaction {
@@ -66,6 +67,7 @@ export default function WalletPage() {
     internal: 0,
     normal: 0
   });
+  const [showAsEth, setShowAsEth] = useState(false);
 
   // Debug log for diagnosing corporate user wallet issues
   console.log('[WalletPage] Initializing wallet page with user:', {
@@ -348,7 +350,7 @@ export default function WalletPage() {
       case 'deposit':
         return 'Deposit';
       case 'donation':
-        return 'Donation';
+        return user?.role === "corporate" ? 'Fund' : 'Donation';
       case 'transfer':
         return 'Transfer';
       case 'self':
@@ -526,7 +528,28 @@ export default function WalletPage() {
                   {isLoadingWallet ? (
                     <Skeleton className="h-10 w-32" />
                   ) : (
-                    <p className="text-3xl font-bold text-primary">{walletBalance} ETH</p>
+                    <>
+                      <p className="text-3xl font-bold text-primary">
+                        {showAsEth 
+                          ? formatEth(walletBalance) 
+                          : formatMyr(ethToMyr(parseFloat(walletBalance)))}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {showAsEth 
+                          ? `${formatMyr(ethToMyr(parseFloat(walletBalance)))} (MYR value)` 
+                          : `${walletBalance} ETH (blockchain value)`}
+                      </p>
+                      <div className="mt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setShowAsEth(!showAsEth)}
+                          className="text-xs h-7"
+                        >
+                          Show as {showAsEth ? 'MYR' : 'ETH'}
+                        </Button>
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -556,7 +579,18 @@ export default function WalletPage() {
                   {isLoadingTransactions ? (
                     <Skeleton className="h-8 w-28" />
                   ) : (
-                    <p className="text-2xl font-bold">{totalDonated} ETH</p>
+                    <>
+                      <p className="text-2xl font-bold">
+                        {showAsEth 
+                          ? `${totalDonated} ETH` 
+                          : formatMyr(ethToMyr(totalDonated))}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {showAsEth 
+                          ? formatMyr(ethToMyr(totalDonated))
+                          : `${totalDonated} ETH`}
+                      </p>
+                    </>
                   )}
                 </div>
                 
@@ -621,7 +655,7 @@ export default function WalletPage() {
           <TabsList>
             <TabsTrigger value="all">All Transactions</TabsTrigger>
             <TabsTrigger value="deposits">Deposits</TabsTrigger>
-            <TabsTrigger value="donations">Donations</TabsTrigger>
+            <TabsTrigger value="donations">{user?.role === "corporate" ? "Funds" : "Donations"}</TabsTrigger>
             <TabsTrigger value="internal">Internal</TabsTrigger>
           </TabsList>
           <TabsContent value="all" className="mt-4">
@@ -699,7 +733,10 @@ export default function WalletPage() {
                           }`}>
                             {tx.type === 'deposit' || tx.type === 'quadratic_distribution' ? '+' : 
                              tx.type === 'contract_creation' ? '' : 
-                             '-'}{tx.amount > 0 ? tx.amount : '0.00'} {tx.currency}
+                             '-'}
+                            {showAsEth 
+                              ? `${tx.amount > 0 ? tx.amount : '0.00'} ${tx.currency}`
+                              : formatMyr(ethToMyr(tx.amount))}
                           </div>
                         </div>
                       ))}
@@ -798,7 +835,10 @@ export default function WalletPage() {
                           }`}>
                             {tx.type === 'deposit' || tx.type === 'quadratic_distribution' ? '+' : 
                              tx.type === 'contract_creation' ? '' : 
-                             '-'}{tx.amount > 0 ? tx.amount : '0.00'} {tx.currency}
+                             '-'}
+                            {showAsEth 
+                              ? `${tx.amount > 0 ? tx.amount : '0.00'} ${tx.currency}`
+                              : formatMyr(ethToMyr(tx.amount))}
                           </div>
                         </div>
                       ))}
@@ -817,7 +857,7 @@ export default function WalletPage() {
           <TabsContent value="donations" className="mt-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle>Donations</CardTitle>
+                <CardTitle>{user?.role === "corporate" ? "Funds" : "Donations"}</CardTitle>
                 <CardDescription>Your contributions to projects</CardDescription>
               </CardHeader>
               <CardContent>
@@ -864,7 +904,10 @@ export default function WalletPage() {
                           }`}>
                             {tx.type === 'deposit' || tx.type === 'quadratic_distribution' ? '+' : 
                              tx.type === 'contract_creation' ? '' : 
-                             '-'}{tx.amount > 0 ? tx.amount : '0.00'} {tx.currency}
+                             '-'}
+                            {showAsEth 
+                              ? `${tx.amount > 0 ? tx.amount : '0.00'} ${tx.currency}`
+                              : formatMyr(ethToMyr(tx.amount))}
                           </div>
                         </div>
                       ))}
@@ -943,7 +986,10 @@ export default function WalletPage() {
                           }`}>
                             {tx.type === 'deposit' || tx.type === 'quadratic_distribution' ? '+' : 
                              tx.type === 'contract_creation' ? '' : 
-                             '-'}{tx.amount > 0 ? tx.amount : '0.00'} {tx.currency}
+                             '-'}
+                            {showAsEth 
+                              ? `${tx.amount > 0 ? tx.amount : '0.00'} ${tx.currency}`
+                              : formatMyr(ethToMyr(tx.amount))}
                           </div>
                         </div>
                       ))}

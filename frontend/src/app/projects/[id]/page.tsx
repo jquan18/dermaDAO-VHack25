@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatEther } from "ethers";
 import { BlurContainer } from "@/components/ui/blur-container";
 import Link from "next/link";
+import { ethToMyr, formatMyr, formatEth } from "@/lib/currency";
 
 // Define transaction interface similar to the wallet page
 interface Transaction {
@@ -287,16 +288,11 @@ export default function ProjectDetailsPage() {
   const formatCryptoAmount = (amount: number) => {
     // Don't display anything if amount is too small
     if (!amount || Math.abs(amount) < 0.0001) {
-      return '0.00 ETH';
+      return formatMyr(0);
     }
     
-    // For regular amounts
-    if (Math.abs(amount) >= 0.01) {
-      return amount.toFixed(2) + ' ETH';
-    }
-    
-    // For small amounts (between 0.0001 and 0.01)
-    return amount.toFixed(6) + ' ETH';
+    // Convert ETH amount to MYR and format
+    return formatMyr(ethToMyr(amount));
   };
 
   // Combine and deduplicate transactions from blockchain and database

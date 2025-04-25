@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { format, parseISO } from "date-fns"
+import { ethToMyr, formatMyr } from "@/lib/currency"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -17,8 +19,15 @@ export function calculateProgress(raised: number, goal: number): number {
 /**
  * Format currency values with appropriate symbol and decimals
  */
-export function formatCurrency(amount: number, currency: string = "USD", maximumFractionDigits: number = 2): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatCurrency(amount: number, currency: string = "MYR", maximumFractionDigits: number = 2): string {
+  // When currency is ETH, convert to MYR and return only the MYR value
+  if (currency === "ETH") {
+    // Convert ETH to MYR and format as MYR without showing "ETH"
+    return formatMyr(ethToMyr(amount));
+  }
+
+  // For other currencies, use standard formatting
+  return new Intl.NumberFormat("en-MY", {
     style: "currency",
     currency,
     maximumFractionDigits,
