@@ -252,12 +252,12 @@ function PoolInfo({ pool }) {
             {/* Total Funds */}
             <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Funds</p>
-               <p className="text-xl font-semibold">{totalFunds.toFixed(2)} {currency}</p> 
+               <p className="text-xl font-semibold">{formatMyr(ethToMyr(totalFunds))}</p> 
             </div>
             {/* Allocated */}
             <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Allocated</p>
-               <p className="text-xl font-semibold">{allocatedFunds.toFixed(2)} {currency}</p> 
+               <p className="text-xl font-semibold">{formatMyr(ethToMyr(allocatedFunds))}</p> 
             </div>
             {/* Duration/Status */}
             <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
@@ -277,10 +277,10 @@ function PoolInfo({ pool }) {
             <Progress value={fundingPercentage} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>
-                {allocatedFunds.toFixed(4)} {currency} allocated
+                {formatMyr(ethToMyr(allocatedFunds))} allocated
               </span>
               <span>
-                {fundingPercentage}% of total funds ({totalFunds.toFixed(4)} {currency})
+                {fundingPercentage}% of total funds ({formatMyr(ethToMyr(totalFunds))})
               </span>
             </div>
           </div>
