@@ -11,6 +11,7 @@ import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { BlurContainer } from "@/components/ui/blur-container";
+import { ethToMyr, formatMyr } from "@/lib/currency";
 
 // Consolidated theme styling data
 interface ThemeStyles {
@@ -226,13 +227,13 @@ export function PoolCard({ pool }: PoolCardProps) {
                 <CircleDollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
                 <span>Total Funding</span>
               </div>
-              <span className="font-medium">${(pool.total_funds || 0).toLocaleString()}</span>
+              <span className="font-medium">{formatMyr(ethToMyr(pool.total_funds || 0))}</span>
             </div>
             
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-muted-foreground">Allocated</span>
-                <span className="font-medium">${(pool.allocated_funds || 0).toLocaleString()}</span>
+                <span className="font-medium">{formatMyr(ethToMyr(pool.allocated_funds || 0))}</span>
               </div>
               <Progress 
                 value={fundingPercentage} 

@@ -25,6 +25,7 @@ import { quadraticFundingApi } from "@/lib/api";
 import { Loader2, Info, Wallet } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { BlurContainer } from "@/components/ui/blur-container";
+import { ethToMyr, formatMyr } from "@/lib/currency";
 
 interface PoolRound {
   id: string;
@@ -289,7 +290,21 @@ export default function PoolsPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <PoolCard pool={pool} />
+              <PoolCard pool={{
+                id: pool.id,
+                name: pool.name,
+                description: pool.description,
+                theme: pool.theme,
+                is_active: pool.is_active,
+                sponsor_name: pool.sponsor_name,
+                logo_url: pool.logo_url,
+                total_funds: Number(pool.total_funding_amount || 0),
+                allocated_funds: Number(pool.allocated_funding || 0),
+                start_date: pool.current_round?.start_time,
+                end_date: pool.current_round?.end_time,
+                is_distributed: pool.current_round?.is_distributed,
+                project_count: pool.current_round?.active_project_count
+              }} />
             </motion.div>
           ))}
         </div>
