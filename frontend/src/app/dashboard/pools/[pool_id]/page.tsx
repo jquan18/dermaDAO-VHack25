@@ -153,7 +153,7 @@ function ProjectCard({ project, idx, isShariahCompliant }) {
         </CardContent>
         <CardFooter className="pt-0">
           <Button asChild className="w-full">
-            <Link href={`/dashboard/pools/${project.id}`}>
+            <Link href={`/dashboard/donations/${project.id}`}>
               View Project
             </Link>
           </Button>
