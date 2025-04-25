@@ -59,6 +59,7 @@ export function CurrencyInput({
           className="pl-7"
           value={myrValue}
           onChange={handleChange}
+          step="any"
           {...props}
         />
       </div>
