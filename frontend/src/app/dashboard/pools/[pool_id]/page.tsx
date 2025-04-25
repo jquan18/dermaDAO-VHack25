@@ -85,7 +85,7 @@ const projectImages = [
 ];
 
 // Project Card Component
-function ProjectCard({ project, idx }) {
+function ProjectCard({ project, idx, isShariahCompliant }) {
   // Add safety check for null/undefined project
   if (!project) return null;
 
@@ -113,6 +113,12 @@ function ProjectCard({ project, idx }) {
           {project.category && (
             <Badge className="absolute top-2 right-2" variant="secondary">
               {project.category}
+            </Badge>
+          )}
+          {/* Shariah Compliance Badge */}
+          {isShariahCompliant && (
+            <Badge className="absolute top-2 left-2 bg-green-500 text-white shadow-lg" variant="default">
+              Shariah Compliant
             </Badge>
           )}
         </div>
@@ -487,7 +493,7 @@ export default function PoolDetailPage() {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {filteredProjects.map((project, idx) => (
-                <ProjectCard key={project.id} project={project} idx={idx} />
+                <ProjectCard key={project.id} project={project} idx={idx} isShariahCompliant={pool.is_shariah_compliant} />
               ))}
             </motion.div>
           ) : (
