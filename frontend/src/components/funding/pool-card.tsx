@@ -11,6 +11,7 @@ import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { BlurContainer } from "@/components/ui/blur-container";
+import { ethToMyr, formatMyr } from "@/lib/currency";
 
 // Consolidated theme styling data
 interface ThemeStyles {
@@ -112,7 +113,7 @@ const getThemeData = (theme: string): ThemeStyles => {
   // Default theme styling if the theme doesn't match any in our map
   const defaultTheme: ThemeStyles = {
     gradient: "from-primary/20 to-primary/5",
-    progress: undefined,
+    progress: "rgb(100, 116, 139)",
     badge: {
       bg: "rgba(100, 116, 139, 0.1)",
       text: "rgb(51, 65, 85)",
@@ -139,6 +140,7 @@ interface PoolCardProps {
     total_funds: number;
     allocated_funds: number;
     project_count?: number;
+    is_shariah_compliant?: boolean;
   };
 }
 
@@ -192,6 +194,9 @@ export function PoolCard({ pool }: PoolCardProps) {
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="line-clamp-2 font-semibold text-lg">{pool.name}</CardTitle>
+          {pool.is_shariah_compliant && (
+            <Badge variant="success" className="ml-2">Shariah Compliant</Badge>
+          )}
         </div>
         <CardDescription className="flex items-center text-sm flex-wrap gap-x-2">
           {pool.sponsor_name && (
@@ -226,13 +231,13 @@ export function PoolCard({ pool }: PoolCardProps) {
                 <CircleDollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
                 <span>Total Funding</span>
               </div>
-              <span className="font-medium">${(pool.total_funds || 0).toLocaleString()}</span>
+              <span className="font-medium">{formatMyr(ethToMyr(pool.total_funds || 0))}</span>
             </div>
             
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-muted-foreground">Allocated</span>
-                <span className="font-medium">${(pool.allocated_funds || 0).toLocaleString()}</span>
+                <span className="font-medium">{formatMyr(ethToMyr(pool.allocated_funds || 0))}</span>
               </div>
               <Progress 
                 value={fundingPercentage} 

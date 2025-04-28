@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { BlurContainer } from '@/components/ui/blur-container';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
+import { ethToMyr, formatMyr } from '@/lib/currency';
 
 // Helper function to normalize API responses
 function normalizeResponse(response) {
@@ -73,22 +74,35 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
+// Hardcoded project images logic (copied from charity projects page)
+const projectImages = [
+  "/landing/flood_relief.jpg",
+  "/landing/gas_leak_pipeline.jpg",
+  '/landing/baby.jpg',
+  '/landing/old_folks.jpg',
+  '/landing/smiling_kids.jpg',
+  '/landing/water.jpg',
+  '/landing/wildlife.jpg',
+  '/landing/old_man_harold.jpg',
+];
+
 // Project Card Component
-function ProjectCard({ project }) {
+function ProjectCard({ project, idx, isShariahCompliant }) {
   // Add safety check for null/undefined project
   if (!project) return null;
-  
+
   const progress = project.funding_progress?.raised 
     ? Math.min(100, Math.round((Number(project.funding_progress.raised || 0) / Number(project.funding_goal || 0) || 0) * 100))
     : 0;
-    
+
   return (
     <motion.div variants={item}>
       <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
         <div className="relative w-full pt-[56.25%]">
-          {project.image_url ? (
+          {/* Hardcoded project image logic, fallback to placeholder */}
+          {projectImages[idx % projectImages.length] ? (
             <Image
-              src={project.image_url}
+              src={projectImages[idx % projectImages.length]}
               alt={project.name || 'Project Image'}
               fill
               className="object-cover rounded-t-lg"
@@ -103,43 +117,46 @@ function ProjectCard({ project }) {
               {project.category}
             </Badge>
           )}
+          {/* Shariah Compliance Badge */}
+          {isShariahCompliant && (
+            <Badge className="absolute top-2 left-2 bg-green-500 text-white shadow-lg" variant="default">
+              Shariah Compliant
+            </Badge>
+          )}
         </div>
-        
         <CardHeader className="pb-2">
           <CardTitle className="text-xl line-clamp-1">{project.name || 'Unnamed Project'}</CardTitle>
           <CardDescription className="line-clamp-2">
             {project.charity_name || "Charity Organization"}
           </CardDescription>
         </CardHeader>
-        
         <CardContent className="flex-grow">
           <div className="bg-white/20 backdrop-blur-sm rounded-md p-3 mb-4">
             <p className="text-sm text-muted-foreground line-clamp-3">
               {project.description || 'No description available'}
             </p>
           </div>
-          
-          <div className="bg-white/30 backdrop-blur-md rounded-md p-3 space-y-3">
+          <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Raised</span>
               <span className="font-medium">
-                {project.funding_progress?.raised ? Number(project.funding_progress.raised).toFixed(2) : "0.00"} ETH
+                {/* --- CURRENCY FIX: Use ETH->MYR conversion utility --- */}
+                {project.funding_progress?.raised ? formatMyr(ethToMyr(Number(project.funding_progress.raised))) : formatMyr(0)}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Goal</span>
+              <span className="font-medium">
+                {project.funding_goal ? formatMyr(ethToMyr(Number(project.funding_goal))) : formatMyr(0)}
               </span>
             </div>
             <Progress value={progress} className="h-2" />
-            <div className="flex justify-between text-sm">
-              <span>{progress}% of {Number(project.funding_goal || 0)} ETH</span>
-              <span className="text-muted-foreground">
-                {project.contributions_count || 0} contributions
-              </span>
-            </div>
           </div>
         </CardContent>
-        
         <CardFooter className="pt-0">
           <Button asChild className="w-full">
             <Link href={`/dashboard/donations/${project.id}`}>
-              Donate to Project
+              View Project
             </Link>
           </Button>
         </CardFooter>
@@ -215,15 +232,12 @@ function PoolInfo({ pool }) {
                   </Badge>
                   <span className="text-muted-foreground">Theme: {pool.theme}</span>
                   {pool.company_name && <span className="text-muted-foreground">By: {pool.company_name}</span>}
+                  {pool.is_shariah_compliant && (
+                    <Badge variant="success">Shariah Compliant</Badge>
+                  )}
                 </CardDescription>
               </div>
             </div>
-            {/* Action Button - Example */}
-             <Button asChild>
-               <Link href={`/dashboard/donations?pool=${pool.id}`}>
-                 Donate to Projects
-               </Link>
-             </Button>
           </div>
         </CardHeader>
         
@@ -240,12 +254,12 @@ function PoolInfo({ pool }) {
             {/* Total Funds */}
             <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Funds</p>
-               <p className="text-xl font-semibold">{totalFunds.toFixed(2)} {currency}</p> 
+               <p className="text-xl font-semibold">{formatMyr(ethToMyr(totalFunds))}</p> 
             </div>
             {/* Allocated */}
             <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Allocated</p>
-               <p className="text-xl font-semibold">{allocatedFunds.toFixed(2)} {currency}</p> 
+               <p className="text-xl font-semibold">{formatMyr(ethToMyr(allocatedFunds))}</p> 
             </div>
             {/* Duration/Status */}
             <div className="bg-white/30 backdrop-blur-md rounded-lg p-3 text-center">
@@ -265,10 +279,10 @@ function PoolInfo({ pool }) {
             <Progress value={fundingPercentage} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>
-                {allocatedFunds.toFixed(4)} {currency} allocated
+                {formatMyr(ethToMyr(allocatedFunds))} allocated
               </span>
               <span>
-                {fundingPercentage}% of total funds ({totalFunds.toFixed(4)} {currency})
+                {fundingPercentage}% of total funds ({formatMyr(ethToMyr(totalFunds))})
               </span>
             </div>
           </div>
@@ -477,8 +491,8 @@ export default function PoolDetailPage() {
               animate="show"
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
-              {filteredProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
+              {filteredProjects.map((project, idx) => (
+                <ProjectCard key={project.id} project={project} idx={idx} isShariahCompliant={pool.is_shariah_compliant} />
               ))}
             </motion.div>
           ) : (

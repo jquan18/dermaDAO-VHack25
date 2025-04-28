@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -132,6 +133,11 @@ export default function NewProjectPage() {
     }
   }, [selectedPoolId, pools]);
   
+  // Handle change of funding goal using CurrencyInput
+  const handleFundingGoalChange = (ethValue: number, myrValue: number) => {
+    setFundingGoal(ethValue.toString());
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -240,16 +246,12 @@ export default function NewProjectPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="funding-goal">Funding Goal (ETH)</Label>
-                    <Input
-                      id="funding-goal"
-                      type="number"
-                      step="0.0001"
-                      min="0"
-                      value={fundingGoal}
-                      onChange={(e) => setFundingGoal(e.target.value)}
-                      placeholder="0.5"
-                      required
+                    <Label htmlFor="funding-goal">Funding Goal (MYR)</Label>
+                    <CurrencyInput
+                      onChange={handleFundingGoalChange}
+                      initialEthValue={fundingGoal ? parseFloat(fundingGoal) : 0}
+                      placeholder=""
+                      min={0}
                     />
                   </div>
                 </div>

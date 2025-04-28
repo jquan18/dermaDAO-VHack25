@@ -38,6 +38,8 @@ import { TransferTypeSelector } from "@/components/proposals/transfer-type-selec
 import { CryptoAddressInput } from "@/components/proposals/crypto-address-input";
 import { projectsApi, proposalsApi, bankAccountsApi } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { myrToEth } from "@/lib/currency";
 
 // Create schema with conditional validation based on transfer type
 const proposalFormSchema = z.object({
@@ -415,19 +417,19 @@ export function ProposalForm({ preselectedProjectId }: ProposalFormProps) {
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount (ETH)</FormLabel>
+                  <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      step="0.000001"
-                      min="0.000001"
-                      placeholder="0.01"
-                      {...field}
+                    <CurrencyInput
+                      onChange={(ethValue, myrValue) => {
+                        field.onChange(ethValue.toString());
+                      }}
+                      initialEthValue={field.value ? parseFloat(field.value) : 0}
+                      placeholder=""
                       disabled={isSubmitting}
                     />
                   </FormControl>
                   <FormDescription>
-                    Enter the amount of ETH to withdraw
+                    Enter the amount to withdraw
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
