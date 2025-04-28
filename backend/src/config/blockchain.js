@@ -21,7 +21,7 @@ logger.info(`Using Chain ID: ${chainId}`);
 // Load ABIs
 const loadAbi = (name) => {
   try {
-    const abiPath = path.join(__dirname, '../../../blockchain/abi', `${name}.json`);
+    const abiPath = path.join(__dirname, '../../abi', `${name}.json`);
     return JSON.parse(fs.readFileSync(abiPath, 'utf8'));
   } catch (error) {
     logger.error(`Failed to load ABI for ${name}:`, error.message);
