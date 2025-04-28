@@ -109,27 +109,25 @@ app.get('/health', async (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
-const PORT = process.env.PORT || 8000;
-
 // Initialize blockchain connection
 blockchain.initializeBlockchain().catch(err => {
   logger.error(`Failed to initialize blockchain services: ${err.message}`);
   logger.info('Server will continue with limited blockchain functionality');
 });
 
-app.listen(PORT, () => {
-  logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
-
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   logger.error('UNCAUGHT EXCEPTION:', err);
-  process.exit(1);
+  // Don't exit the process in serverless environment
+  // process.exit(1);
 });
 
 // Handle unhandled rejections
 process.on('unhandledRejection', (err) => {
   logger.error('UNHANDLED REJECTION:', err);
-  process.exit(1);
-}); 
+  // Don't exit the process in serverless environment
+  // process.exit(1);
+});
+
+// Export the app for serverless use
+module.exports = app;

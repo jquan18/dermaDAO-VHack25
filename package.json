@@ -1,4 +1,15 @@
 {
+  "name": "dermadao",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "cd frontend && npm run build",
+    "postinstall": "cd frontend && npm install && cd ../backend && npm install"
+  },
   "dependencies": {
     "@tabler/icons-react": "^3.31.0",
     "clsx": "^2.1.1",
@@ -8,5 +19,8 @@
     "ogl": "^1.0.11",
     "tailwind-merge": "^3.2.0",
     "react-markdown": "^10.1.0"
+  },
+  "devDependencies": {
+    "vercel": "^32.4.1"
   }
 }
