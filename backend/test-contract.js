@@ -5,7 +5,7 @@ const path = require('path');
 async function testContract() {
   try {
     // Load ABI
-    const platformAbi = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/abi/Platform.json'), 'utf8'));
+    const platformAbi = JSON.parse(fs.readFileSync(path.join(__dirname, '../blockchain/abi/Platform.json'), 'utf8'));
 
     // Setup provider and wallet
     const url = 'https://sepolia-rpc.scroll.io/';
