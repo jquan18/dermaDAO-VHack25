@@ -4,14 +4,7 @@ const nextConfig = {
   images: {
     domains: ['cloudflare-ipfs.com', 'images.unsplash.com', 'randomuser.me'],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:8001/api/:path*', // Proxy to backend
-      },
-    ];
-  },
+  output: 'standalone',
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

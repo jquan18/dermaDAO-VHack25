@@ -44,7 +44,12 @@ export function FundingDistribution({
       setSuccess(false);
       setWarningMessage(null);
 
-      const response = await quadraticFundingApi.distributeQuadraticFunding(createNewRound);
+      // First parameter should be a poolId (number) and second parameter is the boolean flag
+      // Using the roundId from props as the poolId parameter
+      if (!roundId) {
+        throw new Error("Round ID is required for distribution");
+      }
+      const response = await quadraticFundingApi.distributeQuadraticFunding(roundId, createNewRound);
 
       if (response.success) {
         setSuccess(true);

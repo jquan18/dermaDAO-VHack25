@@ -18,6 +18,8 @@ export interface User {
   charity_id?: string;
   profile_image?: string;
   created_at: string;
+  is_corporate?: boolean;
+  company?: any;
 }
 
 interface AuthState {
@@ -289,18 +291,17 @@ export const useAuthStore = create<AuthState>()(
           
           console.log('Corporate role check response:', roleResponse);
           
-          if (roleResponse.success && roleResponse.data.isCorporate) {
+          if (roleResponse.success && roleResponse.data && roleResponse.data.isCorporate) {
             console.log('User confirmed as corporate user with company');
             
             // Only update if the role isn't already corporate
-            if (user.role !== 'corporate') {
-              console.log('Updating user role from', user.role, 'to corporate');
-              
+            if (!get().user?.is_corporate) {
               set({
                 user: {
-                  ...user,
-                  role: 'corporate'
-                }
+                  ...(get().user ?? {}),
+                  is_corporate: true,
+                  company: roleResponse.data.companyDetails
+                } as User
               });
             }
           }

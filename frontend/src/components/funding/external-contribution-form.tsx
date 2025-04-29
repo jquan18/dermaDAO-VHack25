@@ -42,14 +42,23 @@ export function ExternalContributionForm({ className, roundId, onSuccess }: Exte
       return;
     }
 
+    if (!roundId) {
+      setError("Pool ID is required");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       
-      // Format the data
+      // Create a fresh object with only the required fields to avoid type issues
       const contributionData = {
-        ...formData,
-        round_id: roundId
+        transaction_hash: formData.transaction_hash,
+        amount: formData.amount,
+        pool_id: roundId,
+        // Only add these if they have values
+        ...(formData.contributor_address ? { contributor_address: formData.contributor_address } : {}),
+        ...(formData.contributor_name ? { contributor_name: formData.contributor_name } : {})
       };
       
       const response = await quadraticFundingApi.recordExternalContribution(contributionData);
@@ -157,7 +166,7 @@ export function ExternalContributionForm({ className, roundId, onSuccess }: Exte
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={loading || !formData.transaction_hash || !formData.amount}
+            disabled={loading || !formData.transaction_hash || !formData.amount || !roundId}
           >
             {loading ? "Recording..." : "Record Contribution"}
           </Button>

@@ -77,7 +77,7 @@ export function ProjectAllocations({ className }: ProjectAllocationsProps) {
 
         if (response.success) {
           // Ensure the data matches the updated ProjectAllocation interface
-          setProjects((response.data || []).map(p => ({ ...p, funding_goal: p.funding_goal ?? 0 })) );
+          setProjects((response.data || []).map((p: Partial<ProjectAllocation>) => ({ ...p, funding_goal: p.funding_goal ?? 0 })) );
         } else {
           setError("Failed to load project allocations");
         }
@@ -108,13 +108,38 @@ export function ProjectAllocations({ className }: ProjectAllocationsProps) {
   );
 
   const sortedProjects = [...filteredProjects].sort((a, b) => {
-    const fieldA = a[sortField];
-    const fieldB = b[sortField];
+    // Create safe versions with nullish coalescing to guarantee non-null values
+    // This converts all null/undefined values to sensible defaults based on their expected type
+    const getSafeValue = (value: any) => {
+      if (value === null || value === undefined) {
+        // Return appropriate default based on sortField
+        switch (sortField) {
+          case 'name':
+          case 'charity_name':
+          case 'description':
+            return '';
+          case 'funding_goal':
+          case 'vote_count':
+          case 'verification_score':
+            return 0;
+          case 'start_date':
+          case 'created_at':
+          case 'updated_at':
+            return '';
+          default:
+            return '';
+        }
+      }
+      return value;
+    };
+
+    const safeFieldA = getSafeValue(a[sortField]);
+    const safeFieldB = getSafeValue(b[sortField]);
 
     let comparison = 0;
-    if (fieldA > fieldB) {
+    if (safeFieldA > safeFieldB) {
       comparison = 1;
-    } else if (fieldA < fieldB) {
+    } else if (safeFieldA < safeFieldB) {
       comparison = -1;
     }
 

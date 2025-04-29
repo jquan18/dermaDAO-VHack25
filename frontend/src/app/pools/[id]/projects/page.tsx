@@ -46,6 +46,7 @@ interface Pool {
   current_round?: PoolRound;
   sponsor_logo_url?: string;
   total_projects?: number;
+  currency?: string;
 }
 
 interface Project {
@@ -57,9 +58,12 @@ interface Project {
   funding_progress?: {
     raised: number;
   };
+  is_active: boolean;
   category?: string;
   tags?: string[];
   is_verified: boolean;
+  created_at: string;
+  contributions_count?: number;
 }
 
 interface ProjectsPageProps {
@@ -104,15 +108,31 @@ export default function PoolProjectsPage() {
         
         // Fetch pool details
         const poolResponse = await api.getPool(poolId);
-        setPool(poolResponse.data);
+        // .data is ApiResponse<Pool>, .data.data is Pool
+        setPool(poolResponse.data.data);
         
         // Fetch projects associated with this pool
         const projectsResponse = await api.getPoolProjects(poolId);
-        // Only include verified projects for normal users
-        const verifiedProjects = projectsResponse.data.filter((project: Project) => project.is_verified);
+        // .data is ApiResponse<Project[]>, .data.data is Project[]
+        // Map fetched projects to local Project with is_verified flag
+        const projectsWithVerified = (projectsResponse.data.data as any[]).map(p => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          image_url: p.image_url,
+          funding_goal: p.funding_goal,
+          funding_progress: p.funding_progress,
+          is_active: p.is_active,
+          category: p.category,
+          tags: p.tags,
+          is_verified: Boolean(p.verification_score),
+          created_at: p.created_at,
+          contributions_count: p.contributions_count || 0,
+        })) as Project[];
+        const verifiedProjects = projectsWithVerified.filter(p => p.is_verified);
         setProjects(verifiedProjects);
         setFilteredProjects(verifiedProjects);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching data:', error);
         toast({
           variant: 'destructive',
@@ -159,7 +179,7 @@ export default function PoolProjectsPage() {
         case 'most-contributions':
           return (b.contributions_count || 0) - (a.contributions_count || 0);
         case 'most-funded':
-          return (b.contributions_amount || 0) - (a.contributions_amount || 0);
+          return (b.funding_progress?.raised || 0) - (a.funding_progress?.raised || 0);
         case 'newest':
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         case 'alphabetical':
@@ -209,6 +229,33 @@ export default function PoolProjectsPage() {
   
   const currency = pool.currency || 'ETH';
   
+  function formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  function calculateTimeRemaining(): string | null {
+    if (!pool?.current_round) return null;
+    
+    const endTime = new Date(pool.current_round.end_time);
+    const now = new Date();
+    
+    // If round has ended
+    if (now > endTime) {
+      return "Round ended";
+    }
+    
+    const timeLeft = endTime.getTime() - now.getTime();
+    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    return `${days}d ${hours}h remaining`;
+  };
+
   return (
     <div className="container py-6 max-w-7xl">
       {/* Back button and header */}
@@ -392,39 +439,30 @@ export default function PoolProjectsPage() {
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
+        {filteredProjects.map((project) => {
+          const endTime = pool?.current_round ? new Date(pool.current_round.end_time) : null;
+          const daysLeft = endTime
+            ? Math.max(0, Math.ceil((endTime.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+            : 0;
+          return (
+            <ProjectCard
+              key={project.id}
+              project={{
+                id: project.id,
+                title: project.name,
+                description: project.description,
+                coverImage: project.image_url,
+                targetAmount: project.funding_goal,
+                amountRaised: project.funding_progress?.raised || 0,
+                daysLeft,
+                status: project.is_active ? 'active' : 'completed',
+                category: project.category || '',
+                poolId,
+              }}
+            />
+          );
+        })}
       </div>
     );
   }
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  // Calculate time remaining for pool round
-  const calculateTimeRemaining = () => {
-    if (!pool?.current_round) return null;
-    
-    const endTime = new Date(pool.current_round.end_time);
-    const now = new Date();
-    
-    // If round has ended
-    if (now > endTime) {
-      return "Round ended";
-    }
-    
-    const timeLeft = endTime.getTime() - now.getTime();
-    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
-    return `${days}d ${hours}h remaining`;
-  };
 } 

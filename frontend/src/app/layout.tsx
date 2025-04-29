@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'DermaDAO - Transparent Charity Funding Platform',
   description: 'A decentralized platform for transparent charity funding using blockchain technology',
+  metadataBase: new URL('https://derma-dao-junquan2-ny0ncqjra-jquan18s-projects.vercel.app'),
 };
 
 export default function RootLayout({

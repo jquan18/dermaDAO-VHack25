@@ -275,7 +275,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
     if (!user || !project) return;
     
     // Only charity admins can update their projects
-    const isCharityAdmin = user.role === 'charity' && project.charity_id && user.charity_id === project.charity_id;
+    const isCharityAdmin = user.role === 'charity_admin' && project.charity_id && user.charity_id === project.charity_id;
     const isAdmin = user.role === 'admin';
     
     if (!isCharityAdmin && !isAdmin) {
@@ -771,7 +771,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                     <div>
                       <div className="text-sm text-gray-500">Quadratic Funding</div>
                       <div className="font-medium">
-                        {formatMyr(ethToMyr(parseFloat(quadraticFundingTotal)))}
+                        {formatMyr(ethToMyr(quadraticFundingTotal))}
                       </div>
                     </div>
                   </div>
@@ -970,7 +970,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailProps) {
                 <CardTitle>Verification Status</CardTitle>
                 <CardDescription>Current verification status and suggestions for improvement</CardDescription>
               </div>
-              {(user?.role === 'charity' || user?.role === 'admin') && (
+              {(user?.role === 'charity_admin' || user?.role === 'admin') && (
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium">Shariah Compliant</span>
                   <Switch 

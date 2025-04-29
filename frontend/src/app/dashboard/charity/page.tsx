@@ -253,7 +253,7 @@ export default function CharityDashboard() {
   const charityName = user?.name ? `${user.name}'s Charity` : 'Your Charity';
   
   // Function to display mock values instead of zeros
-  const displayValue = (value, mockValue) => {
+  const displayValue = (value: number, mockValue: number) => {
     return value === 0 ? mockValue : value;
   };
 

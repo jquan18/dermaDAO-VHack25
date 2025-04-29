@@ -32,7 +32,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { ethToMyr, formatMyr } from '@/lib/currency';
 
 // Helper function to normalize API responses
-function normalizeResponse(response) {
+function normalizeResponse(response: any) {
   // Case 1: Standard format with { success, data }
   if (response && typeof response.success === 'boolean') {
     return response;
@@ -87,7 +87,7 @@ const projectImages = [
 ];
 
 // Project Card Component
-function ProjectCard({ project, idx, isShariahCompliant }) {
+function ProjectCard({ project, idx, isShariahCompliant }: { project: any; idx: number; isShariahCompliant: boolean }) {
   // Add safety check for null/undefined project
   if (!project) return null;
 
@@ -166,7 +166,7 @@ function ProjectCard({ project, idx, isShariahCompliant }) {
 }
 
 // Pool Details Component (Refactored)
-function PoolInfo({ pool }) {
+function PoolInfo({ pool }: { pool: any }) {
   if (!pool) return null;
 
   const totalFunds = Number(pool.total_funds || 0);
@@ -298,13 +298,13 @@ export default function PoolDetailPage() {
   const { toast } = useToast();
   const poolId = params.pool_id as string;
   
-  const [pool, setPool] = useState(null);
-  const [projects, setProjects] = useState([]);
-  const [filteredProjects, setFilteredProjects] = useState([]);
+  const [pool, setPool] = useState<any>(null);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('default');
-  const [debugInfo, setDebugInfo] = useState(null); // For debugging purposes
+  const [debugInfo, setDebugInfo] = useState<{ poolResponse: any; projectsResponse: any } | null>(null); // For debugging purposes
   
   useEffect(() => {
     async function fetchData() {
@@ -313,7 +313,7 @@ export default function PoolDetailPage() {
         console.log('Fetching pool data for ID:', poolId);
         
         // Fetch pool details
-        let poolResponse = await api.getPool(poolId);
+        let poolResponse: any = await api.getPool(poolId);
         console.log('Pool API raw response:', poolResponse);
         
         // Normalize the response
@@ -328,7 +328,7 @@ export default function PoolDetailPage() {
         
         // Fetch projects in this pool
         console.log('Fetching projects for pool ID:', poolId);
-        let projectsResponse = await api.getPoolProjects(poolId);
+        let projectsResponse: any = await api.getPoolProjects(poolId);
         console.log('Projects API raw response:', projectsResponse);
         
         // Normalize the response
@@ -362,7 +362,7 @@ export default function PoolDetailPage() {
           setProjects([]);
           setFilteredProjects([]);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching pool data:', error);
         toast({
           variant: 'destructive',

@@ -22,7 +22,7 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 
 export default function NewProjectPage() {
   const router = useRouter();
-  const { user, updateUser } = useAuthStore();
+  const { user } = useAuthStore();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,14 +53,8 @@ export default function NewProjectPage() {
           console.log("Charity info response:", response); // Log the full response for debugging
           
           if (response.success && response.data && response.data.charity) {
-            // Update the auth store with charity_id if updateUser exists
-            if (updateUser) {
-              updateUser({
-                ...user,
-                charity_id: response.data.charity.id
-              });
-            }
-            // Always set the local charity ID as fallback
+            // We can't update the user state directly as there's no updateUser function
+            // Just store the charity ID locally for this component
             setLocalCharityId(response.data.charity.id);
           } else {
             console.error("Failed to fetch charity info:", response);
@@ -84,7 +78,7 @@ export default function NewProjectPage() {
     };
     
     fetchCharityInfo();
-  }, [user, updateUser]);
+  }, [user]);
   
   // Fetch available pools
   useEffect(() => {

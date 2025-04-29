@@ -23,8 +23,8 @@ export default function DonationsPage() {
   const { toast } = useToast();
   const poolId = params.pool_id as string;
   
-  const [pool, setPool] = useState(null);
-  const [donations, setDonations] = useState([]);
+  const [pool, setPool] = useState<any>(null);
+  const [donations, setDonations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -35,26 +35,26 @@ export default function DonationsPage() {
         // Fetch pool details
         const poolResponse = await api.getPool(poolId);
         
-        if (!poolResponse.success) {
-          throw new Error(poolResponse.error?.message || 'Failed to fetch pool data');
+        if (!poolResponse.data?.success) {
+          throw new Error(poolResponse.data?.error?.message || 'Failed to fetch pool data');
         }
         
-        setPool(poolResponse.data);
+        setPool(poolResponse.data.data);
         
         // Fetch user's donations in this pool
         const donationsResponse = await api.getUserPoolDonations(poolId);
         
-        if (!donationsResponse.success) {
-          throw new Error(donationsResponse.error?.message || 'Failed to fetch donations data');
+        if (!donationsResponse.data?.success) {
+          throw new Error(donationsResponse.data?.error?.message || 'Failed to fetch donations data');
         }
         
-        if (Array.isArray(donationsResponse.data)) {
-          setDonations(donationsResponse.data);
+        if (Array.isArray(donationsResponse.data.data)) {
+          setDonations(donationsResponse.data.data);
         } else {
-          console.warn('Expected donations data to be an array, but got:', donationsResponse.data);
+          console.warn('Expected donations data to be an array, but got:', donationsResponse.data.data);
           setDonations([]);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching donations data:', error);
         toast({
           variant: 'destructive',
@@ -70,7 +70,7 @@ export default function DonationsPage() {
   }, [poolId, toast]);
   
   // Format date for display
-  const formatDate = (dateString) => {
+  const formatDate = (dateString?: string): string => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString('en-US', { 
       year: 'numeric', 

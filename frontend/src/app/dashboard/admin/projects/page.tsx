@@ -20,7 +20,7 @@ import { AlertCircle, CheckCircle, Clock, Search, Shield, ShieldCheck, ShieldX, 
 import { projectsApi } from "@/lib/api";
 import { useBlockchain } from "@/hooks/use-blockchain";
 import { formatDate } from "@/lib/utils";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 type Project = {
   id: number;
@@ -181,7 +181,7 @@ export default function ProjectsVerification() {
         toast({
           title: "AI Evaluation Complete",
           description: `Project received a score of ${result.data.verification_score}/100`,
-          variant: "success"
+          variant: "default"
         });
       } else {
         setError(result.error?.message || "Failed to evaluate project");

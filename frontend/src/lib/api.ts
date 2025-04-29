@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '',  // Use relative URLs instead of prefixing with /api
   headers: {
     'Content-Type': 'application/json',
   },
@@ -54,7 +54,7 @@ api.interceptors.response.use(
 // Authentication API
 export const authApi = {
   login: async (email: string, password: string) => {
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/api/auth/login', { email, password });
     return response.data;
   },
   register: async (
@@ -344,7 +344,7 @@ export const donationsApi = {
     amount: number,
     message?: string
   ) => {
-    const response = await api.post('/donations', {
+    const response = await api.post('/api/donations', {
       project_id: projectId,
       amount,
       message,
@@ -352,13 +352,13 @@ export const donationsApi = {
     return response.data;
   },
   getUserDonations: async () => {
-    const response = await api.get('/donations/user');
+    const response = await api.get('/api/donations/user');
     return response.data;
   },
   getProjectDonations: async (projectId: string, page = 1, limit = 10) => {
     try {
       console.log(`Fetching donations for project ${projectId}, page ${page}, limit ${limit}`);
-      const response = await api.get(`/donations/by-project/${projectId}?page=${page}&limit=${limit}`);
+      const response = await api.get(`/api/donations/by-project/${projectId}?page=${page}&limit=${limit}`);
       console.log('Project donations API response:', response.data);
       
       // Check if the response has the expected structure
@@ -372,19 +372,21 @@ export const donationsApi = {
         
         return response.data;
       } else {
-        console.warn('Unexpected API response format:', response.data);
-        // Return a structured response even if the format is unexpected
-        return {
-          success: true,
-          data: {
-            donations: response.data.data?.donations || response.data.donations || [],
-            total: response.data.data?.total || response.data.total || 0,
-            page: response.data.data?.page || response.data.page || page,
-            limit: response.data.data?.limit || response.data.limit || limit,
-            total_raised: response.data.data?.total_raised || response.data.total_raised || 0
-          }
-        };
+        console.warn('Response has success=true but data is not an array:', response.data.data);
       }
+      
+      // If we don't have the expected data structure, log it and return empty array
+      console.warn('Unexpected API response format:', response.data);
+      return {
+        success: true,
+        data: {
+          donations: response.data.data?.donations || response.data.donations || [],
+          total: response.data.data?.total || response.data.total || 0,
+          page: response.data.data?.page || response.data.page || page,
+          limit: response.data.data?.limit || response.data.limit || limit,
+          total_raised: response.data.data?.total_raised || response.data.total_raised || 0
+        }
+      };
     } catch (error) {
       console.error('Error fetching project donations:', error);
       // Return a structured error response
@@ -405,7 +407,7 @@ export const donationsApi = {
     }
   },
   getDonationStats: async () => {
-    const response = await api.get('/donations/stats');
+    const response = await api.get('/api/donations/stats');
     return response.data;
   },
 };
@@ -707,7 +709,7 @@ export const quadraticFundingApi = {
   // Get funding pool balance
   getPoolBalance: async () => {
     try {
-      const response = await api.get('/quadratic/pool-balance');
+      const response = await api.get('/api/quadratic/pool-balance');
       return response.data;
     } catch (error) {
       throw error;
@@ -717,7 +719,7 @@ export const quadraticFundingApi = {
   // Get projects eligible for quadratic funding
   getProjects: async () => {
     try {
-      const response = await api.get('/quadratic/projects');
+      const response = await api.get('/api/quadratic/projects');
       return response.data;
     } catch (error) {
       throw error;
@@ -728,7 +730,7 @@ export const quadraticFundingApi = {
   distributeQuadraticFunding: async (poolId: number, forceDistribution: boolean = false) => {
     try {
       // Send pool_id in the request body
-      const response = await api.post('/quadratic/distribute', { 
+      const response = await api.post('/api/quadratic/distribute', { 
         pool_id: poolId,
         force_distribution: forceDistribution
       });
@@ -758,7 +760,7 @@ export const quadraticFundingApi = {
   }) => {
     try {
       // Ensure the payload matches the expected structure
-      const response = await api.post('/quadratic/external-contribution', contributionData);
+      const response = await api.post('/api/quadratic/external-contribution', contributionData);
       return response.data;
     } catch (error) {
       // Log the error for better debugging
@@ -782,7 +784,7 @@ export const quadraticFundingApi = {
         limit: limit.toString(),
         ...filters,
       });
-      const response = await api.get(`/pools?${queryParams}`);
+      const response = await api.get(`/api/pools?${queryParams}`);
       
       // Log the API response structure for debugging
       console.log('API response from getPools:', response.data);
@@ -805,7 +807,7 @@ export const quadraticFundingApi = {
   // Get funding pool by ID
   getPool: async (id: string | number) => {
     try {
-      const response = await api.get(`/pools/${id}`);
+      const response = await api.get(`/api/pools/${id}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -820,7 +822,7 @@ export const quadraticFundingApi = {
     round_duration?: number;
   }) => {
     try {
-      const response = await api.post('/pools', poolData);
+      const response = await api.post('/api/pools', poolData);
       return response.data;
     } catch (error) {
       throw error;
@@ -835,7 +837,7 @@ export const quadraticFundingApi = {
     is_active?: boolean;
   }) => {
     try {
-      const response = await api.put(`/pools/${id}`, poolData);
+      const response = await api.put(`/api/pools/${id}`, poolData);
       return response.data;
     } catch (error) {
       throw error;
@@ -845,7 +847,7 @@ export const quadraticFundingApi = {
   // Get projects in a specific pool
   getPoolProjects: async (poolId: string | number) => {
     try {
-      const response = await api.get(`/pools/${poolId}/projects`);
+      const response = await api.get(`/api/pools/${poolId}/projects`);
       return response.data;
     } catch (error) {
       throw error;
@@ -855,7 +857,7 @@ export const quadraticFundingApi = {
   // Donate to a funding pool
   donateToPool: async (poolId: string | number, amount: number) => {
     try {
-      const response = await api.post(`/pools/${poolId}/donate`, { amount });
+      const response = await api.post(`/api/pools/${poolId}/donate`, { amount });
       return response.data;
     } catch (error) {
       console.error('Error donating to pool:', error);
@@ -871,7 +873,7 @@ export const quadraticFundingApi = {
   // Add a project to a pool
   addProjectToPool: async (poolId: string | number, projectId: string | number) => {
     try {
-      const response = await api.post(`/pools/${poolId}/projects`, { project_id: projectId });
+      const response = await api.post(`/api/pools/${poolId}/projects`, { project_id: projectId });
       return response.data;
     } catch (error) {
       console.error('Error adding project to pool:', error);
@@ -887,7 +889,7 @@ export const quadraticFundingApi = {
   // Distribute funds for a specific pool
   distributePoolFunds: async (poolId: string | number, createNewRound: boolean = false) => {
     try {
-      const response = await api.post(`/pools/${poolId}/distribute`, { create_new_round: createNewRound });
+      const response = await api.post(`/api/pools/${poolId}/distribute`, { create_new_round: createNewRound });
       return response.data;
     } catch (error) {
       console.error('Error distributing pool funds:', error);
@@ -985,11 +987,18 @@ export const userRoleApi = {
           isCorporate: false
         }
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error checking corporate role:', error);
-      
       // If we get a 404, it means the user doesn't have a company
-      if (error.response && error.response.status === 404) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as any).response === 'object' &&
+        (error as any).response !== null &&
+        'status' in (error as any).response &&
+        (error as any).response.status === 404
+      ) {
         return {
           success: true,
           data: {
@@ -997,7 +1006,6 @@ export const userRoleApi = {
           }
         };
       }
-      
       return {
         success: false,
         error: 'Failed to check corporate role'
@@ -1005,6 +1013,17 @@ export const userRoleApi = {
     }
   }
 };
+
+// Helper to handle API errors in a consistent way
+function handleApiError(error: any) {
+  if (error?.response?.data?.error) {
+    return error.response.data.error;
+  }
+  return {
+    message: error instanceof Error ? error.message : 'An unknown error occurred',
+    code: 'UNKNOWN_ERROR',
+  };
+}
 
 // Default export for backward compatibility
 export default projectsApi; 

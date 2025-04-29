@@ -6,14 +6,21 @@
       "use": "@vercel/next"
     },
     {
-      "src": "backend/src/api/**/*.js",
+      "src": "backend/src/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/backend/(.*)",
+      "dest": "/backend/src/index.js"
+    },
+    {
       "src": "/api/(.*)",
-      "dest": "/backend/src/api/$1"
+      "dest": "/backend/src/index.js"
+    },
+    {
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
@@ -21,6 +28,7 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "BACKEND_URL": "https://derma-dao-junquan2.vercel.app/api"
   }
 }

@@ -13,7 +13,7 @@ import Link from "next/link";
 interface QuadraticFundingInfoProps {
   className?: string;
   showLearnMore?: boolean;
-  poolId?: number;
+  poolId: number;
 }
 
 export function QuadraticFundingInfo({ className, showLearnMore = true, poolId }: QuadraticFundingInfoProps) {
@@ -23,9 +23,14 @@ export function QuadraticFundingInfo({ className, showLearnMore = true, poolId }
 
   useEffect(() => {
     const fetchPoolData = async () => {
+      if (poolId === undefined) {
+        setError("No pool ID provided");
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
-        const response = await quadraticFundingApi.getCurrentRound(poolId);
+        const response = await quadraticFundingApi.getPool(poolId);
         
         if (response.success) {
           setPoolData(response.data);

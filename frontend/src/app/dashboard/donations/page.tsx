@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { projectsApi, donationsApi, userApi } from "@/lib/api";
+import { projectsApi, donationsApi } from "@/lib/api";
 import { Loader2, Search, PieChart, BarChart3, CalendarDays, Landmark, ExternalLink, BadgeCheck, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
